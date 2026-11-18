@@ -6,7 +6,7 @@ This document records the formal resolutions of the six core architectural and H
 
 ## Decision Area DR-01: Item Discovery and Search Structure
 
-- **Status**: **DECIDED (Module 02)**
+- **Status**: **IMPLEMENTED & VERIFIED (Module 04)**
 - **Selected Option**: **Option C — Unified Discovery** (Weighted Score: **90.0 / 100**)
 - **Design Question**: How should users discover, browse, and search genuine available items without unnecessary cognitive effort?
 - **Summary Resolution**: Unified interface combining a prominent persistent search bar with visible category filter pills (*All*, *Tools*, *Gardening*, *Household*, *Outdoor*, *Electronics*), an availability checkbox toggle, dynamic active filter indicators, and a one-click filter reset control.
@@ -18,7 +18,7 @@ This document records the formal resolutions of the six core architectural and H
 
 ## Decision Area DR-02: Borrowing Request and Owner Approval Workflow
 
-- **Status**: **DECIDED (Module 02)**
+- **Status**: **IMPLEMENTED & VERIFIED (Module 05)**
 - **Selected Option**: **Option C — Structured Borrowing Request** (Weighted Score: **90.0 / 100**)
 - **Design Question**: How should a borrower propose a borrowing arrangement and how should the item owner make a decision?
 - **Summary Resolution**: Structured request workflow where the borrower specifies start and return dates and an optional note. The request enters a visible `PENDING` state. The owner can explicitly **Approve** or **Decline**. The borrower can **Cancel** an unapproved pending request. Actions on finalized requests are disallowed.
@@ -31,7 +31,7 @@ This document records the formal resolutions of the six core architectural and H
 
 ## Decision Area DR-03: Borrowing Availability and Scheduling
 
-- **Status**: **DECIDED (Module 02)**
+- **Status**: **IMPLEMENTED & VERIFIED (Module 05)**
 - **Selected Option**: **Option B — Explicit Date-Range Scheduling** (Weighted Score: **86.0 / 100**)
 - **Design Question**: How should item availability dates, loan timeframes, and overlapping borrowing requests be visualized, scheduled, and validated?
 - **Summary Resolution**: Explicit Collection Date and Return Deadline inputs validated via an inclusive interval overlap check: `candidateStart <= existingReturn AND existingStart <= candidateReturn`. Pending requests do not lock the calendar; overlap checks re-execute at approval time to prevent race conditions.
@@ -56,7 +56,7 @@ This document records the formal resolutions of the six core architectural and H
 
 ## Decision Area DR-05: Collection-Location Privacy and Disclosure
 
-- **Status**: **DECIDED (Module 02)**
+- **Status**: **IMPLEMENTED & VERIFIED (Module 03 & 04)**
 - **Selected Option**: **Option C — Coarse Area Only in Current Prototype** (Weighted Score: **92.0 / 100**)
 - **Design Question**: How should collection points and handoff instructions be structured and progressively disclosed across the discovery and approved loan stages?
 - **Summary Resolution**: Collect and display only a coarse, user-defined neighborhood or public landmark area (e.g., "North District"). Exact residential street addresses, apartment unit numbers, and private access codes are **not** collected or stored in the local-first prototype.
@@ -69,7 +69,7 @@ This document records the formal resolutions of the six core architectural and H
 
 ## Decision Area DR-06: Responsive Navigation and Borrower/Owner Interaction Structure
 
-- **Status**: **DECIDED (Module 02)**
+- **Status**: **IMPLEMENTED & VERIFIED (Module 03)**
 - **Selected Option**: **Option C — Unified Application with Task-Oriented Sections** (Weighted Score: **89.0 / 100**)
 - **Design Question**: How should the application interface structure navigation between the Borrower perspective (discovering and requesting items) and the Owner perspective (managing items and approving requests) across desktop and mobile form factors?
 - **Summary Resolution**: Cohesive application shell with four primary task destinations (*Discover*, *Borrowing*, *Lending*, *Account*). Responsive desktop sticky top bar and mobile fixed bottom navigation bar with minimum 44×44 CSS pixel touch targets.

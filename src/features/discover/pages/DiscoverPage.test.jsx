@@ -272,8 +272,8 @@ describe('DiscoverPage: Unified Item Discovery Subsystem (DR-01)', () => {
     expect(modalContent.getByText(/Light scuffs on chuck collar, motor runs smooth/i)).toBeInTheDocument();
     expect(modalContent.getByText(/North Hills \/ Oak District/i)).toBeInTheDocument();
 
-    // Shows Module 05 notice
-    expect(modalContent.getByText(/Module 05 Roadmap Notice/i)).toBeInTheDocument();
+    // Shows Request to Borrow action
+    expect(modalContent.getByRole('button', { name: /Request to Borrow/i })).toBeInTheDocument();
 
     // Close using close button
     const closeBtn = modalContent.getByRole('button', { name: /Close item details/i });

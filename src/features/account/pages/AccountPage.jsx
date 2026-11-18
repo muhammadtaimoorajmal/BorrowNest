@@ -14,6 +14,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
   const [importFile, setImportFile] = useState(null);
   const [importPreview, setImportPreview] = useState(null);
   const [importItems, setImportItems] = useState([]);
+  const [importRequests, setImportRequests] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState(null);
   const [importResult, setImportResult] = useState(null);
@@ -21,6 +22,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
 
   const [storageEstimate, setStorageEstimate] = useState(null);
   const [localItemCount, setLocalItemCount] = useState(0);
+  const [localRequestStats, setLocalRequestStats] = useState({ total: 0, pending: 0, approved: 0 });
 
   // Load storage diagnostics
   useEffect(() => {
@@ -30,6 +32,15 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
       try {
         const count = await storageAdapter.countItems();
         if (isMounted) setLocalItemCount(count);
+
+        if (typeof storageAdapter.listBorrowRequests === 'function') {
+          const reqs = await storageAdapter.listBorrowRequests();
+          if (isMounted) {
+            const pending = reqs.filter((r) => r.status === 'PENDING').length;
+            const approved = reqs.filter((r) => r.status === 'APPROVED').length;
+            setLocalRequestStats({ total: reqs.length, pending, approved });
+          }
+        }
 
         if (navigator.storage && navigator.storage.estimate) {
           const estimate = await navigator.storage.estimate();
@@ -58,7 +69,9 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
     try {
       const backupData = await generateBackupData(storageAdapter);
       downloadBackupFile(backupData);
-      setExportMessage(`Successfully exported ${backupData.itemCount} items with photographs.`);
+      setExportMessage(
+        `Successfully exported ${backupData.itemCount} items and ${backupData.requestCount || 0} borrowing requests with photographs.`,
+      );
     } catch (err) {
       setExportMessage(`Export failed: ${err.message}`);
     } finally {
@@ -74,13 +87,15 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
     setImportError(null);
     setImportPreview(null);
     setImportItems([]);
+    setImportRequests([]);
     setImportResult(null);
     setIsImporting(true);
 
     try {
-      const { preview, items } = await parseAndValidateBackup(file);
+      const { preview, items, requests } = await parseAndValidateBackup(file);
       setImportPreview(preview);
       setImportItems(items);
+      setImportRequests(requests || []);
     } catch (err) {
       setImportError(err.message || 'Failed to parse backup file.');
     } finally {
@@ -90,17 +105,21 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
   };
 
   const handleExecuteMerge = async () => {
-    if (!importItems.length) return;
+    if (!importItems.length && !importRequests.length) return;
     setIsImporting(true);
     setImportError(null);
     try {
-      const { addedCount, skippedCount } = await executeMerge(importItems, storageAdapter);
+      const { addedCount, skippedCount } = await executeMerge(
+        { items: importItems, requests: importRequests },
+        storageAdapter,
+      );
       setImportResult({
         type: 'MERGE',
-        message: `Merge complete: ${addedCount} new items imported, ${skippedCount} duplicate items skipped.`,
+        message: `Merge complete: ${addedCount} new records imported, ${skippedCount} duplicate records skipped.`,
       });
       setImportPreview(null);
       setImportItems([]);
+      setImportRequests([]);
       setImportFile(null);
       if (typeof onDataRestored === 'function') onDataRestored();
     } catch (err) {
@@ -111,18 +130,22 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
   };
 
   const handleExecuteReplace = async () => {
-    if (!importItems.length) return;
+    if (!importItems.length && !importRequests.length) return;
     setIsImporting(true);
     setImportError(null);
     setShowReplaceConfirm(false);
     try {
-      const { replacedCount } = await executeReplace(importItems, storageAdapter);
+      const { replacedCount, replacedRequestsCount } = await executeReplace(
+        { items: importItems, requests: importRequests },
+        storageAdapter,
+      );
       setImportResult({
         type: 'REPLACE',
-        message: `Replace complete: Local library replaced with ${replacedCount} items from backup.`,
+        message: `Replace complete: Local library replaced with ${replacedCount} items and ${replacedRequestsCount ?? importRequests.length} requests from backup.`,
       });
       setImportPreview(null);
       setImportItems([]);
+      setImportRequests([]);
       setImportFile(null);
       if (typeof onDataRestored === 'function') onDataRestored();
     } catch (err) {
@@ -221,7 +244,8 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
                 <li><strong>Exported:</strong> {new Date(importPreview.exportedAt).toLocaleString()}</li>
                 <li><strong>Total Items in Backup:</strong> {importPreview.itemCount} ({importPreview.activeCount} active, {importPreview.archivedCount} archived)</li>
                 <li><strong>Photographs in Backup:</strong> {importPreview.photoCount}</li>
-                <li><strong>Current Local Items:</strong> {localItemCount}</li>
+                <li><strong>Borrowing Requests in Backup:</strong> {importPreview.requestCount || 0} ({importPreview.pendingRequestCount || 0} pending, {importPreview.approvedRequestCount || 0} approved)</li>
+                <li><strong>Current Local Items:</strong> {localItemCount} (Requests: {localRequestStats.total})</li>
               </ul>
 
               <div className={styles.restoreActionsRow}>
@@ -260,6 +284,12 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
             <div className={styles.diagRow}>
               <span>Saved Items in Database:</span>
               <strong>{localItemCount}</strong>
+            </div>
+            <div className={styles.diagRow}>
+              <span>Borrowing Requests:</span>
+              <strong>
+                {localRequestStats.total} ({localRequestStats.pending} pending, {localRequestStats.approved} approved)
+              </strong>
             </div>
             {storageEstimate && (
               <>
@@ -307,7 +337,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
               Replace All Local Records?
             </h3>
             <p className={styles.confirmText}>
-              Warning: Replacing will permanently delete all {localItemCount} current local item records and replace them with the {importPreview?.itemCount} items from your backup file. This cannot be undone unless you already have a backup.
+              Warning: Replacing will permanently delete all {localItemCount} current local item records and {localRequestStats.total} borrowing requests, replacing them with the {importPreview?.itemCount} items and {importPreview?.requestCount || 0} requests from your backup file. This cannot be undone unless you already have a backup.
             </p>
             <div className={styles.confirmBtnRow}>
               <button

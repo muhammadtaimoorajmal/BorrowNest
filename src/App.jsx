@@ -3,7 +3,7 @@ import Navbar from './navigation/Navbar';
 import LendingPage from './features/listings/pages/LendingPage';
 import AccountPage from './features/account/pages/AccountPage';
 import DiscoverPage from './features/discover/pages/DiscoverPage';
-import BorrowingPlaceholder from './features/borrowing/BorrowingPlaceholder';
+import BorrowingPage from './features/borrowing/pages/BorrowingPage';
 import Footer from './components/Footer';
 import { storageAdapter } from './services/storage/IndexedDbStorageAdapter';
 import styles from './App.module.css';
@@ -55,10 +55,18 @@ export function App({ adapter = storageAdapter }) {
 
       <main id="main-content" className={styles.mainContent} tabIndex="-1">
         {currentSection === 'discover' && (
-          <DiscoverPage adapter={adapter} onNavigateToLending={() => navigateTo('lending')} />
+          <DiscoverPage
+            adapter={adapter}
+            onNavigateToLending={() => navigateTo('lending')}
+            onNavigateToBorrowing={() => navigateTo('borrowing')}
+          />
         )}
         {currentSection === 'borrowing' && (
-          <BorrowingPlaceholder onNavigateToLending={() => navigateTo('lending')} />
+          <BorrowingPage
+            adapter={adapter}
+            onNavigateToDiscover={() => navigateTo('discover')}
+            onNavigateToLending={() => navigateTo('lending')}
+          />
         )}
         {currentSection === 'lending' && <LendingPage adapter={adapter} />}
         {currentSection === 'account' && (

@@ -152,4 +152,143 @@ describe('LendingPage UI and Item Lifecycle', () => {
       expect(screen.queryByText('Camping Tent 4-Person')).not.toBeInTheDocument();
     }, { timeout: 3000 });
   });
+
+  it('renders incoming requests tab with pending badge count and permits owner decisions', async () => {
+    const item = await adapter.createItem({
+      id: 'lending-item-req-test',
+      title: 'Pressure Washer 1800 PSI',
+      description: 'Compact washer with turbo nozzle.',
+      category: 'TOOLS',
+      conditionGrade: 4,
+      approximateArea: 'South Park',
+      availability: 'AVAILABLE',
+      status: 'ACTIVE',
+      photoAttestation: true,
+      photos: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    await adapter.createBorrowRequest({
+      id: 'req-lending-test-1',
+      itemId: item.id,
+      borrowerAlias: 'Casey Stone',
+      startDate: '2026-12-10',
+      endDate: '2026-12-14',
+    });
+
+    render(<LendingPage adapter={adapter} />);
+
+    // Verify Incoming Requests tab badge displays 1
+    const reqTab = await screen.findByRole('tab', { name: /Incoming Requests 1/i });
+    expect(reqTab).toBeInTheDocument();
+
+    // Click tab
+    fireEvent.click(reqTab);
+
+    // Verify request details are shown
+    expect(await screen.findByText('Casey Stone')).toBeInTheDocument();
+    expect(screen.getByText(/10 Dec 2026 – 14 Dec 2026/i)).toBeInTheDocument();
+
+    // Click Approve
+    const approveBtn = screen.getByRole('button', { name: /Approve Request/i });
+    fireEvent.click(approveBtn);
+
+    // Confirmation dialog
+    expect(screen.getByRole('heading', { name: /Approve Borrowing Request/i })).toBeInTheDocument();
+    const modalApproveBtn = screen.getAllByRole('button', { name: /Approve Request/i })[1];
+    fireEvent.click(modalApproveBtn);
+
+    // Verifies status changed to APPROVED
+    await waitFor(async () => {
+      const updatedReq = await adapter.getBorrowRequestById('req-lending-test-1');
+      expect(updatedReq.status).toBe('APPROVED');
+    });
+  });
+
+  it('blocks deleting item with request history and displays helpful error banner', async () => {
+    const item = await adapter.createItem({
+      id: 'item-with-history',
+      title: 'Circular Saw 7-1/4 inch',
+      description: 'Powerful saw with carbide blade.',
+      category: 'TOOLS',
+      conditionGrade: 4,
+      approximateArea: 'North Bay',
+      availability: 'AVAILABLE',
+      status: 'ACTIVE',
+      photoAttestation: true,
+      photos: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Create a borrowing request for this item
+    await adapter.createBorrowRequest({
+      id: 'req-history-1',
+      itemId: item.id,
+      borrowerAlias: 'Saw Borrower',
+      startDate: '2026-12-15',
+      endDate: '2026-12-18',
+    });
+
+    render(<LendingPage adapter={adapter} />);
+
+    expect(await screen.findByText('Circular Saw 7-1/4 inch')).toBeInTheDocument();
+
+    // Attempt to delete
+    const deleteBtn = screen.getByRole('button', { name: /Delete Circular Saw 7-1\/4 inch/i });
+    fireEvent.click(deleteBtn);
+
+    expect(screen.getByRole('heading', { name: /Permanently Delete Listing\?/i })).toBeInTheDocument();
+    const confirmDeleteBtn = screen.getByRole('button', { name: /Permanently Delete/i });
+    fireEvent.click(confirmDeleteBtn);
+
+    // Must display error banner blocking deletion
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Cannot delete item.*associated borrowing request/i);
+
+    // Item must still exist in DB
+    const itemInDb = await adapter.getItemById('item-with-history');
+    expect(itemInDb).toBeDefined();
+  });
+
+  it('blocks archiving item with active approved reservation and displays error', async () => {
+    const item = await adapter.createItem({
+      id: 'item-with-approved-res',
+      title: 'Lawn Aerator Roller',
+      description: 'Heavy duty spiked lawn aerator.',
+      category: 'GARDENING',
+      conditionGrade: 4,
+      approximateArea: 'Greenwood',
+      availability: 'AVAILABLE',
+      status: 'ACTIVE',
+      photoAttestation: true,
+      photos: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    const req = await adapter.createBorrowRequest({
+      id: 'approved-res-1',
+      itemId: item.id,
+      borrowerAlias: 'Lawn Care Pro',
+      startDate: '2026-12-15',
+      endDate: '2026-12-18',
+    });
+    await adapter.approveBorrowRequest(req.id);
+
+    render(<LendingPage adapter={adapter} />);
+
+    expect(await screen.findByText('Lawn Aerator Roller')).toBeInTheDocument();
+
+    // Attempt to archive
+    const archiveBtn = screen.getByRole('button', { name: /Archive Lawn Aerator Roller/i });
+    fireEvent.click(archiveBtn);
+
+    // Must display error banner blocking archive
+    expect(await screen.findByRole('alert')).toHaveTextContent(/active or approved reservation/i);
+
+    // Item must still be ACTIVE
+    const itemInDb = await adapter.getItemById('item-with-approved-res');
+    expect(itemInDb.status).toBe('ACTIVE');
+  });
 });

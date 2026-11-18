@@ -216,6 +216,12 @@
   gap: var(--bn-space-6);
 }
 
+.requestsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-space-4);
+}
+
 .modalBackdrop {
   position: fixed;
   top: 0;

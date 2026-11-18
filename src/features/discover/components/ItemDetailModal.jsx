@@ -10,7 +10,7 @@ import styles from './ItemDetailModal.module.css';
  * @param {object} props.item - The selected item listing
  * @param {function} props.onClose - Modal close handler
  */
-export function ItemDetailModal({ item, onClose }) {
+export function ItemDetailModal({ item, onClose, onRequestBorrow }) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const modalRef = useRef(null);
   const closeBtnRef = useRef(null);
@@ -178,21 +178,30 @@ export function ItemDetailModal({ item, onClose }) {
               <div className={styles.notesBox}>{item.conditionNotes}</div>
             </div>
           )}
-
-          {/* Module 05 Coordination Notice */}
-          <div className={styles.roadmapNotice}>
-            <span className={styles.roadmapBadge}>Module 05 Roadmap Notice</span>
-            <p className={styles.roadmapText}>
-              Interactive borrowing requests, scheduling calendars, and direct borrower coordination
-              will be available in <strong>Module 05</strong>. For now, listings in your local BorrowNest catalog are available for review.
-            </p>
-          </div>
         </div>
 
         <footer className={styles.footer}>
           <button type="button" onClick={onClose} className={styles.dismissBtn}>
             Close
           </button>
+          {isAvailable ? (
+            <button
+              type="button"
+              onClick={() => onRequestBorrow && onRequestBorrow(item)}
+              className={styles.requestBtn}
+            >
+              Request to Borrow
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className={styles.requestBtnDisabled}
+              title="Item is currently marked unavailable by owner"
+            >
+              Unavailable for Request
+            </button>
+          )}
         </footer>
       </div>
     </div>

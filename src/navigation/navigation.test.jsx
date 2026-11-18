@@ -81,12 +81,12 @@ describe('Navigation Subsystem', () => {
 
     expect(await screen.findByRole('heading', { name: /Item Discovery & Catalog/i })).toBeInTheDocument();
 
-    // Navigate to Borrowing placeholder
+    // Navigate to Borrowing workspace
     await act(async () => {
       window.location.hash = '#borrowing';
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
 
-    expect(await screen.findByRole('heading', { name: /Borrowing Requests & Coordination/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /Borrowing Requests/i })).toBeInTheDocument();
   });
 });

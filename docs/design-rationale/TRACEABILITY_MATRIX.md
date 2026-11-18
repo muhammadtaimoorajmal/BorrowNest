@@ -21,20 +21,20 @@ This matrix establishes bidirectional traceability between architectural decisio
 
 | Requirement ID | Name | Architectural Design Status | Implementation Status | Verification Status |
 | :---: | :--- | :---: | :---: | :---: |
-| **FR-001** | Item Listing Creation | **DECIDED (DR-04, DR-05, DR-06)** | PLANNED (Module 03) | PENDING MODULE 03 |
-| **FR-002** | Item Discovery | **DECIDED (DR-01, DR-06)** | PLANNED (Module 04) | PENDING MODULE 04 |
-| **FR-003** | Search and Filtering | **DECIDED (DR-01)** | PLANNED (Module 04) | PENDING MODULE 04 |
-| **FR-004** | Item Detail Inspection | **DECIDED (DR-01, DR-05)** | PLANNED (Module 04) | PENDING MODULE 04 |
-| **FR-005** | Borrowing Request Submission | **DECIDED (DR-02, DR-03)** | PLANNED (Module 05) | PENDING MODULE 05 |
-| **FR-006** | Request Decision Workflow | **DECIDED (DR-02)** | PLANNED (Module 05) | PENDING MODULE 05 |
-| **FR-007** | Borrowing Period Scheduling | **DECIDED (DR-02, DR-03)** | PLANNED (Module 05) | PENDING MODULE 05 |
+| **FR-001** | Item Listing Creation | **DECIDED (DR-04, DR-05, DR-06)** | IMPLEMENTED (Module 03) | VERIFIED (Vitest & CI) |
+| **FR-002** | Item Discovery | **DECIDED (DR-01, DR-06)** | IMPLEMENTED (Module 04) | VERIFIED (Vitest & CI) |
+| **FR-003** | Search and Filtering | **DECIDED (DR-01)** | IMPLEMENTED (Module 04) | VERIFIED (Vitest & CI) |
+| **FR-004** | Item Detail Inspection | **DECIDED (DR-01, DR-05)** | IMPLEMENTED (Module 04) | VERIFIED (Vitest & CI) |
+| **FR-005** | Borrowing Request Submission | **DECIDED (DR-02, DR-03)** | IMPLEMENTED (Module 05) | VERIFIED (Vitest & CI) |
+| **FR-006** | Request Decision Workflow | **DECIDED (DR-02)** | IMPLEMENTED (Module 05) | VERIFIED (Vitest & CI) |
+| **FR-007** | Borrowing Period Scheduling | **DECIDED (DR-02, DR-03)** | IMPLEMENTED (Module 05) | VERIFIED (Vitest & CI) |
 | **FR-008** | Collection & Return Logging | **DECIDED (DR-03, DR-04, DR-05)** | PLANNED (Module 06) | PENDING MODULE 06 |
 | **FR-009** | Item Condition Recording | **DECIDED (DR-04)** | PLANNED (Module 06) | PENDING MODULE 06 |
 | **FR-010** | Borrowing History & Status | **DECIDED (DR-03, DR-06)** | PLANNED (Module 06) | PENDING MODULE 06 |
-| **NFR-001** | Usability & Interaction | **DECIDED (DR-01, 02, 03, 06)** | Baseline Verified | VERIFIED (Shell Only) |
-| **NFR-002** | Accessibility (WCAG 2.2 AA) | **DECIDED (DR-01, 06)** | Baseline Verified | VERIFIED (Shell Only) |
-| **NFR-003** | Responsiveness & Mobile Ergonomics | **DECIDED (DR-06)** | Baseline Verified | VERIFIED (Shell Only) |
-| **NFR-004** | Data Privacy & Security | **DECIDED (DR-04, DR-05)** | Policy Verified | VERIFIED (Policy Only) |
-| **NFR-005** | Reliability & Data Integrity | **DECIDED (DR-02, 03, 04, 05)** | Policy Verified | VERIFIED (Policy Only) |
-| **NFR-006** | Performance | **DECIDED (DR-01, 03)** | Baseline Verified | VERIFIED (Build < 200ms) |
-| **NFR-007** | Maintainability & Quality | **DECIDED (DR-01 through 06)** | CI Automated | VERIFIED (0 lint, 3 tests) |
+| **NFR-001** | Usability & Interaction | **DECIDED (DR-01, 02, 03, 06)** | Implemented & Verified | VERIFIED (Modules 01–05) |
+| **NFR-002** | Accessibility (WCAG 2.2 AA) | **DECIDED (DR-01, 06)** | Implemented & Verified | VERIFIED (Modules 01–05) |
+| **NFR-003** | Responsiveness & Mobile Ergonomics | **DECIDED (DR-06)** | Implemented & Verified | VERIFIED (48px Touch Targets) |
+| **NFR-004** | Data Privacy & Security | **DECIDED (DR-04, DR-05)** | Implemented & Verified | VERIFIED (Canvas EXIF & Address Guard) |
+| **NFR-005** | Reliability & Data Integrity | **DECIDED (DR-02, 03, 04, 05)** | Implemented & Verified | VERIFIED (Zero-Fake-Data & DB v2) |
+| **NFR-006** | Performance | **DECIDED (DR-01, 03)** | Implemented & Verified | VERIFIED (Build < 300ms, Bundle 352 kB) |
+| **NFR-007** | Maintainability & Quality | **DECIDED (DR-01 through 06)** | CI Automated | VERIFIED (0 lint, 163 tests passing) |

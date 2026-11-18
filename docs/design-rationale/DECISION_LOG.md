@@ -8,12 +8,12 @@ This log maintains the authoritative registry of all formal architectural and HC
 
 | ID | Title & Question | Selected Option | Score | Status | Module |
 | :---: | :--- | :--- | :---: | :---: | :---: |
-| **[DR-01](./DR-01_ITEM_DISCOVERY.md)** | Item Discovery & Search Structure | **Option C: Unified Discovery** | **90.0** | **DECIDED** | Module 04 |
-| **[DR-02](./DR-02_BORROWING_APPROVAL.md)** | Borrowing Request & Approval Workflow | **Option C: Structured Borrowing Request** | **90.0** | **DECIDED** | Module 05 |
-| **[DR-03](./DR-03_AVAILABILITY_SCHEDULING.md)** | Availability & Date-Range Scheduling | **Option B: Explicit Date-Range Scheduling** | **86.0** | **DECIDED** | Module 05 |
+| **[DR-01](./DR-01_ITEM_DISCOVERY.md)** | Item Discovery & Search Structure | **Option C: Unified Discovery** | **90.0** | **IMPLEMENTED & VERIFIED** | Module 04 |
+| **[DR-02](./DR-02_BORROWING_APPROVAL.md)** | Borrowing Request & Approval Workflow | **Option C: Structured Borrowing Request** | **90.0** | **IMPLEMENTED & VERIFIED** | Module 05 |
+| **[DR-03](./DR-03_AVAILABILITY_SCHEDULING.md)** | Availability & Date-Range Scheduling | **Option B: Explicit Date-Range Scheduling** | **86.0** | **IMPLEMENTED & VERIFIED** | Module 05 |
 | **[DR-04](./DR-04_CONDITION_HANDOVER.md)** | Item Condition & Handover Documentation | **Option C: Structured Condition Checkpoints** | **84.0** | **DECIDED** | Module 06 |
-| **[DR-05](./DR-05_LOCATION_PRIVACY.md)** | Location Privacy & Disclosure | **Option C: Coarse Area Only (Local-First)** | **92.0** | **DECIDED** | Module 03 |
-| **[DR-06](./DR-06_RESPONSIVE_NAVIGATION.md)** | Responsive Navigation & Perspective Structure | **Option C: Task-Oriented Sections** | **89.0** | **DECIDED** | Module 03 |
+| **[DR-05](./DR-05_LOCATION_PRIVACY.md)** | Location Privacy & Disclosure | **Option C: Coarse Area Only (Local-First)** | **92.0** | **IMPLEMENTED & VERIFIED** | Module 03 |
+| **[DR-06](./DR-06_RESPONSIVE_NAVIGATION.md)** | Responsive Navigation & Perspective Structure | **Option C: Task-Oriented Sections** | **89.0** | **IMPLEMENTED & VERIFIED** | Module 03 |
 
 ---
 
@@ -39,7 +39,7 @@ This log maintains the authoritative registry of all formal architectural and HC
 - **Main Rationale**: Protects owner consent and scheduling control, provides unambiguous status visibility, and enforces state integrity.
 - **Requirements Affected**: FR-005, FR-006, FR-007, NFR-001, NFR-005.
 - **Evidence References**: E-01 (QOC), E-02 (NN/g Heuristics #1, #3, #5), E-05 (Form Instructions).
-- **Decision Status**: **DECIDED**.
+- **Decision Status**: **IMPLEMENTED & VERIFIED** (Module 05).
 - **Target Implementation Module**: Module 05 (Borrowing Flow).
 - **Known Limitation**: Operates within local client runtime; does not trigger external push notifications to other devices.
 
@@ -52,7 +52,7 @@ This log maintains the authoritative registry of all formal architectural and HC
 - **Main Rationale**: Mathematically eliminates overlapping double bookings using accessible HTML date controls without heavy third-party calendar libraries.
 - **Requirements Affected**: FR-007, FR-008, FR-010, NFR-001, NFR-005.
 - **Evidence References**: E-01 (QOC), E-02 (NN/g Heuristics #5, #9), E-03 (WCAG 2.2 SC 3.3.1, 3.3.2), E-05 (Form Instructions).
-- **Decision Status**: **DECIDED**.
+- **Decision Status**: **IMPLEMENTED & VERIFIED** (Module 05).
 - **Target Implementation Module**: Module 05 (Borrowing Flow & Scheduling).
 - **Known Limitation**: Operates on full-day boundaries without sub-day hourly time slots.
 

@@ -7,7 +7,7 @@
 ---
 
 ## 2. Status
-**DECIDED** (Selected Option B: Explicit Date-Range Scheduling).
+**IMPLEMENTED & VERIFIED** in Module 05 (Selected Option B: Explicit Date-Range Scheduling with inclusive conflict prevention and transactional atomic verification).
 
 ---
 

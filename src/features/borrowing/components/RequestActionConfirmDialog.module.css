@@ -1,0 +1,151 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--bn-spacing-4);
+  z-index: 1100;
+}
+
+.modal {
+  position: relative;
+  background-color: var(--bn-surface-card);
+  border-radius: var(--bn-radius-xl);
+  max-width: 480px;
+  width: 100%;
+  box-shadow: var(--bn-shadow-xl);
+  overflow: hidden;
+  animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.header {
+  padding: var(--bn-spacing-5) var(--bn-spacing-6);
+  border-bottom: 1px solid var(--bn-border-subtle);
+}
+
+.title {
+  font-size: var(--bn-font-size-lg);
+  font-weight: var(--bn-font-weight-bold);
+  color: var(--bn-text-primary);
+  margin: 0;
+}
+
+.body {
+  padding: var(--bn-spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-spacing-4);
+}
+
+.message {
+  font-size: var(--bn-font-size-sm);
+  color: var(--bn-text-secondary);
+  line-height: var(--bn-line-height-relaxed);
+  margin: 0;
+}
+
+.detailsCard {
+  background-color: var(--bn-surface-subtle);
+  border: 1px solid var(--bn-border-subtle);
+  border-radius: var(--bn-radius-md);
+  padding: var(--bn-spacing-3) var(--bn-spacing-4);
+  font-size: var(--bn-font-size-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-spacing-1);
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.detailLabel {
+  color: var(--bn-text-secondary);
+}
+
+.detailVal {
+  font-weight: var(--bn-font-weight-semibold);
+  color: var(--bn-text-primary);
+}
+
+.errorBanner {
+  background-color: #fee2e2;
+  border: 1px solid #f87171;
+  border-radius: var(--bn-radius-md);
+  padding: var(--bn-spacing-3);
+  color: #991b1b;
+  font-size: var(--bn-font-size-xs);
+}
+
+.footer {
+  padding: var(--bn-spacing-4) var(--bn-spacing-6);
+  border-top: 1px solid var(--bn-border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--bn-spacing-3);
+  background-color: var(--bn-surface-card);
+}
+
+.cancelBtn {
+  padding: var(--bn-spacing-2) var(--bn-spacing-4);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-medium);
+  color: var(--bn-text-secondary);
+  background-color: transparent;
+  border: 1px solid var(--bn-border-subtle);
+  border-radius: var(--bn-radius-md);
+  cursor: pointer;
+}
+
+.cancelBtn:hover {
+  background-color: var(--bn-surface-subtle);
+}
+
+.confirmBtn {
+  padding: var(--bn-spacing-2) var(--bn-spacing-5);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-semibold);
+  border-radius: var(--bn-radius-md);
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  transition: background-color var(--bn-transition-fast);
+}
+
+.confirmBtnApprove {
+  background-color: var(--bn-color-success-600, #16a34a);
+}
+
+.confirmBtnApprove:hover:not(:disabled) {
+  background-color: var(--bn-color-success-700, #15803d);
+}
+
+.confirmBtnDanger {
+  background-color: var(--bn-color-danger-600, #dc2626);
+}
+
+.confirmBtnDanger:hover:not(:disabled) {
+  background-color: var(--bn-color-danger-700, #b91c1c);
+}
+
+.confirmBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -1,0 +1,271 @@
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-spacing-6);
+  max-width: var(--bn-container-max);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-spacing-2);
+}
+
+.pageTitle {
+  font-size: var(--bn-font-size-2xl);
+  font-weight: var(--bn-font-weight-bold);
+  color: var(--bn-text-primary);
+  margin: 0;
+  line-height: var(--bn-line-height-tight);
+}
+
+.pageSubtitle {
+  font-size: var(--bn-font-size-base);
+  color: var(--bn-text-secondary);
+  margin: 0;
+  max-width: 65ch;
+  line-height: var(--bn-line-height-relaxed);
+}
+
+.disclosureBanner {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--bn-radius-lg);
+  padding: var(--bn-spacing-3) var(--bn-spacing-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bn-spacing-3);
+  font-size: var(--bn-font-size-xs);
+  color: #1e40af;
+  line-height: var(--bn-line-height-relaxed);
+}
+
+.disclosureIcon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.perspectiveTabs {
+  display: flex;
+  background-color: var(--bn-surface-subtle);
+  border-radius: var(--bn-radius-lg);
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--bn-border-subtle);
+  align-self: flex-start;
+}
+
+.perspectiveTab {
+  padding: var(--bn-spacing-2) var(--bn-spacing-5);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-medium);
+  color: var(--bn-text-secondary);
+  background-color: transparent;
+  border: none;
+  border-radius: var(--bn-radius-md);
+  cursor: pointer;
+  transition: all var(--bn-transition-fast);
+}
+
+.perspectiveTab:hover:not(.perspectiveTabActive) {
+  color: var(--bn-text-primary);
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.perspectiveTabActive {
+  background-color: var(--bn-surface-card);
+  color: var(--bn-color-primary-700);
+  font-weight: var(--bn-font-weight-semibold);
+  box-shadow: var(--bn-shadow-sm);
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bn-spacing-3);
+  padding-bottom: var(--bn-spacing-2);
+  border-bottom: 1px solid var(--bn-border-subtle);
+}
+
+.statusPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bn-spacing-2);
+}
+
+.statusPill {
+  padding: 4px var(--bn-spacing-3);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-medium);
+  color: var(--bn-text-secondary);
+  background-color: var(--bn-surface-subtle);
+  border: 1px solid var(--bn-border-subtle);
+  border-radius: var(--bn-radius-full);
+  cursor: pointer;
+  transition: all var(--bn-transition-fast);
+}
+
+.statusPill:hover:not(.statusPillActive) {
+  border-color: var(--bn-border-strong);
+  color: var(--bn-text-primary);
+}
+
+.statusPillActive {
+  background-color: var(--bn-color-primary-50);
+  color: var(--bn-color-primary-700);
+  border-color: var(--bn-color-primary-300);
+  font-weight: var(--bn-font-weight-semibold);
+}
+
+.reservationsSection {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--bn-radius-xl);
+  padding: var(--bn-spacing-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-spacing-3);
+}
+
+.reservationsSectionTitle {
+  font-size: var(--bn-font-size-base);
+  font-weight: var(--bn-font-weight-bold);
+  color: #166534;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--bn-spacing-2);
+}
+
+.reservationsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--bn-spacing-3);
+}
+
+.reservationMiniCard {
+  background-color: #ffffff;
+  border: 1px solid #86efac;
+  border-radius: var(--bn-radius-lg);
+  padding: var(--bn-spacing-3) var(--bn-spacing-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reservationMiniTitle {
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-semibold);
+  color: var(--bn-text-primary);
+  margin: 0;
+}
+
+.reservationMiniDates {
+  font-size: var(--bn-font-size-xs);
+  color: #15803d;
+  font-weight: var(--bn-font-weight-medium);
+}
+
+.reservationMiniAlias {
+  font-size: var(--bn-font-size-xs);
+  color: var(--bn-text-secondary);
+}
+
+.requestsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-spacing-4);
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--bn-spacing-12);
+  gap: var(--bn-spacing-3);
+  color: var(--bn-text-secondary);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--bn-border-subtle);
+  border-top-color: var(--bn-color-primary-600);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.errorBanner {
+  background-color: #fee2e2;
+  border: 1px solid #f87171;
+  border-radius: var(--bn-radius-lg);
+  padding: var(--bn-spacing-4);
+  color: #991b1b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--bn-spacing-12) var(--bn-spacing-6);
+  background-color: var(--bn-surface-subtle);
+  border: 1px dashed var(--bn-border-strong);
+  border-radius: var(--bn-radius-xl);
+  gap: var(--bn-spacing-3);
+}
+
+.emptyStateIcon {
+  font-size: 2.5rem;
+}
+
+.emptyStateTitle {
+  font-size: var(--bn-font-size-lg);
+  font-weight: var(--bn-font-weight-bold);
+  color: var(--bn-text-primary);
+  margin: 0;
+}
+
+.emptyStateText {
+  font-size: var(--bn-font-size-sm);
+  color: var(--bn-text-secondary);
+  max-width: 50ch;
+  margin: 0;
+  line-height: var(--bn-line-height-relaxed);
+}
+
+.actionBtn {
+  margin-top: var(--bn-spacing-2);
+  padding: var(--bn-spacing-2) var(--bn-spacing-5);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-semibold);
+  color: #ffffff;
+  background-color: var(--bn-color-primary-600);
+  border: none;
+  border-radius: var(--bn-radius-md);
+  cursor: pointer;
+  transition: background-color var(--bn-transition-fast);
+}
+
+.actionBtn:hover {
+  background-color: var(--bn-color-primary-700);
+}

@@ -15,6 +15,7 @@ This register documents genuine technical, security, and methodological limitati
 | **RISK-05** | GitHub Actions Runner Node Runtime Deprecation | Low | Verified (Action Deprecation Warning) | No | CI Maintenance |
 | **RISK-06** | Absence of Empirical Participant Validation | Medium | Certain (100% — Analytical Scope) | No | Post-Prototype |
 | **RISK-07** | Storage Transaction Atomicity & Concurrency Integrity | High | Resolved (Module 04 Part A Repairs) | No | Module 04+ |
+| **RISK-08** | Reservation Overlap Race Conditions & Multi-Store Atomicity | High | Resolved (Module 05 Concurrency Controls) | No | Module 05+ |
 
 ---
 
@@ -116,3 +117,17 @@ This register documents genuine technical, security, and methodological limitati
   4. *Client-Side Photo Validation & Re-processing*: Added MIME type validation, mandatory `altText` verification, and re-processing of accepted image Blobs through `processItemImage` to strip EXIF and downscale to 1600px.
 - **Blocks Current Prototype?**: **No**. Fully resolved and verified with dedicated test suites (`backup.test.js`, `IndexedDbStorageAdapter.test.js`, `LendingPage.test.jsx`).
 - **Implementation Status**: **VERIFIED** in Module 04 test suite.
+
+---
+
+### RISK-08: Reservation Overlap Race Conditions & Multi-Store Atomicity
+- **Description**: Two competing borrowing requests for the same item over overlapping dates could theoretically be approved simultaneously if availability validation were decoupled from status modification. In addition, backup schema version 2 introduces multi-store dependencies between `items` and `borrowingRequests`.
+- **Impact**: High — Double-booking physical equipment, schedule corruption, and inconsistent multi-store restore state.
+- **Remediation Implemented & Verified in Module 05**:
+  1. *Approval Transaction Serialization*: Approving a request opens a single atomic `readwrite` transaction over `[items, borrowingRequests]`. It queries all existing requests for the item and re-verifies inclusive overlap collision invariants before writing `APPROVED`. Competing transactions serialize deterministically in IndexedDB, guaranteeing exactly 1 success and 1 `ReservationConflictError`.
+  2. *Inclusive Overlap Collision Prevention*: Enforces the mathematical interval intersection rule `candidateStart <= existingReturn && existingStart <= candidateReturn`, preventing shared boundary conflicts.
+  3. *Overdue Safety Hold*: Approved reservations past their return deadline remain locked to block new overlapping bookings until physical inspection and return in Module 06.
+  4. *Multi-Store Atomic Backup Operations*: `replaceAllData` and `mergeAllData` operate across both object stores inside a single `readwrite` transaction, guaranteeing atomic all-or-nothing rollback on any schema or referential failure.
+  5. *Relational Integrity Guards*: Item deletion is blocked when borrowing history exists (`ItemHasRequestHistoryError`), and item archiving is blocked when active approved reservations exist (`ItemHasActiveReservationError`).
+- **Blocks Current Prototype?**: **No**. Fully mitigated and verified with dedicated concurrency and integration test suites.
+- **Implementation Status**: **VERIFIED** in Module 05 test suite (`IndexedDbStorageAdapter.requests.test.js`, `backup.test.js`, `BorrowingIntegration.test.jsx`).

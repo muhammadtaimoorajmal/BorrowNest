@@ -7,6 +7,7 @@ import { DiscoveryCard } from '../components/DiscoveryCard';
 import { DiscoveryEmptyState } from '../components/DiscoveryEmptyState';
 import { DiscoveryNoResults } from '../components/DiscoveryNoResults';
 import { ItemDetailModal } from '../components/ItemDetailModal';
+import { BorrowRequestDialog } from '../../borrowing/components/BorrowRequestDialog';
 import styles from './DiscoverPage.module.css';
 
 /**
@@ -17,8 +18,9 @@ import styles from './DiscoverPage.module.css';
  * @param {object} props
  * @param {object} [props.adapter] - Storage adapter instance
  * @param {function} props.onNavigateToLending - Callback to navigate to Lending workspace
+ * @param {function} [props.onNavigateToBorrowing] - Callback to navigate to Borrowing workspace
  */
-export function DiscoverPage({ adapter, onNavigateToLending }) {
+export function DiscoverPage({ adapter, onNavigateToLending, onNavigateToBorrowing }) {
   const {
     items,
     totalActiveCount,
@@ -37,6 +39,7 @@ export function DiscoverPage({ adapter, onNavigateToLending }) {
   } = useDiscovery(adapter);
 
   const [selectedItem, setSelectedItem] = useState(null);
+  const [requestingItem, setRequestingItem] = useState(null);
 
   return (
     <div className={styles.pageWrapper}>
@@ -135,6 +138,20 @@ export function DiscoverPage({ adapter, onNavigateToLending }) {
         <ItemDetailModal
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
+          onRequestBorrow={(item) => {
+            setSelectedItem(null);
+            setRequestingItem(item);
+          }}
+        />
+      )}
+
+      {/* Borrow Request Submission Dialog (DR-02 / DR-03) */}
+      {requestingItem && (
+        <BorrowRequestDialog
+          item={requestingItem}
+          adapter={adapter}
+          onClose={() => setRequestingItem(null)}
+          onNavigateToBorrowing={onNavigateToBorrowing}
         />
       )}
     </div>

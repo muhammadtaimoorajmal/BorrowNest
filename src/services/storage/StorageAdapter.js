@@ -50,4 +50,45 @@ export class StorageAdapter {
   async replaceAllItems(_items) {
     throw new Error('Method not implemented: replaceAllItems');
   }
+
+  // Module 05: Borrowing Request and Scheduling operations (DR-02, DR-03)
+  async createBorrowRequest(_request) {
+    throw new Error('Method not implemented: createBorrowRequest');
+  }
+
+  async getBorrowRequestById(_id) {
+    throw new Error('Method not implemented: getBorrowRequestById');
+  }
+
+  async listBorrowRequests(_options = {}) {
+    throw new Error('Method not implemented: listBorrowRequests');
+  }
+
+  async approveBorrowRequest(_id) {
+    throw new Error('Method not implemented: approveBorrowRequest');
+  }
+
+  async declineBorrowRequest(_id) {
+    throw new Error('Method not implemented: declineBorrowRequest');
+  }
+
+  async cancelBorrowRequest(_id) {
+    throw new Error('Method not implemented: cancelBorrowRequest');
+  }
+
+  async countBorrowRequests(_options = {}) {
+    throw new Error('Method not implemented: countBorrowRequests');
+  }
+
+  async clearAllBorrowRequests() {
+    throw new Error('Method not implemented: clearAllBorrowRequests');
+  }
+
+  async replaceAllData(_data) {
+    throw new Error('Method not implemented: replaceAllData');
+  }
+
+  async mergeAllData(_data) {
+    throw new Error('Method not implemented: mergeAllData');
+  }
 }

@@ -4,6 +4,10 @@ import ListingCard from '../components/ListingCard';
 import ListingForm from '../components/ListingForm';
 import ListingDetailModal from '../components/ListingDetailModal';
 import DeleteConfirmDialog from '../components/DeleteConfirmDialog';
+import { useBorrowRequests } from '../../borrowing/hooks/useBorrowRequests';
+import RequestCard from '../../borrowing/components/RequestCard';
+import RequestActionConfirmDialog from '../../borrowing/components/RequestActionConfirmDialog';
+import { REQUEST_STATUS } from '../../borrowing/constants/requestStatus';
 import styles from './LendingPage.module.css';
 
 export function LendingPage({ adapter }) {
@@ -21,13 +25,25 @@ export function LendingPage({ adapter }) {
     deleteListing,
   } = useListings(adapter);
 
-  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'archived'
+  const {
+    requests,
+    itemsMap,
+    approveRequest,
+    declineRequest,
+  } = useBorrowRequests(adapter);
+
+  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'archived' | 'requests'
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const pendingIncomingCount = requests.filter(
+    (r) => r.status === REQUEST_STATUS.PENDING,
+  ).length;
 
   const handleOpenCreate = () => {
     setEditingItem(null);
@@ -178,6 +194,17 @@ export function LendingPage({ adapter }) {
         >
           Archived <span className={styles.tabBadge}>{stats.archived}</span>
         </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-requests"
+          aria-selected={activeTab === 'requests'}
+          aria-controls="panel-requests"
+          onClick={() => setActiveTab('requests')}
+          className={`${styles.tabBtn} ${activeTab === 'requests' ? styles.activeTab : ''}`}
+        >
+          Incoming Requests <span className={styles.tabBadge}>{pendingIncomingCount}</span>
+        </button>
       </div>
 
       {/* Main Content Area */}
@@ -220,7 +247,7 @@ export function LendingPage({ adapter }) {
             </div>
           )}
         </section>
-      ) : (
+      ) : activeTab === 'archived' ? (
         <section id="panel-archived" role="tabpanel" aria-labelledby="tab-archived">
           {archivedItems.length === 0 ? (
             <div className={styles.emptyState}>
@@ -242,6 +269,31 @@ export function LendingPage({ adapter }) {
                   onArchive={handleArchive}
                   onRestore={handleRestore}
                   onDelete={setDeletingItem}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section id="panel-requests" role="tabpanel" aria-labelledby="tab-requests">
+          {requests.length === 0 ? (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon} aria-hidden="true">📬</div>
+              <h2 className={styles.emptyTitle}>No incoming requests yet</h2>
+              <p className={styles.emptyText}>
+                When community members discover your items and request to borrow them, their requests will appear here for your review and approval.
+              </p>
+            </div>
+          ) : (
+            <div className={styles.requestsList}>
+              {requests.map((req) => (
+                <RequestCard
+                  key={req.id}
+                  request={req}
+                  item={itemsMap.get(req.itemId)}
+                  perspective="owner"
+                  onApprove={(r) => setConfirmAction({ action: 'approve', request: r })}
+                  onDecline={(r) => setConfirmAction({ action: 'decline', request: r })}
                 />
               ))}
             </div>
@@ -278,6 +330,23 @@ export function LendingPage({ adapter }) {
           onConfirm={handleDeleteConfirm}
           onCancel={() => setDeletingItem(null)}
           isDeleting={isSubmitting}
+        />
+      )}
+
+      {/* Request Action Confirmation Dialog */}
+      {confirmAction && (
+        <RequestActionConfirmDialog
+          action={confirmAction.action}
+          request={confirmAction.request}
+          item={itemsMap.get(confirmAction.request.itemId)}
+          onConfirm={async (requestId) => {
+            if (confirmAction.action === 'approve') {
+              await approveRequest(requestId);
+            } else if (confirmAction.action === 'decline') {
+              await declineRequest(requestId);
+            }
+          }}
+          onClose={() => setConfirmAction(null)}
         />
       )}
     </div>

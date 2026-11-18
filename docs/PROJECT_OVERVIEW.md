@@ -81,5 +81,5 @@ BorrowNest is engineered to achieve seven core product objectives:
 | **Module 02: Architectural Decision Records** | Formal Question-Option-Criteria (QOC) analysis for six core design areas ([docs/design-rationale/](design-rationale/)) | **COMPLETED & VERIFIED** |
 | **Module 03: Item Management & Local Persistence** | Genuine item CRUD, responsive 4-section navigation, native IndexedDB persistence, client-side EXIF/GPS-stripped photo pipeline, and JSON backup export/restore | **COMPLETED & VERIFIED** |
 | **Module 04: Discovery & Search** | Unified discovery (DR-01), keyword token search, category pills, availability toggle, active filter feedback, read-only item presentation, and detail modal | **COMPLETED & VERIFIED** |
-| **Module 05: Borrowing Flow** | Request submissions, owner approval states, and scheduling calendar | Planned |
+| **Module 05: Borrowing Flow** | Structured request submissions, owner consent decisions (DR-02), date-range scheduling with inclusive conflict prevention (DR-03), dual-perspective workspace, and DB v2 | **COMPLETED & VERIFIED** |
 | **Module 06: Inspection & Returns** | Handover condition comparison and loan lifecycle closure | Planned |

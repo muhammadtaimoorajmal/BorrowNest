@@ -17,9 +17,9 @@ Status Definitions:
 | **FR-002** | Item Discovery | BorrowNest shall provide a public item discovery view displaying all active, non-archived items from local storage, with honest empty states when no listings exist, without synthetic items. | Module 04 | **IMPLEMENTED & VERIFIED** |
 | **FR-003** | Search and Filtering | Users can filter items by search keywords, category tags, and lending availability status. | Module 04 | **IMPLEMENTED & VERIFIED** |
 | **FR-004** | Item Detail Inspection | The borrower can review full item details, usage guidelines, general pickup area, and owner condition notes. | Module 04 | **IMPLEMENTED & VERIFIED** |
-| **FR-005** | Borrowing Request Submission | A borrower can submit a request specifying the desired borrowing timeframe and a short note. | Module 05 | **PLANNED** |
-| **FR-006** | Request Decision Workflow | The item owner can review pending borrowing requests and choose to approve or decline them. | Module 05 | **PLANNED** |
-| **FR-007** | Borrowing Period Scheduling | The system records explicit start and return dates, preventing conflicting overlapping bookings. | Module 05 | **PLANNED** |
+| **FR-005** | Borrowing Request Submission | A borrower can submit a request specifying the desired borrowing timeframe and a short note. | Module 05 | **IMPLEMENTED & VERIFIED** |
+| **FR-006** | Request Decision Workflow | The item owner can review pending borrowing requests and choose to approve or decline them. | Module 05 | **IMPLEMENTED & VERIFIED** |
+| **FR-007** | Borrowing Period Scheduling | The system records explicit start and return dates, preventing conflicting overlapping bookings. | Module 05 | **IMPLEMENTED & VERIFIED** |
 | **FR-008** | Collection & Return Logging | Both parties can track handover confirmation, active loan duration, and return completion. | Module 06 | **PLANNED** |
 | **FR-009** | Item Condition Recording | Users can record item condition and observations prior to collection and re-inspect condition upon return. | Module 06 | **PLANNED** |
 | **FR-010** | Borrowing History & Status | Users can view past completed loans, active borrowings, and upcoming return deadlines in one place. | Module 06 | **PLANNED** |
@@ -65,4 +65,4 @@ Status Definitions:
 - **NFR-007.1**: The codebase must adhere to strict ESLint configurations with zero lint warnings or errors.
 - **NFR-007.2**: Every release must pass an automated CI test suite executing in GitHub Actions prior to branch integration.
 - **NFR-007.3**: Styling must be structured using CSS Custom Properties (tokens) and scoped CSS Modules to prevent style pollution.
-- **Status**: Module 04 Verification: **VERIFIED** (ESLint 0 errors/warnings, Vitest 81/81 tests passing).
+- **Status**: Module 05 Verification: **VERIFIED** (ESLint 0 errors/warnings, Vitest 163/163 tests passing, production build passing).

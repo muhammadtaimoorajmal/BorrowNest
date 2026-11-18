@@ -10,7 +10,7 @@ BorrowNest is built upon the foundational belief that peer coordination tools sh
 
 BorrowNest strictly practices **data minimization**:
 - **No Unnecessary Personal Information**: The application does not collect governmental IDs, telephone numbers, financial details, credit scores, social media handles, or biometric markers.
-- **Identity Fields**: Borrower and owner identification within the local-first prototype are lightweight aliases or handles chosen freely by the user.
+- **Identity Fields**: Borrower and owner identification within the local-first prototype are lightweight aliases or handles chosen freely by the user. BorrowNest explicitly informs users that borrower aliases are stored locally on-device as display names without cryptographic or server identity verification.
 - **Zero Third-Party Telemetry**: The application contains no tracking scripts, advertising beacons, tracking pixels, or cross-site analytics cookies.
 
 ---
@@ -64,4 +64,4 @@ BorrowNest enforces an explicit project-wide data-integrity rule: **No Fabricate
 Users are informed transparently regarding the nature of local-first storage:
 - **Device-Bound**: Data stored in browser `IndexedDB` does not automatically sync across separate browsers, incognito windows, or devices.
 - **Browser Clearing Risks**: If a user clears their browser cache or site data, locally saved records may be erased.
-- **Implemented Backup Safeguard**: In Module 03, BorrowNest implements a single-click local JSON backup export (`exportBackup.js`) and schema-validated restore (`importBackup.js`) via the Account & Local Data Management view. Users can export their entire library including photos (encoded to base64) and restore it via Merge (preserving existing items) or Replace (full restore).
+- **Implemented Backup Safeguard**: In Modules 03 and 05, BorrowNest implements a single-click local JSON backup export (`exportBackup.js`) and schema-validated restore (`importBackup.js`) via the Account & Local Data Management view. Users can export their entire library including photos (encoded to base64) and structured borrowing requests (Schema Version 2) and restore it via Merge (preserving existing items and novel requests) or Replace (atomic multi-store replacement).

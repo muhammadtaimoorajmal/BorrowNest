@@ -70,7 +70,31 @@ BorrowNest/
 │   │   │   └── pages/
 │   │   │       ├── AccountPage.jsx
 │   │   │       └── AccountPage.module.css
-│   │   ├── borrowing/           # Borrowing Requests (Module 05 Roadmap)
+│   │   ├── borrowing/           # Structured Requests & Scheduling (Module 05 Implemented)
+│   │   │   ├── components/
+│   │   │   │   ├── BorrowRequestDialog.jsx
+│   │   │   │   ├── BorrowRequestDialog.module.css
+│   │   │   │   ├── BorrowRequestDialog.test.jsx
+│   │   │   │   ├── RequestActionConfirmDialog.jsx
+│   │   │   │   ├── RequestActionConfirmDialog.module.css
+│   │   │   │   ├── RequestCard.jsx
+│   │   │   │   ├── RequestCard.module.css
+│   │   │   │   ├── RequestStatusBadge.jsx
+│   │   │   │   └── RequestStatusBadge.module.css
+│   │   │   ├── constants/
+│   │   │   │   └── requestStatus.js
+│   │   │   ├── hooks/
+│   │   │   │   └── useBorrowRequests.js
+│   │   │   ├── pages/
+│   │   │   │   ├── BorrowingPage.jsx
+│   │   │   │   ├── BorrowingPage.module.css
+│   │   │   │   └── BorrowingPage.test.jsx
+│   │   │   ├── services/
+│   │   │   │   ├── borrowRequestValidation.js
+│   │   │   │   ├── borrowRequestValidation.test.js
+│   │   │   │   ├── dateRange.js
+│   │   │   │   └── dateRange.test.js
+│   │   │   ├── BorrowingIntegration.test.jsx
 │   │   │   └── BorrowingPlaceholder.jsx
 │   │   ├── discover/            # Item Catalog & Discovery (Module 04 Implemented)
 │   │   │   ├── components/
@@ -229,6 +253,15 @@ erDiagram
   - **Merge Error Propagation**: Explicit error filtering ensures unexpected storage errors surface visibly during backup restore rather than being swallowed silently.
   - **Imported Photo Validation & Re-processing**: Backup import validates MIME types, enforces accessible `altText`, and re-processes image blobs through the client-side Canvas pipeline to guarantee EXIF stripping and size boundaries.
   - **Request Sequencing**: Monotonic counter sequencing in `useListings` prevents race conditions from overlapping asynchronous fetches from overwriting newer state updates.
+
+- **Module 05 Borrowing Requests & Date-Range Scheduling Architecture (DR-02 & DR-03)**:
+  - **IndexedDB Schema Version 2 Upgrade**: The native `BorrowNest` database is upgraded to version 2 with a non-destructive migration that preserves all legacy items and media intact while establishing the `borrowingRequests` store with indexes on `itemId`, `status`, `startDate`, `endDate`, `collectionDate`, `returnDeadline`, and `createdAt`. Added `db.onversionchange = () => db.close();` for multi-tab durability.
+  - **Borrowing State Machine**: Deterministic progression: `PENDING` $\rightarrow$ `APPROVED` | `DECLINED` | `CANCELLED`. Terminal states are strictly immutable; requests cannot be re-opened once closed.
+  - **Inclusive Date-Range Overlap Prevention**: Implements the strict interval intersection formula `candidateStart <= existingReturn && existingStart <= candidateReturn`. A shared boundary day (e.g. returning on Dec 5 while another starts on Dec 5) is strictly treated as an overlapping conflict to guarantee physical handover feasibility.
+  - **Transactional Concurrency Serialization**: Approving a request opens a single atomic `readwrite` transaction over both `[items, borrowingRequests]`. It re-verifies item availability and checks all other approved requests for date conflicts before writing `APPROVED`, guaranteeing that concurrent competing approvals serialize deterministically into exactly one approval and one `ReservationConflictError`.
+  - **Overdue Safety Hold**: Any approved reservation whose return deadline is in the past remains locked to block new overlapping bookings until physical condition inspection and return completion in Module 06.
+  - **Relational Integrity Guards**: Deleting an item with associated borrowing request history is blocked (`ItemHasRequestHistoryError`), preserving historical audit records. Archiving an item with an active approved reservation is blocked (`ItemHasActiveReservationError`).
+  - **Backup & Restore Version 2**: Extended backup schema version 2 serializing both `items` and `borrowingRequests`. Provides full backward compatibility for version 1 backups, atomic multi-store replacement (`replaceAllData`), and conflict-validating atomic merge (`mergeAllData`).
 
 ---
 

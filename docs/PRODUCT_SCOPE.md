@@ -21,11 +21,11 @@ The full planned capabilities of BorrowNest comprise six foundational modules:
 - **Listing Archival**: Safely archive retired items while preserving historical loan records.
 
 ### C. Borrowing Workflow
-- **Request Submission**: Submit a structured borrowing request specifying start date, return date, and intended usage notes.
-- **Duration Agreement**: Provide unambiguous date ranges for the loan.
-- **Owner Governance**: Empower item owners to review, accept, or decline pending requests.
-- **Status Progression**: Track request lifecycle from `Requested` $\rightarrow$ `Approved` $\rightarrow$ `Collected` $\rightarrow$ `Returned` $\rightarrow$ `Completed`.
-- **Collection & Return Logging**: Timestamp physical item collection and return events.
+- **Request Submission**: Submit a structured borrowing request specifying collection date, return deadline, borrower display alias, and intended usage notes (**IMPLEMENTED — Module 05**).
+- **Duration Agreement**: Provide unambiguous calendar date ranges with inclusive conflict prevention (**IMPLEMENTED — Module 05**).
+- **Owner Governance**: Empower item owners to review, approve, or decline pending requests with transactional atomic conflict verification (**IMPLEMENTED — Module 05**).
+- **Status Progression**: Track request lifecycle from `PENDING` $\rightarrow$ `APPROVED` | `DECLINED` | `CANCELLED` (**IMPLEMENTED — Module 05**). Physical collection handoff and return condition inspection arrive in Module 06.
+- **Overdue Safety Hold**: Approved reservations whose deadline has passed remain locked to prevent conflicting bookings until return completion in Module 06 (**IMPLEMENTED — Module 05**).
 
 ### D. Condition Management
 - **Condition Rating**: Rate condition across standard tiers (e.g., Brand New, Excellent, Good, Fair).
@@ -76,17 +76,19 @@ To preserve data privacy, operational simplicity, and architectural focus, the f
 
 ---
 
-## 4. Current Local-First Boundaries & Module 04 Status
+## 4. Current Local-First Boundaries & Module 05 Status
 
-The Module 04 implementation delivers complete unified item discovery, search, and filtering alongside genuine item listing management and local IndexedDB persistence. Users and evaluators should recognize the following real constraints and implemented capabilities:
+The Module 05 implementation delivers complete structured borrowing requests, owner approval workflows, and date-range scheduling alongside unified item discovery, item listing management, and local IndexedDB version 2 persistence. Users and evaluators should recognize the following real constraints and implemented capabilities:
 
-- **Unified Item Discovery (DR-01)**: Fully functional local catalog exploration featuring multi-token keyword search, category exploration pills (*All*, *Tools*, *Gardening*, *Household*, *Outdoor*, *Electronics*), progressive availability toggle (*Available now only*), and reactive results feedback with a one-click filter reset action.
-- **Read-Only Borrower Perspective**: Clean item cards and an accessible detail dialog (`ItemDetailModal`) presenting photos, condition descriptions, and coarse pickup areas without owner-only management buttons.
-- **Local Storage Scope**: Data stored in native `IndexedDB` is confined to the specific browser profile and device where it was entered.
-- **No Automatic Cross-Device Sync**: Creating a listing on a smartphone will not automatically mirror onto a desktop browser without manual export/import or future peer-to-peer sync mechanisms.
-- **Cache Clearance Impact & Mitigation**: Clearing browser site data will remove locally stored listings. To directly address this risk, client-side JSON backup export and validated restore (both merge and single-transaction atomic replace modes) are available via the Account & Local Data Management view.
-- **Real-Time Address Safeguard**: In accordance with DR-05, listings require coarse neighborhood tags and feature real-time heuristic pattern detection warning users against entering specific street addresses or gate codes.
-- **Future Module Boundaries**: Structured borrowing requests and reservation scheduling arrive in Module 05; physical handover condition checklists and return completion arrive in Module 06.
+- **Structured Borrowing Requests (DR-02)**: Direct request submission from catalog discovery modal (`BorrowRequestDialog`), recording borrower display alias, collection date, return deadline, and optional intended-use note.
+- **Date-Range Scheduling & Conflict Prevention (DR-03)**: Calendar date scheduling with strict inclusive date interval overlap checks (`candidateStart <= existingReturn && existingStart <= candidateReturn`).
+- **Atomic Approval Serialization**: Competing approvals are serialized through a single atomic `readwrite` IndexedDB transaction over `[items, borrowingRequests]`, re-verifying conflicts before writing `APPROVED` status.
+- **Functional Borrowing Workspace**: Dual-perspective workspace with Borrower View (cancellation of pending requests) and Owner View (approval/decline decisions and active reservation overview).
+- **Lending Workspace Integration**: "Incoming Requests" tab displaying pending request counter badges and review decisions.
+- **Relational Integrity Safeguards**: Deleting items with request history is blocked (`ItemHasRequestHistoryError`), and archiving items with active approved reservations is blocked (`ItemHasActiveReservationError`).
+- **Overdue Safety Hold**: Reservations whose return deadline has passed remain locked, blocking new bookings until physical return in Module 06.
+- **Multi-Store Version 2 Backup/Restore**: Version 2 backup schema serializing items, photos, and borrowing requests, with full backward compatibility for version 1 archives.
+- **Future Module Boundaries**: Physical collection handover, pre/post-loan condition comparison checklists, and loan completion protocols arrive in Module 06.
 
 ---
 

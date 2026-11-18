@@ -7,7 +7,7 @@
 ---
 
 ## 2. Status
-**DECIDED** (Selected Option C: Structured Borrowing Request).
+**IMPLEMENTED & VERIFIED** in Module 05 (Selected Option C: Structured Borrowing Request with IndexedDB v2 persistence and transactional atomic approval).
 
 ---
 
@@ -121,7 +121,7 @@ $$\text{Score} = \sum_{i=1}^{5} \left( W_i \times \frac{R_i}{5} \right)$$
 - **C2 (Status Clarity)**: Option C scores 5/5 by introducing distinct, non-overlapping status badges (`PENDING`, `APPROVED`, `DECLINED`, `CANCELLED`). Option B scores 2/5 because agreement states remain ambiguous in free-text prose. Option A scores 3/5.
 - **C3 (Error Prevention)**: Option C scores 4/5 by enforcing deterministic transitions and disallowing actions on closed requests. Options A and B score 2/5 due to vulnerability to scheduling collisions and double bookings.
 - **C4 (Efficiency)**: Option A scores 5/5 for raw speed (1 click). Option C scores 4/5 by keeping the modal form to essential dates and a single approval click. Option B scores 2/5 due to lengthy messaging back-and-forth.
-- **C5 (Local-First Feasibility)**: Option C scores 4/5 because a finite state machine maps directly to local browser state and `localStorage` records. Option B scores 1/5 because conversational messaging requires WebSockets, message brokers, and centralized servers incompatible with local-first client operation.
+- **C5 (Local-First Feasibility)**: Option C scores 4/5 because a finite state machine maps directly to local browser state and transactional `IndexedDB` records. Option B scores 1/5 because conversational messaging requires WebSockets, message brokers, and centralized servers incompatible with local-first client operation.
 
 ---
 

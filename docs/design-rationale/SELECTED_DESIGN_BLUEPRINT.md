@@ -185,6 +185,6 @@ stateDiagram-v2
 | **Media Pipeline (DR-04)** | Canvas EXIF/GPS metadata stripping, 1600px scaling, WebP/JPEG compression, mandatory alt text | **Implemented & Verified (Module 03)** |
 | **Account & Data Portability** | JSON backup export (`borrownest-backup` v1), schema-validated merge and replace restore, storage diagnostics | **Implemented & Verified (Module 03)** |
 | **Item Discovery & Catalog (DR-01)** | Keyword search, categorical exploration pills, availability toggling, catalog grid, read-only item cards, detail modal, honest zero states | **Implemented & Verified (Module 04)** |
-| **Borrowing Requests & Approval (DR-02)** | Unbundled request submission, owner review workflow, cancellation handling | Planned (Module 05 Roadmap) |
-| **Availability Scheduling (DR-03)** | Date range picker, real-time overlap prevention, scheduling calendar | Planned (Module 05 Roadmap) |
+| **Borrowing Requests & Approval (DR-02)** | Direct request dialog (`BorrowRequestDialog`), owner review workflow in Lending, cancellation handling, immutable terminal states | **Implemented & Verified (Module 05)** |
+| **Availability Scheduling (DR-03)** | HTML5 date pickers, inclusive overlap collision prevention, atomic approval transaction, active reservation schedule overview | **Implemented & Verified (Module 05)** |
 | **Condition Handover (DR-04)** | Dual-inspection checklist, side-by-side comparison, return completion logging | Planned (Module 06 Roadmap) |

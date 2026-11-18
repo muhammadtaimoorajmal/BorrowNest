@@ -38,16 +38,17 @@ BorrowNest is architected as a **local-first client-side application**. It store
 
 ## Prototype Boundaries and Current Status
 
-BorrowNest has completed **Module 04 (Unified Item Discovery, Search & Filtering)**:
-- **Unified Discovery Experience (DR-01)**: Fully integrated local catalog discovery combining persistent multi-token keyword search, category exploration pills (*All*, *Tools*, *Gardening*, *Household*, *Outdoor*, *Electronics*), and a progressive availability facet (*Available now only*).
-- **Reactive Matching Engine**: Normalized Unicode NFKC token matching across listing title, description, category, and approximate area, updating results and live regions instantly.
-- **Accessible Live Feedback**: `aria-live="polite"` result counter with active filter indicators and single-click filter reset recovery (Nielsen Heuristics #6 and #9).
-- **Read-Only Discovery Cards**: Accessible item presentation cards featuring genuine photo rendering, availability badges, condition grade chips, and coarse location badges, strictly excluding owner-only management actions.
-- **Accessible Item Details Dialog**: Modal dialog (`role="dialog"`, `aria-modal="true"`) with photo carousel/gallery, complete condition notes, approximate area reminder (DR-05), and keyboard escape dismissibility.
-- **Honest Empty & Zero-Results States**: Zero synthetic or mock marketplace data; honest empty state linking to the Lending workspace when no items are listed, and dedicated recovery guidance when active filters return zero matches.
-- **Cross-Module Persistence & Lifecycle Integrity**: Immediate synchronization with local IndexedDB storage; active items appear in catalog discovery, availability toggles update instantly, and archived items are strictly excluded from borrower discovery.
-- **Module 03 Quality & Stabilization Upgrades**: ACID-compliant single-transaction backup replacement (`replaceAllItems`), robust merge error handling, client-side imported photo validation and re-processing pipeline, and request sequencing preventing out-of-order stale state overwrite.
-- **Future Module Roadmap**: Interactive borrowing requests, reservation scheduling, and loan duration coordination for Module 05; and handover condition inspection protocols for Module 06.
+BorrowNest has completed **Module 05 (Structured Borrowing Requests, Owner Approval & Date-Range Scheduling)**:
+- **Borrower Request Submission Workflow**: Integrated borrower request dialog triggered directly from catalog discovery (`ItemDetailModal` -> `BorrowRequestDialog`), displaying item summaries, checking real-time schedule availability, and recording structured requests.
+- **Owner Consent Decision Workflow (DR-02)**: Complete owner review workflow featuring explicit Approve and Decline actions, accessible confirmation modals, and immutable terminal states preventing uncoordinated alterations.
+- **Date-Range Scheduling & Conflict Prevention (DR-03)**: Exact calendar date scheduling using native date inputs (`YYYY-MM-DD`) with strict inclusive date interval overlap prevention (`candidateStart <= existingReturn && existingStart <= candidateReturn`).
+- **Transactional Atomic Approval Serialization**: Competing or concurrent approval attempts open a single `readwrite` IndexedDB transaction across both `items` and `borrowingRequests`, re-validating item availability and calendar conflicts at approval time to guarantee zero double-booking.
+- **Overdue Safety Hold**: Approved reservations whose return deadline has passed remain locked and flagged with clear overdue notices, preventing new conflicting bookings until physical return completion in Module 06.
+- **Relational Integrity Safeguards**: Deleting items that possess borrowing request history is strictly blocked (`ItemHasRequestHistoryError`), and archiving items with active or approved reservations is prevented (`ItemHasActiveReservationError`).
+- **Dual-Perspective Borrowing Workspace**: Dedicated Borrowing workspace providing both **Borrower View (My Requests)** with cancellation controls for pending requests, and **Owner View (Incoming Requests)** with decision controls and active reservation schedules, backed by honest local-first disclosures.
+- **Lending Workspace Integration**: Dedicated "Incoming Requests" tab alongside Active and Archived listings, displaying real-time pending request count badges.
+- **Backup & Restore Schema Version 2**: Versioned multi-store JSON archive format serializing items, photos, and borrowing requests, with full backward compatibility for version 1 backups and atomic replace/merge transactions.
+- **Future Module Roadmap**: Handover physical inspection, condition photo comparisons, and return verification protocols for Module 06.
 
 ---
 
@@ -55,6 +56,7 @@ BorrowNest has completed **Module 04 (Unified Item Discovery, Search & Filtering
 
 - **Data Minimization**: BorrowNest requests only information strictly necessary for lending coordination.
 - **Collection Privacy**: Only coarse neighborhood or landmark areas are collected and displayed. Exact residential street addresses and private lockbox codes are strictly prevented via real-time heuristic warning safeguards (DR-05).
+- **Borrower Identity Transparency**: Borrower aliases are explicitly identified as local display names stored client-side rather than cryptographically verified network identities.
 - **EXIF & Metadata Stripping**: Uploaded photos are stripped of all camera metadata, embedded GPS coordinates, and device identifiers client-side before storage.
 - **Genuine Imagery**: BorrowNest strictly prohibits generic stock photographs, clip art, or synthetic renders. All listings rely exclusively on genuine photographs captured directly by item owners.
 - **Design Target**: Built with semantic HTML, ARIA landmarks, and keyboard navigation targeting WCAG 2.2 Level AA, with mobile navigation touch targets meeting or exceeding 44 × 44 CSS pixels.
@@ -69,7 +71,7 @@ BorrowNest has completed **Module 04 (Unified Item Discovery, Search & Filtering
 | **Module 02** | Formal Question-Option-Criteria (QOC) design rationale across 6 key architectural decision areas ([docs/design-rationale/](docs/design-rationale/)) | **Implemented** |
 | **Module 03** | Genuine item listing management, native IndexedDB persistence, photo processing, and backup/restore | **Implemented & Verified** |
 | **Module 04** | Discovery, category browsing, and search filtering | **Implemented & Verified** |
-| **Module 05** | Request submission, owner approval flow, and loan period scheduling | Planned |
+| **Module 05** | Request submission, owner approval flow, and loan period scheduling | **Implemented & Verified** |
 | **Module 06** | Handover inspection, condition documentation, and return completion | Planned |
 
 ---

@@ -8,68 +8,112 @@ import {
 } from './importBackup';
 import { IndexedDbStorageAdapter } from '../storage/IndexedDbStorageAdapter';
 import { BACKUP_FORMAT, BACKUP_SCHEMA_VERSION } from './backupSchema';
+import { REQUEST_STATUS } from '../../features/borrowing/constants/requestStatus';
 
-describe('Backup and Restore Subsystem', () => {
+describe('Backup and Restore Subsystem (Schema V1 & V2)', () => {
   let adapter;
 
   beforeEach(async () => {
-    adapter = new IndexedDbStorageAdapter(null, 'BorrowNest_Backup_Test');
+    adapter = new IndexedDbStorageAdapter(null, `BorrowNest_Backup_Test_${Date.now()}_${Math.random().toString(36).slice(2)}`);
     await adapter.initialize();
     await adapter.clearAllItems();
   });
 
-  const validBackupFixture = {
-    format: BACKUP_FORMAT,
-    schemaVersion: BACKUP_SCHEMA_VERSION,
-    exportedAt: '2026-11-18T10:00:00.000Z',
-    itemCount: 1,
-    items: [
+  const validItemFixture = {
+    schemaVersion: 1,
+    id: 'backup-item-1',
+    title: 'Pressure Washer 2000 PSI',
+    description: 'Electric pressure washer with soap cannon and turbo nozzle attachments.',
+    category: 'TOOLS',
+    conditionGrade: 4,
+    conditionNotes: 'Works great, hose has light scuffing.',
+    approximateArea: 'North Hills / Near Water Tower',
+    availability: 'AVAILABLE',
+    status: 'ACTIVE',
+    photoAttestation: true,
+    photos: [
       {
-        schemaVersion: 1,
-        id: 'backup-item-1',
-        title: 'Pressure Washer 2000 PSI',
-        description: 'Electric pressure washer with soap cannon and turbo nozzle attachments.',
-        category: 'TOOLS',
-        conditionGrade: 4,
-        conditionNotes: 'Works great, hose has light scuffing.',
-        approximateArea: 'North Hills / Near Water Tower',
-        availability: 'AVAILABLE',
-        status: 'ACTIVE',
-        photoAttestation: true,
-        photos: [
-          {
-            id: 'photo-1',
-            dataUrl: 'data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAADwAQCdASoBAAEAAkA4JaQAA3AA/vuUAAA=',
-            altText: 'Front angle of yellow electric pressure washer',
-            mimeType: 'image/webp',
-            width: 800,
-            height: 600,
-            sizeBytes: 1200,
-          },
-        ],
-        createdAt: '2026-11-18T09:00:00.000Z',
-        updatedAt: '2026-11-18T09:00:00.000Z',
+        id: 'photo-1',
+        dataUrl: 'data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAADwAQCdASoBAAEAAkA4JaQAA3AA/vuUAAA=',
+        altText: 'Front angle of yellow electric pressure washer',
+        mimeType: 'image/webp',
+        width: 800,
+        height: 600,
+        sizeBytes: 1200,
       },
     ],
+    createdAt: '2026-11-18T09:00:00.000Z',
+    updatedAt: '2026-11-18T09:00:00.000Z',
   };
 
-  it('generates valid backup JSON from storage adapter', async () => {
+  const validRequestFixture = {
+    id: 'backup-req-1',
+    itemId: 'backup-item-1',
+    borrowerAlias: 'Alex Green',
+    startDate: '2026-12-01',
+    endDate: '2026-12-05',
+    requestNote: 'Need for weekend patio cleaning',
+    status: REQUEST_STATUS.APPROVED,
+    createdAt: '2026-11-18T10:00:00.000Z',
+    updatedAt: '2026-11-18T10:15:00.000Z',
+    decidedAt: '2026-11-18T10:15:00.000Z',
+  };
+
+  const validBackupFixtureV2 = {
+    format: BACKUP_FORMAT,
+    schemaVersion: 2,
+    exportedAt: '2026-11-18T11:00:00.000Z',
+    itemCount: 1,
+    requestCount: 1,
+    items: [validItemFixture],
+    borrowingRequests: [validRequestFixture],
+  };
+
+  const validBackupFixtureV1 = {
+    format: BACKUP_FORMAT,
+    schemaVersion: 1,
+    exportedAt: '2026-11-18T10:00:00.000Z',
+    itemCount: 1,
+    items: [validItemFixture],
+  };
+
+  it('generates valid backup JSON schema v2 from storage adapter', async () => {
     const backupData = await generateBackupData(adapter);
     expect(backupData.format).toBe(BACKUP_FORMAT);
     expect(backupData.schemaVersion).toBe(BACKUP_SCHEMA_VERSION);
     expect(backupData.itemCount).toBe(0);
+    expect(backupData.requestCount).toBe(0);
     expect(backupData.items).toEqual([]);
+    expect(backupData.borrowingRequests).toEqual([]);
   });
 
-  it('parses and previews valid backup data correctly', async () => {
-    const jsonStr = JSON.stringify(validBackupFixture);
-    const { preview, items } = await parseAndValidateBackup(jsonStr);
+  it('parses and previews valid v2 backup data correctly', async () => {
+    const jsonStr = JSON.stringify(validBackupFixtureV2);
+    const { preview, items, requests } = await parseAndValidateBackup(jsonStr);
 
+    expect(preview.schemaVersion).toBe(2);
     expect(preview.itemCount).toBe(1);
     expect(preview.activeCount).toBe(1);
     expect(preview.photoCount).toBe(1);
+    expect(preview.requestCount).toBe(1);
+    expect(preview.approvedRequestCount).toBe(1);
+    expect(preview.pendingRequestCount).toBe(0);
     expect(items.length).toBe(1);
     expect(items[0].id).toBe('backup-item-1');
+    expect(requests.length).toBe(1);
+    expect(requests[0].id).toBe('backup-req-1');
+  });
+
+  it('parses and previews legacy v1 backup data with 0 requests for backward compatibility', async () => {
+    const jsonStr = JSON.stringify(validBackupFixtureV1);
+    const { preview, items, requests } = await parseAndValidateBackup(jsonStr);
+
+    expect(preview.schemaVersion).toBe(1);
+    expect(preview.itemCount).toBe(1);
+    expect(preview.activeCount).toBe(1);
+    expect(preview.requestCount).toBe(0);
+    expect(items.length).toBe(1);
+    expect(requests).toEqual([]);
   });
 
   it('rejects malformed JSON strings', async () => {
@@ -79,14 +123,14 @@ describe('Backup and Restore Subsystem', () => {
   });
 
   it('rejects backup with invalid format identifier', async () => {
-    const invalidFormat = { ...validBackupFixture, format: 'unknown-format' };
+    const invalidFormat = { ...validBackupFixtureV2, format: 'unknown-format' };
     await expect(parseAndValidateBackup(JSON.stringify(invalidFormat))).rejects.toThrow(
       /Unrecognized backup format/i,
     );
   });
 
   it('rejects backup with unsupported schema version', async () => {
-    const invalidVer = { ...validBackupFixture, schemaVersion: 99 };
+    const invalidVer = { ...validBackupFixtureV2, schemaVersion: 99 };
     await expect(parseAndValidateBackup(JSON.stringify(invalidVer))).rejects.toThrow(
       /Unsupported backup schema version/i,
     );
@@ -94,11 +138,11 @@ describe('Backup and Restore Subsystem', () => {
 
   it('rejects backup containing corrupted or invalid item records', async () => {
     const corrupted = {
-      ...validBackupFixture,
+      ...validBackupFixtureV2,
       items: [
         {
           id: 'corrupted-item',
-          title: 'Hi', // Too short (min 3)
+          title: 'Hi',
           description: 'Too short',
           category: 'INVALID_CATEGORY',
         },
@@ -109,24 +153,180 @@ describe('Backup and Restore Subsystem', () => {
     );
   });
 
-  it('executes MERGE by adding novel records and skipping duplicates', async () => {
-    const { items } = await parseAndValidateBackup(JSON.stringify(validBackupFixture));
-
-    // First merge
-    const result1 = await executeMerge(items, adapter);
-    expect(result1.addedCount).toBe(1);
-    expect(result1.skippedCount).toBe(0);
-    expect(await adapter.countItems()).toBe(1);
-
-    // Second merge with same items
-    const result2 = await executeMerge(items, adapter);
-    expect(result2.addedCount).toBe(0);
-    expect(result2.skippedCount).toBe(1);
-    expect(await adapter.countItems()).toBe(1);
+  it('rejects backup when request references non-existent item in backup archive', async () => {
+    const orphanRequestBackup = {
+      ...validBackupFixtureV2,
+      borrowingRequests: [
+        {
+          ...validRequestFixture,
+          itemId: 'non-existent-item-999',
+        },
+      ],
+    };
+    await expect(parseAndValidateBackup(JSON.stringify(orphanRequestBackup))).rejects.toThrow(
+      /references item "non-existent-item-999" which does not exist/i,
+    );
   });
 
-  it('executes REPLACE by wiping existing items and inserting backup items', async () => {
-    // Add existing dummy item
+  it('rejects backup with invalid request status', async () => {
+    const invalidStatusBackup = {
+      ...validBackupFixtureV2,
+      borrowingRequests: [
+        {
+          ...validRequestFixture,
+          status: 'COMPLETED_EARLY_INVALID',
+        },
+      ],
+    };
+    await expect(parseAndValidateBackup(JSON.stringify(invalidStatusBackup))).rejects.toThrow(
+      /Invalid borrowing request at index 0/i,
+    );
+  });
+
+  it('rejects backup with duplicate request IDs', async () => {
+    const duplicateReqBackup = {
+      ...validBackupFixtureV2,
+      borrowingRequests: [
+        validRequestFixture,
+        {
+          ...validRequestFixture,
+          startDate: '2026-12-10',
+          endDate: '2026-12-15',
+        },
+      ],
+    };
+    await expect(parseAndValidateBackup(JSON.stringify(duplicateReqBackup))).rejects.toThrow(
+      /Duplicate request ID "backup-req-1"/i,
+    );
+  });
+
+  it('rejects backup with invalid date range in request', async () => {
+    const invalidDatesBackup = {
+      ...validBackupFixtureV2,
+      borrowingRequests: [
+        {
+          ...validRequestFixture,
+          startDate: '2026-12-10',
+          endDate: '2026-12-05', // End before start!
+        },
+      ],
+    };
+    await expect(parseAndValidateBackup(JSON.stringify(invalidDatesBackup))).rejects.toThrow(
+      /Invalid borrowing request/i,
+    );
+  });
+
+  it('rejects backup containing internally conflicting approved requests for the same item', async () => {
+    const conflictingApprovedBackup = {
+      ...validBackupFixtureV2,
+      borrowingRequests: [
+        {
+          ...validRequestFixture,
+          id: 'req-a',
+          startDate: '2026-12-01',
+          endDate: '2026-12-05',
+          status: REQUEST_STATUS.APPROVED,
+        },
+        {
+          ...validRequestFixture,
+          id: 'req-b',
+          startDate: '2026-12-03', // Overlaps with req-a!
+          endDate: '2026-12-08',
+          status: REQUEST_STATUS.APPROVED,
+        },
+      ],
+    };
+    await expect(parseAndValidateBackup(JSON.stringify(conflictingApprovedBackup))).rejects.toThrow(
+      /internally conflicting approved reservations/i,
+    );
+  });
+
+  it('permits backup containing overlapping PENDING requests', async () => {
+    const overlappingPendingBackup = {
+      ...validBackupFixtureV2,
+      borrowingRequests: [
+        {
+          ...validRequestFixture,
+          id: 'pending-a',
+          startDate: '2026-12-01',
+          endDate: '2026-12-05',
+          status: REQUEST_STATUS.PENDING,
+        },
+        {
+          ...validRequestFixture,
+          id: 'pending-b',
+          startDate: '2026-12-03',
+          endDate: '2026-12-08',
+          status: REQUEST_STATUS.PENDING,
+        },
+      ],
+    };
+    const parsed = await parseAndValidateBackup(JSON.stringify(overlappingPendingBackup));
+    expect(parsed.preview.pendingRequestCount).toBe(2);
+    expect(parsed.requests.length).toBe(2);
+  });
+
+  it('executes MERGE by adding novel items and requests and skipping duplicates', async () => {
+    const parsed = await parseAndValidateBackup(JSON.stringify(validBackupFixtureV2));
+
+    // First merge
+    const result1 = await executeMerge(parsed, adapter);
+    expect(result1.addedItemsCount).toBe(1);
+    expect(result1.addedRequestsCount).toBe(1);
+    expect(await adapter.countItems()).toBe(1);
+    expect((await adapter.listBorrowRequests()).length).toBe(1);
+
+    // Second merge with same items and requests
+    const result2 = await executeMerge(parsed, adapter);
+    expect(result2.addedItemsCount).toBe(0);
+    expect(result2.addedRequestsCount).toBe(0);
+    expect(result2.skippedItemsCount).toBe(1);
+    expect(result2.skippedRequestsCount).toBe(1);
+    expect(await adapter.countItems()).toBe(1);
+    expect((await adapter.listBorrowRequests()).length).toBe(1);
+  });
+
+  it('executes MERGE with v1 payload while preserving existing requests in storage', async () => {
+    // Seed an item and request first
+    await adapter.createItem({
+      ...validItemFixture,
+      id: 'existing-item-1',
+      photos: [],
+    });
+    await adapter.createBorrowRequest({
+      itemId: 'existing-item-1',
+      borrowerAlias: 'Existing Borrower',
+      startDate: '2026-12-20',
+      endDate: '2026-12-25',
+    });
+
+    expect(await adapter.countItems()).toBe(1);
+    expect((await adapter.listBorrowRequests()).length).toBe(1);
+
+    // Now merge v1 backup containing a different item
+    const v1Backup = {
+      ...validBackupFixtureV1,
+      items: [
+        {
+          ...validItemFixture,
+          id: 'v1-novel-item',
+        },
+      ],
+    };
+    const parsedV1 = await parseAndValidateBackup(JSON.stringify(v1Backup));
+    const mergeResult = await executeMerge(parsedV1, adapter);
+
+    expect(mergeResult.addedItemsCount).toBe(1);
+    expect(mergeResult.addedRequestsCount).toBe(0);
+    // Crucial check: existing request is preserved
+    expect(await adapter.countItems()).toBe(2);
+    const currentRequests = await adapter.listBorrowRequests();
+    expect(currentRequests.length).toBe(1);
+    expect(currentRequests[0].borrowerAlias).toBe('Existing Borrower');
+  });
+
+  it('executes REPLACE by atomically clearing and replacing both items and requests', async () => {
+    // Add existing dummy item and request
     await adapter.createItem({
       id: 'existing-local-item',
       title: 'Old Lawn Mower',
@@ -141,26 +341,138 @@ describe('Backup and Restore Subsystem', () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+    await adapter.createBorrowRequest({
+      id: 'old-req',
+      itemId: 'existing-local-item',
+      borrowerAlias: 'Old Borrower',
+      startDate: '2026-12-10',
+      endDate: '2026-12-15',
+    });
 
     expect(await adapter.countItems()).toBe(1);
+    expect((await adapter.listBorrowRequests()).length).toBe(1);
 
-    const { items } = await parseAndValidateBackup(JSON.stringify(validBackupFixture));
-    const { replacedCount } = await executeReplace(items, adapter);
+    const parsed = await parseAndValidateBackup(JSON.stringify(validBackupFixtureV2));
+    const { replacedItemsCount, replacedRequestsCount } = await executeReplace(parsed, adapter);
 
-    expect(replacedCount).toBe(1);
+    expect(replacedItemsCount).toBe(1);
+    expect(replacedRequestsCount).toBe(1);
     expect(await adapter.countItems()).toBe(1);
+    expect((await adapter.listBorrowRequests()).length).toBe(1);
 
-    const retrieved = await adapter.getItemById('backup-item-1');
-    expect(retrieved.title).toBe('Pressure Washer 2000 PSI');
+    const retrievedItem = await adapter.getItemById('backup-item-1');
+    expect(retrievedItem.title).toBe('Pressure Washer 2000 PSI');
+    const retrievedReq = await adapter.getBorrowRequestById('backup-req-1');
+    expect(retrievedReq.borrowerAlias).toBe('Alex Green');
+  });
+
+  it('executes REPLACE with v1 payload clearing existing requests and replacing items', async () => {
+    await adapter.createItem({
+      id: 'old-item',
+      title: 'Old Item',
+      description: 'Will be replaced by v1 backup',
+      category: 'TOOLS',
+      conditionGrade: 3,
+      approximateArea: 'Central',
+      availability: 'AVAILABLE',
+      status: 'ACTIVE',
+      photoAttestation: true,
+      photos: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    await adapter.createBorrowRequest({
+      id: 'old-req',
+      itemId: 'old-item',
+      borrowerAlias: 'Old User',
+      startDate: '2026-12-10',
+      endDate: '2026-12-15',
+    });
+
+    const parsedV1 = await parseAndValidateBackup(JSON.stringify(validBackupFixtureV1));
+    const result = await executeReplace(parsedV1, adapter);
+
+    expect(result.replacedItemsCount).toBe(1);
+    expect(result.replacedRequestsCount).toBe(0);
+    expect(await adapter.countItems()).toBe(1);
+    expect((await adapter.listBorrowRequests()).length).toBe(0); // Requests cleared cleanly
+  });
+
+  it('executes empty backup replacement cleanly', async () => {
+    const emptyBackup = {
+      format: BACKUP_FORMAT,
+      schemaVersion: 2,
+      exportedAt: new Date().toISOString(),
+      itemCount: 0,
+      requestCount: 0,
+      items: [],
+      borrowingRequests: [],
+    };
+    const parsed = await parseAndValidateBackup(JSON.stringify(emptyBackup));
+    const result = await executeReplace(parsed, adapter);
+    expect(result.replacedItemsCount).toBe(0);
+    expect(result.replacedRequestsCount).toBe(0);
+    expect(await adapter.countItems()).toBe(0);
+    expect((await adapter.listBorrowRequests()).length).toBe(0);
+  });
+
+  it('merge conflict aborts without partial import', async () => {
+    // Create an item and approved reservation in DB
+    await adapter.createItem({
+      ...validItemFixture,
+      id: 'item-conflict-test',
+      photos: [],
+    });
+    const existingReq = await adapter.createBorrowRequest({
+      itemId: 'item-conflict-test',
+      borrowerAlias: 'Existing User',
+      startDate: '2026-12-05',
+      endDate: '2026-12-10',
+    });
+    await adapter.approveBorrowRequest(existingReq.id);
+
+    // Attempt to merge a backup with a novel approved reservation that overlaps with existing one
+    const conflictingBackup = {
+      format: BACKUP_FORMAT,
+      schemaVersion: 2,
+      exportedAt: new Date().toISOString(),
+      itemCount: 1,
+      requestCount: 1,
+      items: [
+        {
+          ...validItemFixture,
+          id: 'item-conflict-test',
+        },
+      ],
+      borrowingRequests: [
+        {
+          id: 'new-overlapping-req',
+          itemId: 'item-conflict-test',
+          borrowerAlias: 'Novel User',
+          startDate: '2026-12-08', // Overlaps with 2026-12-05 - 2026-12-10!
+          endDate: '2026-12-12',
+          status: REQUEST_STATUS.APPROVED,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+    };
+
+    const parsed = await parseAndValidateBackup(JSON.stringify(conflictingBackup));
+    await expect(executeMerge(parsed, adapter)).rejects.toThrow(/conflict/i);
+
+    // Ensure no partial state was written
+    const reqsAfter = await adapter.listBorrowRequests();
+    expect(reqsAfter.length).toBe(1);
+    expect(reqsAfter[0].id).toBe(existingReq.id);
   });
 
   describe('Robust Merge Error Handling', () => {
     it('propagates unexpected storage errors without silently swallowing them', async () => {
       const failingAdapter = {
-        getItemById: () => {
+        mergeAllData: () => {
           throw new Error('Unexpected fatal database corruption');
         },
-        createItem: () => {},
       };
 
       const items = [{ id: 'test-item-x', title: 'Sample' }];
@@ -178,10 +490,10 @@ describe('Backup and Restore Subsystem', () => {
   describe('Photo Validation in Backup Import', () => {
     it('rejects backup with unsupported image MIME type (e.g. SVG or GIF)', async () => {
       const unsupportedPhotoBackup = {
-        ...validBackupFixture,
+        ...validBackupFixtureV2,
         items: [
           {
-            ...validBackupFixture.items[0],
+            ...validBackupFixtureV2.items[0],
             photos: [
               {
                 id: 'p-svg',
@@ -200,10 +512,10 @@ describe('Backup and Restore Subsystem', () => {
 
     it('rejects backup with malformed base64 image payload', async () => {
       const malformedPhotoBackup = {
-        ...validBackupFixture,
+        ...validBackupFixtureV2,
         items: [
           {
-            ...validBackupFixture.items[0],
+            ...validBackupFixtureV2.items[0],
             photos: [
               {
                 id: 'p-corrupt',
@@ -222,14 +534,14 @@ describe('Backup and Restore Subsystem', () => {
 
     it('rejects photo missing required accessible altText description', async () => {
       const noAltBackup = {
-        ...validBackupFixture,
+        ...validBackupFixtureV2,
         items: [
           {
-            ...validBackupFixture.items[0],
+            ...validBackupFixtureV2.items[0],
             photos: [
               {
                 id: 'p-no-alt',
-                altText: '   ', // whitespace only
+                altText: '   ',
                 dataUrl: 'data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAADwAQCdASoBAAEAAkA4JaQAA3AA/vuUAAA=',
               },
             ],
@@ -243,7 +555,7 @@ describe('Backup and Restore Subsystem', () => {
     });
 
     it('reprocesses accepted photo into a clean WebP/JPEG Blob stripping original metadata', async () => {
-      const { items } = await parseAndValidateBackup(JSON.stringify(validBackupFixture));
+      const { items } = await parseAndValidateBackup(JSON.stringify(validBackupFixtureV2));
       expect(items[0].photos.length).toBe(1);
       const processedPhoto = items[0].photos[0];
 
