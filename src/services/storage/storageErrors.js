@@ -85,3 +85,108 @@ export class ItemHasActiveReservationError extends StorageError {
     this.itemId = itemId;
   }
 }
+
+// ==========================================
+// Module 06: Loan Lifecycle Domain Errors (DR-04)
+// ==========================================
+
+export class LoanNotFoundError extends StorageError {
+  constructor(requestId, message = `Loan lifecycle record for request "${requestId}" was not found.`) {
+    super(message);
+    this.name = 'LoanNotFoundError';
+    this.requestId = requestId;
+  }
+}
+
+export class LoanStateTransitionError extends StorageError {
+  constructor(fromStatus, toStatus, message) {
+    super(message || `Cannot transition loan from "${fromStatus}" to "${toStatus}".`);
+    this.name = 'LoanStateTransitionError';
+    this.fromStatus = fromStatus;
+    this.toStatus = toStatus;
+  }
+}
+
+export class CollectionDateNotReachedError extends StorageError {
+  constructor(collectionDate, today, message) {
+    super(message || `Physical collection cannot be recorded before the agreed start date (${collectionDate}). Today is ${today}.`);
+    this.name = 'CollectionDateNotReachedError';
+    this.collectionDate = collectionDate;
+    this.today = today;
+  }
+}
+
+export class ReservationExpiredError extends StorageError {
+  constructor(returnDeadline, today, message) {
+    super(message || `Reservation period has expired (deadline was ${returnDeadline}, today is ${today}). Collection cannot be recorded.`);
+    this.name = 'ReservationExpiredError';
+    this.returnDeadline = returnDeadline;
+    this.today = today;
+  }
+}
+
+export class CollectionAlreadyRecordedError extends StorageError {
+  constructor(requestId, message = `Collection handover has already been recorded for request "${requestId}".`) {
+    super(message);
+    this.name = 'CollectionAlreadyRecordedError';
+    this.requestId = requestId;
+  }
+}
+
+export class BorrowerReceiptRequiredError extends StorageError {
+  constructor(requestId, message = `Borrower physical receipt confirmation is required before loan can become ACTIVE.`) {
+    super(message);
+    this.name = 'BorrowerReceiptRequiredError';
+    this.requestId = requestId;
+  }
+}
+
+export class ReturnNotMarkedError extends StorageError {
+  constructor(requestId, message = `Physical return must be marked before owner inspection can be completed.`) {
+    super(message);
+    this.name = 'ReturnNotMarkedError';
+    this.requestId = requestId;
+  }
+}
+
+export class ReturnInspectionRequiredError extends StorageError {
+  constructor(requestId, message = `Owner return condition inspection is required to complete the loan.`) {
+    super(message);
+    this.name = 'ReturnInspectionRequiredError';
+    this.requestId = requestId;
+  }
+}
+
+export class LoanAlreadyCompletedError extends StorageError {
+  constructor(requestId, message = `Loan "${requestId}" is already completed and immutable.`) {
+    super(message);
+    this.name = 'LoanAlreadyCompletedError';
+    this.requestId = requestId;
+  }
+}
+
+export class UncollectedReleaseNotAllowedError extends StorageError {
+  constructor(requestId, reason, message) {
+    super(message || `Cannot release reservation "${requestId}": ${reason}.`);
+    this.name = 'UncollectedReleaseNotAllowedError';
+    this.requestId = requestId;
+    this.reason = reason;
+  }
+}
+
+export class ConditionValidationError extends StorageError {
+  constructor(errors, message = 'Condition checkpoint validation failed.') {
+    super(message);
+    this.name = 'ConditionValidationError';
+    this.errors = errors;
+  }
+}
+
+export class LoanHistoryIntegrityError extends StorageError {
+  constructor(requestId, message = `Loan history integrity violation for request "${requestId}".`) {
+    super(message);
+    this.name = 'LoanHistoryIntegrityError';
+    this.requestId = requestId;
+  }
+}
+

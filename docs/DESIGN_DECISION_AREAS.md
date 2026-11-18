@@ -43,14 +43,14 @@ This document records the formal resolutions of the six core architectural and H
 
 ## Decision Area DR-04: Item Condition and Handover Documentation
 
-- **Status**: **DECIDED (Module 02)**
+- **Status**: **IMPLEMENTED & VERIFIED (Module 06)**
 - **Selected Option**: **Option C — Structured Condition Checkpoints** (Weighted Score: **84.0 / 100**)
 - **Design Question**: What structure and protocol should be used to capture, verify, and compare item condition at the moments of collection and return?
 - **Summary Resolution**: Standardized 5-tier condition classification (`Like New`, `Good`, `Fair`, `Poor`, `Not Functional`) recorded at listing baseline, confirmed at collection handoff, and re-inspected at return. Supported by optional authentic user photos with client-side EXIF GPS stripping and a side-by-side comparison view.
 - **Legal Distinction**: Condition logs are transparent informational records; they do not constitute legally binding contracts or automated liability determinations.
 - **Detailed Analysis**: [DR-04_CONDITION_HANDOVER.md](design-rationale/DR-04_CONDITION_HANDOVER.md)
 - **Features Affected**: FR-008, FR-009, NFR-004, NFR-005.
-- **Target Implementation**: Module 06.
+- **Target Implementation**: Module 06 (Implemented & Verified).
 
 ---
 

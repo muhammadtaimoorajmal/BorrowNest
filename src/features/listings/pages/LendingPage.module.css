@@ -222,6 +222,17 @@
   gap: var(--bn-space-4);
 }
 
+.comparisonModalWrapper {
+  background-color: var(--bn-surface-card);
+  border-radius: var(--bn-radius-xl);
+  padding: var(--bn-space-6);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--bn-shadow-xl);
+}
+
 .modalBackdrop {
   position: fixed;
   top: 0;

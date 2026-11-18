@@ -64,4 +64,14 @@ BorrowNest enforces an explicit project-wide data-integrity rule: **No Fabricate
 Users are informed transparently regarding the nature of local-first storage:
 - **Device-Bound**: Data stored in browser `IndexedDB` does not automatically sync across separate browsers, incognito windows, or devices.
 - **Browser Clearing Risks**: If a user clears their browser cache or site data, locally saved records may be erased.
-- **Implemented Backup Safeguard**: In Modules 03 and 05, BorrowNest implements a single-click local JSON backup export (`exportBackup.js`) and schema-validated restore (`importBackup.js`) via the Account & Local Data Management view. Users can export their entire library including photos (encoded to base64) and structured borrowing requests (Schema Version 2) and restore it via Merge (preserving existing items and novel requests) or Replace (atomic multi-store replacement).
+- **Implemented Backup Safeguard**: In Modules 03, 05, and 06, BorrowNest implements a single-click local JSON backup export (`exportBackup.js`) and schema-validated restore (`importBackup.js`) via the Account & Local Data Management view. Users can export their entire library including photos (encoded to base64), structured borrowing requests, and physical loan lifecycles with handover/return checkpoint photographs (Schema Version 3), and restore it via Merge (preserving existing items, requests, and loans with collision prevention) or Replace (atomic 3-store replacement across `items`, `borrowingRequests`, and `loans`).
+
+---
+
+## 7. Condition Handover Checkpoints & Non-Legal Scope (DR-04)
+
+In accordance with formal design decision [DR-04](design-rationale/DR-04_CONDITION_HANDOVER.md):
+- **Peer Transparency Only**: Condition evaluations (1 to 5 stars), notes, and checkpoint photographs recorded at listing creation, collection handover, and return inspection are informal peer records intended to eliminate memory lapses and build neighborhood goodwill.
+- **No Legal or Insurance Determinations**: Condition records, receipt confirmations, and return inspections in BorrowNest do **not** constitute legally binding affidavits, digital signatures, or automated financial liability adjudications. BorrowNest never assesses monetary damages or enforces legal claims.
+- **Client-Side Photo Privacy**: All checkpoint photographs uploaded during collection handover or return inspection undergo the exact same client-side Canvas EXIF and GPS stripping before local storage in IndexedDB, preventing physical location leakage.
+- **Honest Prototype Disclosures**: Because BorrowNest operates client-side without remote backend messaging, collection confirmations and return markings are local device acknowledgements. The application explicitly discloses to users that recording a handover does not dispatch automated SMS, email, or push notifications to external parties.

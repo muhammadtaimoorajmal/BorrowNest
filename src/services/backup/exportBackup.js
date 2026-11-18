@@ -1,8 +1,29 @@
 import { BACKUP_FORMAT, BACKUP_SCHEMA_VERSION, blobToBase64 } from './backupSchema';
 
+async function serializeCheckpointPhotos(photos = []) {
+  if (!Array.isArray(photos)) return [];
+  return Promise.all(
+    photos.map(async (photo) => {
+      let dataUrl = photo.dataUrl;
+      if (photo.blob && !dataUrl) {
+        dataUrl = await blobToBase64(photo.blob);
+      }
+      return {
+        id: photo.id,
+        altText: photo.altText || '',
+        mimeType: photo.mimeType || 'image/webp',
+        width: photo.width,
+        height: photo.height,
+        sizeBytes: photo.sizeBytes,
+        dataUrl,
+      };
+    }),
+  );
+}
+
 /**
- * Serializes all item records, photo Blobs, and borrowing request records into a versioned JSON backup object.
- * Version 2 introduces persistent borrowing request records alongside genuine item records.
+ * Serializes all item records, photo Blobs, borrowing requests, and loan lifecycle records
+ * into a versioned JSON backup object (DR-03 + DR-04).
  *
  * @param {import('../storage/StorageAdapter').StorageAdapter} storageAdapter
  * @returns {Promise<object>}
@@ -11,6 +32,9 @@ export async function generateBackupData(storageAdapter) {
   const items = await storageAdapter.listItems();
   const requests = typeof storageAdapter.listBorrowRequests === 'function'
     ? await storageAdapter.listBorrowRequests()
+    : [];
+  const loans = typeof storageAdapter.listLoans === 'function'
+    ? await storageAdapter.listLoans()
     : [];
 
   const serializedItems = await Promise.all(
@@ -72,14 +96,56 @@ export async function generateBackupData(storageAdapter) {
     decisionAt: req.decisionAt || req.decidedAt || null,
   }));
 
+  const serializedLoans = await Promise.all(
+    loans.map(async (loan) => {
+      const collectionCheckpoint = loan.collectionCheckpoint
+        ? {
+            ...loan.collectionCheckpoint,
+            photos: await serializeCheckpointPhotos(loan.collectionCheckpoint.photos),
+          }
+        : null;
+
+      const returnCheckpoint = loan.returnCheckpoint
+        ? {
+            ...loan.returnCheckpoint,
+            photos: await serializeCheckpointPhotos(loan.returnCheckpoint.photos),
+          }
+        : null;
+
+      return {
+        schemaVersion: loan.schemaVersion || 1,
+        requestId: loan.requestId,
+        itemId: loan.itemId,
+        itemTitleSnapshot: loan.itemTitleSnapshot || '',
+        borrowerAlias: loan.borrowerAlias || '',
+        collectionDate: loan.collectionDate,
+        returnDeadline: loan.returnDeadline,
+        status: loan.status,
+        reservedAt: loan.reservedAt,
+        collectionCheckpoint,
+        collectedAt: loan.collectedAt || null,
+        returnCheckpoint,
+        completedAt: loan.completedAt || null,
+        resolution: loan.resolution || null,
+        releasedAt: loan.releasedAt || null,
+        releaseNote: loan.releaseNote || '',
+        provenance: loan.provenance || null,
+        createdAt: loan.createdAt,
+        updatedAt: loan.updatedAt,
+      };
+    }),
+  );
+
   return {
     format: BACKUP_FORMAT,
     schemaVersion: BACKUP_SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
     itemCount: serializedItems.length,
     requestCount: serializedRequests.length,
+    loanCount: serializedLoans.length,
     items: serializedItems,
     borrowingRequests: serializedRequests,
+    loans: serializedLoans,
   };
 }
 

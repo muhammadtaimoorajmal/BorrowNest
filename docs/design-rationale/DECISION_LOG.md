@@ -11,7 +11,7 @@ This log maintains the authoritative registry of all formal architectural and HC
 | **[DR-01](./DR-01_ITEM_DISCOVERY.md)** | Item Discovery & Search Structure | **Option C: Unified Discovery** | **90.0** | **IMPLEMENTED & VERIFIED** | Module 04 |
 | **[DR-02](./DR-02_BORROWING_APPROVAL.md)** | Borrowing Request & Approval Workflow | **Option C: Structured Borrowing Request** | **90.0** | **IMPLEMENTED & VERIFIED** | Module 05 |
 | **[DR-03](./DR-03_AVAILABILITY_SCHEDULING.md)** | Availability & Date-Range Scheduling | **Option B: Explicit Date-Range Scheduling** | **86.0** | **IMPLEMENTED & VERIFIED** | Module 05 |
-| **[DR-04](./DR-04_CONDITION_HANDOVER.md)** | Item Condition & Handover Documentation | **Option C: Structured Condition Checkpoints** | **84.0** | **DECIDED** | Module 06 |
+| **[DR-04](./DR-04_CONDITION_HANDOVER.md)** | Item Condition & Handover Documentation | **Option C: Structured Condition Checkpoints** | **84.0** | **IMPLEMENTED & VERIFIED** | Module 06 |
 | **[DR-05](./DR-05_LOCATION_PRIVACY.md)** | Location Privacy & Disclosure | **Option C: Coarse Area Only (Local-First)** | **92.0** | **IMPLEMENTED & VERIFIED** | Module 03 |
 | **[DR-06](./DR-06_RESPONSIVE_NAVIGATION.md)** | Responsive Navigation & Perspective Structure | **Option C: Task-Oriented Sections** | **89.0** | **IMPLEMENTED & VERIFIED** | Module 03 |
 
@@ -65,8 +65,8 @@ This log maintains the authoritative registry of all formal architectural and HC
 - **Main Rationale**: Provides end-to-end condition traceability, establishes baseline accountability, and protects both parties without onerous bureaucratic checklists.
 - **Requirements Affected**: FR-008, FR-009, NFR-004, NFR-005.
 - **Evidence References**: E-01 (QOC), E-02 (NN/g Heuristics #2, #5, #8), E-03 (WCAG 2.2 SC 3.3.2).
-- **Decision Status**: **DECIDED**.
-- **Target Implementation Module**: Module 06 (Inspection & Returns).
+- **Decision Status**: **IMPLEMENTED & VERIFIED** (Module 06).
+- **Target Implementation Module**: Module 06 (Inspection & Returns — Implemented & Verified).
 - **Known Limitation**: Condition logs are transparent informational records; they do not constitute legally binding contracts or automated liability determinations.
 
 ---

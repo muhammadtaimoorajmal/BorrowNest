@@ -38,17 +38,17 @@ BorrowNest is architected as a **local-first client-side application**. It store
 
 ## Prototype Boundaries and Current Status
 
-BorrowNest has completed **Module 05 (Structured Borrowing Requests, Owner Approval & Date-Range Scheduling)**:
-- **Borrower Request Submission Workflow**: Integrated borrower request dialog triggered directly from catalog discovery (`ItemDetailModal` -> `BorrowRequestDialog`), displaying item summaries, checking real-time schedule availability, and recording structured requests.
-- **Owner Consent Decision Workflow (DR-02)**: Complete owner review workflow featuring explicit Approve and Decline actions, accessible confirmation modals, and immutable terminal states preventing uncoordinated alterations.
-- **Date-Range Scheduling & Conflict Prevention (DR-03)**: Exact calendar date scheduling using native date inputs (`YYYY-MM-DD`) with strict inclusive date interval overlap prevention (`candidateStart <= existingReturn && existingStart <= candidateReturn`).
-- **Transactional Atomic Approval Serialization**: Competing or concurrent approval attempts open a single `readwrite` IndexedDB transaction across both `items` and `borrowingRequests`, re-validating item availability and calendar conflicts at approval time to guarantee zero double-booking.
-- **Overdue Safety Hold**: Approved reservations whose return deadline has passed remain locked and flagged with clear overdue notices, preventing new conflicting bookings until physical return completion in Module 06.
-- **Relational Integrity Safeguards**: Deleting items that possess borrowing request history is strictly blocked (`ItemHasRequestHistoryError`), and archiving items with active or approved reservations is prevented (`ItemHasActiveReservationError`).
-- **Dual-Perspective Borrowing Workspace**: Dedicated Borrowing workspace providing both **Borrower View (My Requests)** with cancellation controls for pending requests, and **Owner View (Incoming Requests)** with decision controls and active reservation schedules, backed by honest local-first disclosures.
-- **Lending Workspace Integration**: Dedicated "Incoming Requests" tab alongside Active and Archived listings, displaying real-time pending request count badges.
-- **Backup & Restore Schema Version 2**: Versioned multi-store JSON archive format serializing items, photos, and borrowing requests, with full backward compatibility for version 1 backups and atomic replace/merge transactions.
-- **Future Module Roadmap**: Handover physical inspection, condition photo comparisons, and return verification protocols for Module 06.
+BorrowNest has completed **Module 06 (Physical Handover, Return Verification & Condition Inspection)** — the final planned functional application module:
+- **Decoupled Request Decision vs. Physical Custody State Machine**: Request decisions remain immutable records (`PENDING`, `APPROVED`, `DECLINED`, `CANCELLED`). Physical custody progresses through a dedicated `loans` store: `RESERVED` $\rightarrow$ `ACTIVE` $\rightarrow$ `COMPLETED` or `RELEASED_NOT_COLLECTED`.
+- **Physical Collection Handover Protocol**: Owner records initial physical handover condition (1–5 tier, observations, max 5 sanitized photos); borrower physically inspects the item and confirms receipt (`confirmCollectionReceipt`), transitioning the loan to `ACTIVE` and stamping `collectedAt`.
+- **Physical Return & Inspection Protocol**: Borrower marks the item physically returned; owner conducts a standardized return condition inspection (1–5 tier, observations, photos) and closes the loan to `COMPLETED` (`completeReturnInspection`), stamping `completedAt` and unlocking calendar dates.
+- **Side-by-Side Condition Comparison View (DR-04 Option C)**: 3-column comparative view across Listing Baseline, Collection Handover, and Return Inspection with objective delta summary pills and explicit peer transparency disclaimers.
+- **Uncollected Reservation Release**: Explicit owner resolution workflow (`releaseUncollectedReservation`) for approved reservations whose pickup window elapsed without collection, transitioning status to `RELEASED_NOT_COLLECTED` and safely unlocking calendar dates without deleting audit history.
+- **Derived Overdue Status**: Overdue is strictly a derived display state for active physical loans past their return deadline (`loan.status === 'ACTIVE' && loan.returnDeadline < today`), distinct from uncollected reservations.
+- **Relational Integrity Safeguards**: Deleting items with request or loan history remains permanently blocked (`ItemHasRequestHistoryError`). Archiving items is blocked while associated loans are in `RESERVED` or `ACTIVE`, but is permitted when all associated loans are `COMPLETED` or `RELEASED_NOT_COLLECTED`.
+- **Lending Workspace Integration**: Dedicated "Items Lent Out" tab alongside Active Listings, Archived, and Incoming Requests, displaying active loan counts and action triggers.
+- **IndexedDB Schema Version 3 & Multi-Store Backup Version 3**: Native `loans` store with indexes, non-destructive migration backfilling legacy `APPROVED` requests as `RESERVED` loans, and version 3 backup/restore serializing items, photos, borrowing requests, and loan lifecycles with checkpoint photographs. All multi-store operations execute atomically.
+- **Comprehensive Quality Gates**: 205 automated tests passing across 24 test suites with 0 ESLint warnings/errors and clean Vite production build.
 
 ---
 
@@ -72,7 +72,7 @@ BorrowNest has completed **Module 05 (Structured Borrowing Requests, Owner Appro
 | **Module 03** | Genuine item listing management, native IndexedDB persistence, photo processing, and backup/restore | **Implemented & Verified** |
 | **Module 04** | Discovery, category browsing, and search filtering | **Implemented & Verified** |
 | **Module 05** | Request submission, owner approval flow, and loan period scheduling | **Implemented & Verified** |
-| **Module 06** | Handover inspection, condition documentation, and return completion | Planned |
+| **Module 06** | Handover inspection, condition documentation, and return completion | **Implemented & Verified** |
 
 ---
 

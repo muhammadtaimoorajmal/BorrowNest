@@ -131,3 +131,23 @@ This register documents genuine technical, security, and methodological limitati
   5. *Relational Integrity Guards*: Item deletion is blocked when borrowing history exists (`ItemHasRequestHistoryError`), and item archiving is blocked when active approved reservations exist (`ItemHasActiveReservationError`).
 - **Blocks Current Prototype?**: **No**. Fully mitigated and verified with dedicated concurrency and integration test suites.
 - **Implementation Status**: **VERIFIED** in Module 05 test suite (`IndexedDbStorageAdapter.requests.test.js`, `backup.test.js`, `BorrowingIntegration.test.jsx`).
+
+---
+
+### RISK-09: Physical Custody Desynchronization, Three-Store Atomicity & Condition Checkpoint Integrity
+- **Description**: Managing physical equipment custody alongside immutable request records introduces potential state synchronization risks:
+  1. *Request vs. Custody Coupling*: Conflating owner decisions (`APPROVED`) with physical possession (`ACTIVE`) could allow loans to be completed without physical handover, or allow dates to unlock prematurely.
+  2. *Three-Store Transactional Atomicity*: Backup and restore operations now span three interrelated IndexedDB stores (`items`, `borrowingRequests`, `loans`). Non-atomic operations or fallback paths could leave partial state on parse errors or overlap collisions.
+  3. *Subjective Liability & Legal Misinterpretation*: Unclear condition ratings or discrepancy notes could be misconstrued as binding digital signatures or legal fault determinations rather than informal peer transparency records.
+  4. *Uncollected Reservation Date Locking*: Approved reservations whose pickup dates elapse without physical handover could permanently block the calendar if not provided with a structured owner release mechanism.
+  5. *Development Dependency Advisory (picomatch ReDoS)*: `npm audit` reports a high severity ReDoS advisory in `picomatch` transitively pulled in by devDependencies (`vite`, `vitest`, `tinyglobby`). Running `npm audit fix --force` would downgrade Vite to an incompatible major version and break project builds.
+- **Impact**: High — Physical possession desynchronization, schedule blocking, legal misinterpretation, or build instability.
+- **Remediation Implemented & Verified in Module 06**:
+  1. *Decoupled Custody State Machine*: Requests retain immutable owner decision states (`PENDING`, `APPROVED`, `DECLINED`, `CANCELLED`). Physical custody progresses through a dedicated `loans` store (`RESERVED` $\rightarrow$ `ACTIVE` $\rightarrow$ `COMPLETED` or `RELEASED_NOT_COLLECTED`).
+  2. *Two-Party Handover Handshake*: Owner records physical condition checkpoint (standardized 1-5 tier, notes, max 5 sanitized photos), and borrower confirms physical receipt before transitioning to `ACTIVE`. Return follows the reverse: borrower marks returned, owner completes return inspection.
+  3. *Uncollected Reservation Release*: Explicit owner resolution workflow (`releaseUncollectedReservation`) enables releasing reservations that expired without collection, transitioning status to `RELEASED_NOT_COLLECTED` and immediately unlocking dates for new community bookings.
+  4. *Atomic Three-Store Transactions*: Approvals, replacements, and merges execute in single `readwrite` transactions across `[items, borrowingRequests, loans]`. Fallback non-atomic paths are completely removed.
+  5. *Informational Transparency Disclaimers*: Clear notices throughout dialogs, cards, and comparison views state that condition checkpoints and confirmations are informational peer records stored locally, not verified digital signatures or legal appraisals.
+  6. *DevDependency Advisory Isolation*: Verified with `npm audit --omit=dev` that zero vulnerabilities exist in production runtime code. Documented that `picomatch` is restricted strictly to local build/test tooling and is never bundled into client production assets.
+- **Blocks Current Prototype?**: **No**. Fully resolved, protected by relational safeguards, and verified across 205 automated tests and production builds.
+- **Implementation Status**: **VERIFIED** in Module 06 test suite (`IndexedDbStorageAdapter.loans.test.js`, `IndexedDbStorageAdapter.migration.test.js`, `backup.test.js`, `LifecycleIntegration.test.jsx`).

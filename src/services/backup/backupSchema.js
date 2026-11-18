@@ -3,8 +3,8 @@
  */
 
 export const BACKUP_FORMAT = 'borrownest-backup';
-export const BACKUP_SCHEMA_VERSION = 2;
-export const SUPPORTED_BACKUP_SCHEMA_VERSIONS = Object.freeze([1, 2]);
+export const BACKUP_SCHEMA_VERSION = 3;
+export const SUPPORTED_BACKUP_SCHEMA_VERSIONS = Object.freeze([1, 2, 3]);
 export const MAX_BACKUP_FILE_BYTES = 50 * 1024 * 1024; // 50MB max backup upload
 
 /**

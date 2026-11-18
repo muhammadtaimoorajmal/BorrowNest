@@ -214,13 +214,13 @@ describe('BorrowingPage UI and Interactions', () => {
     expect(screen.getByText(/No Requests Matching Filter/i)).toBeInTheDocument();
   });
 
-  it('displays overdue warning when approved reservation deadline has passed', async () => {
+  it('displays uncollected banner when approved reservation deadline has passed without handover', async () => {
     // Seed an approved reservation with a past end date via mergeAllData
     await adapter.mergeAllData({
       items: [],
       requests: [
         {
-          id: 'overdue-req',
+          id: 'uncollected-req',
           itemId: testItem.id,
           borrowerAlias: 'Past Borrower',
           startDate: '2026-11-01',
@@ -230,11 +230,87 @@ describe('BorrowingPage UI and Interactions', () => {
           updatedAt: '2026-11-01T10:00:00.000Z',
         },
       ],
+      loans: [
+        {
+          requestId: 'uncollected-req',
+          itemId: testItem.id,
+          status: 'RESERVED',
+          collectionDate: '2026-11-01',
+          returnDeadline: '2026-11-05',
+          createdAt: '2026-11-01T10:00:00.000Z',
+          updatedAt: '2026-11-01T10:00:00.000Z',
+        },
+      ],
     });
 
     render(<BorrowingPage adapter={adapter} />);
 
-    expect(await screen.findByText(/Return deadline has passed/i)).toBeInTheDocument();
-    expect(screen.getByText(/Item return and condition inspection will be completed in Module 06/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Collection not recorded — owner resolution required/i)).toBeInTheDocument();
+  });
+
+  it('displays overdue warning when an active loan return deadline has passed', async () => {
+    await adapter.mergeAllData({
+      items: [],
+      requests: [
+        {
+          id: 'overdue-active-req',
+          itemId: testItem.id,
+          borrowerAlias: 'Active Borrower',
+          startDate: '2026-11-01',
+          endDate: '2026-11-05',
+          status: REQUEST_STATUS.APPROVED,
+          createdAt: '2026-11-01T10:00:00.000Z',
+          updatedAt: '2026-11-01T10:00:00.000Z',
+        },
+      ],
+      loans: [
+        {
+          requestId: 'overdue-active-req',
+          itemId: testItem.id,
+          status: 'ACTIVE',
+          collectionDate: '2026-11-01',
+          returnDeadline: '2026-11-05',
+          collectedAt: '2026-11-01T11:00:00.000Z',
+          createdAt: '2026-11-01T10:00:00.000Z',
+          updatedAt: '2026-11-01T11:00:00.000Z',
+          handoverCheckpoint: {
+            conditionGrade: 4,
+            recordedByRole: 'OWNER',
+            timestamp: '2026-11-01T11:00:00.000Z',
+            notes: 'Handed over in good condition',
+            photos: [],
+          },
+        },
+      ],
+    });
+
+    render(<BorrowingPage adapter={adapter} />);
+
+    expect(await screen.findByText(/Overdue Active Loan: Return deadline was/i)).toBeInTheDocument();
+    expect(screen.getByText(/Item remains in physical custody until return inspection/i)).toBeInTheDocument();
+  });
+
+  it('allows owner to open Record Handover modal for a reserved loan', async () => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const futureStr = new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10);
+
+    const req = await adapter.createBorrowRequest({
+      itemId: testItem.id,
+      borrowerAlias: 'Handover Test Borrower',
+      startDate: todayStr,
+      endDate: futureStr,
+    });
+    await adapter.approveBorrowRequest(req.id);
+
+    render(<BorrowingPage adapter={adapter} />);
+
+    // Switch to Owner View
+    const ownerTab = await screen.findByRole('tab', { name: /Owner View/i });
+    fireEvent.click(ownerTab);
+
+    const recordHandoverBtn = await screen.findByRole('button', { name: /Record Handover/i });
+    fireEvent.click(recordHandoverBtn);
+
+    expect(screen.getByText(/Physical Handover Recording/i)).toBeInTheDocument();
   });
 });

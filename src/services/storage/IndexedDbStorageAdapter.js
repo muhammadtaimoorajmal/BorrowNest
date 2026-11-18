@@ -1,5 +1,5 @@
 import { StorageAdapter } from './StorageAdapter';
-import { openDatabase, STORE_ITEMS, STORE_REQUESTS } from './database';
+import { openDatabase, STORE_ITEMS, STORE_REQUESTS, STORE_LOANS } from './database';
 import {
   StorageError,
   RecordNotFoundError,
@@ -10,6 +10,17 @@ import {
   ItemUnavailableError,
   ItemHasRequestHistoryError,
   ItemHasActiveReservationError,
+  LoanNotFoundError,
+  LoanStateTransitionError,
+  CollectionDateNotReachedError,
+  ReservationExpiredError,
+  CollectionAlreadyRecordedError,
+  BorrowerReceiptRequiredError,
+  ReturnNotMarkedError,
+  ReturnInspectionRequiredError,
+  LoanAlreadyCompletedError,
+  UncollectedReleaseNotAllowedError,
+  ConditionValidationError,
 } from './storageErrors';
 import {
   normalizeBorrowRequest,
@@ -17,8 +28,19 @@ import {
 } from '../../features/borrowing/services/borrowRequestValidation';
 import {
   findConflictingReservations,
+  getLocalToday,
 } from '../../features/borrowing/services/dateRange';
 import { REQUEST_STATUS } from '../../features/borrowing/constants/requestStatus';
+import {
+  LOAN_STATUS,
+} from '../../features/borrowing/constants/loanStatus';
+import {
+  normalizeLoanRecord,
+} from '../../features/borrowing/services/loanValidation';
+import {
+  validateConditionCheckpoint,
+} from '../../features/borrowing/services/conditionValidation';
+import { CONDITION_TIERS } from '../../features/listings/validation/itemValidation';
 
 export class IndexedDbStorageAdapter extends StorageAdapter {
   constructor(idbFactory = null, dbName = undefined) {
@@ -31,6 +53,12 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
   async initialize() {
     if (!this._db) {
       this._db = await openDatabase(this.idbFactory, this.dbName);
+      this._db.onversionchange = () => {
+        if (this._db) {
+          this._db.close();
+          this._db = null;
+        }
+      };
     }
     return this;
   }
@@ -198,8 +226,9 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
   }
 
   /**
-   * Safely archives an item listing.
-   * Protects active commitments: if the item has an APPROVED reservation, archiving is blocked.
+   * Safely archives an item listing (DR-03 + DR-04).
+   * Archiving is blocked while the item has an active reservation in RESERVED or ACTIVE status.
+   * Archiving is permitted when all associated loans are COMPLETED or RELEASED_NOT_COLLECTED (or no loans exist).
    */
   async archiveItem(id) {
     if (!id) {
@@ -208,42 +237,46 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
     const db = await this._getDb();
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS], 'readwrite');
+      const tx = db.transaction([STORE_ITEMS, STORE_LOANS], 'readwrite');
       const itemStore = tx.objectStore(STORE_ITEMS);
-      const reqStore = tx.objectStore(STORE_REQUESTS);
+      const loanStore = tx.objectStore(STORE_LOANS);
+      let updatedItem = null;
 
       const itemReq = itemStore.get(id);
       itemReq.onsuccess = () => {
         if (!itemReq.result) {
+          tx.abort();
           return reject(new RecordNotFoundError(id));
         }
 
-        // Check for active or approved reservations
-        const reqIndex = reqStore.index('itemId');
-        const reqQuery = reqIndex.getAll(id);
+        // Check for active or reserved loans
+        const loanIndex = loanStore.index('itemId');
+        const loanQuery = loanIndex.getAll(id);
 
-        reqQuery.onsuccess = () => {
-          const requests = reqQuery.result || [];
-          const hasApproved = requests.some((r) => r.status === REQUEST_STATUS.APPROVED);
-          if (hasApproved) {
+        loanQuery.onsuccess = () => {
+          const loans = loanQuery.result || [];
+          const hasActiveReservation = loans.some(
+            (l) => l.status === LOAN_STATUS.RESERVED || l.status === LOAN_STATUS.ACTIVE,
+          );
+          if (hasActiveReservation) {
             tx.abort();
             return reject(new ItemHasActiveReservationError(id));
           }
 
-          const updated = {
+          updatedItem = {
             ...itemReq.result,
             status: 'ARCHIVED',
             updatedAt: new Date().toISOString(),
           };
 
-          const putReq = itemStore.put(updated);
+          const putReq = itemStore.put(updatedItem);
           putReq.onerror = (e) => {
             reject(this._handleError(e.target.error, `Failed to archive item "${id}"`));
           };
         };
 
-        reqQuery.onerror = (e) => {
-          reject(this._handleError(e.target.error, `Failed to inspect item reservations for "${id}"`));
+        loanQuery.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to inspect item loans for "${id}"`));
         };
       };
 
@@ -252,7 +285,7 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
       };
 
       tx.oncomplete = () => {
-        resolve({ id, status: 'ARCHIVED' });
+        resolve(updatedItem);
       };
 
       tx.onerror = (e) => {
@@ -262,12 +295,52 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
   }
 
   async restoreItem(id) {
-    return this.updateItem({ id, status: 'ACTIVE' });
+    if (!id) {
+      throw new StorageError('restoreItem requires a valid ID');
+    }
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_ITEMS, 'readwrite');
+      const store = tx.objectStore(STORE_ITEMS);
+      let updatedRecord = null;
+
+      const checkReq = store.get(id);
+      checkReq.onsuccess = () => {
+        if (!checkReq.result) {
+          return reject(new RecordNotFoundError(id));
+        }
+
+        updatedRecord = {
+          ...checkReq.result,
+          status: 'ACTIVE',
+          updatedAt: new Date().toISOString(),
+        };
+
+        const putReq = store.put(updatedRecord);
+        putReq.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to restore item "${id}"`));
+        };
+      };
+
+      checkReq.onerror = (e) => {
+        reject(this._handleError(e.target.error, `Failed to retrieve existing item "${id}"`));
+      };
+
+      tx.oncomplete = () => {
+        resolve(updatedRecord);
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target.error, `Transaction failed restoring item "${id}"`));
+      };
+    });
   }
 
   /**
    * Safely deletes an item listing.
-   * Relational integrity safeguard: items with associated borrowing request history CANNOT be deleted.
+   * Enforces relational integrity: deletion is permanently BLOCKED if any borrowing request
+   * or loan lifecycle record references the item.
    */
   async deleteItem(id) {
     if (!id) {
@@ -276,13 +349,15 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
     const db = await this._getDb();
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS], 'readwrite');
+      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS, STORE_LOANS], 'readwrite');
       const itemStore = tx.objectStore(STORE_ITEMS);
       const reqStore = tx.objectStore(STORE_REQUESTS);
+      const loanStore = tx.objectStore(STORE_LOANS);
 
       const itemReq = itemStore.get(id);
       itemReq.onsuccess = () => {
         if (!itemReq.result) {
+          tx.abort();
           return reject(new RecordNotFoundError(id));
         }
 
@@ -291,15 +366,31 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
         const reqQuery = reqIndex.count(id);
 
         reqQuery.onsuccess = () => {
-          const count = reqQuery.result || 0;
-          if (count > 0) {
+          const reqCount = reqQuery.result || 0;
+          if (reqCount > 0) {
             tx.abort();
-            return reject(new ItemHasRequestHistoryError(id, count));
+            return reject(new ItemHasRequestHistoryError(id, reqCount));
           }
 
-          const delReq = itemStore.delete(id);
-          delReq.onerror = (e) => {
-            reject(this._handleError(e.target.error, `Failed to delete item "${id}"`));
+          // Verify absence of loan history
+          const loanIndex = loanStore.index('itemId');
+          const loanQuery = loanIndex.count(id);
+
+          loanQuery.onsuccess = () => {
+            const loanCount = loanQuery.result || 0;
+            if (loanCount > 0) {
+              tx.abort();
+              return reject(new ItemHasRequestHistoryError(id, loanCount));
+            }
+
+            const delReq = itemStore.delete(id);
+            delReq.onerror = (e) => {
+              reject(this._handleError(e.target.error, `Failed to delete item "${id}"`));
+            };
+          };
+
+          loanQuery.onerror = (e) => {
+            reject(this._handleError(e.target.error, `Failed to verify loan history for item "${id}"`));
           };
         };
 
@@ -330,18 +421,18 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
       const tx = db.transaction(STORE_ITEMS, 'readonly');
       const store = tx.objectStore(STORE_ITEMS);
 
-      let request;
+      let req;
       if (status) {
         const index = store.index('status');
-        request = index.count(status);
+        req = index.count(status);
       } else {
-        request = store.count();
+        req = store.count();
       }
 
-      request.onsuccess = () => {
-        resolve(request.result);
+      req.onsuccess = () => {
+        resolve(req.result);
       };
-      request.onerror = (e) => {
+      req.onerror = (e) => {
         reject(this._handleError(e.target.error, 'Failed to count items'));
       };
     });
@@ -393,7 +484,7 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
   }
 
   async replaceAllItems(items = []) {
-    return this.replaceAllData({ items, requests: [] });
+    return this.replaceAllData({ items, requests: [], loans: [] });
   }
 
   // ==========================================
@@ -403,7 +494,7 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
   /**
    * Creates and persists a new borrowing request record in IndexedDB.
    * Atomically verifies that the referenced item exists, is ACTIVE, is AVAILABLE,
-   * and that candidate dates do not conflict with any existing APPROVED reservation.
+   * and that candidate dates do not conflict with any existing RESERVED or ACTIVE loan.
    *
    * @param {object} requestData
    * @returns {Promise<object>} Persisted normalized request record
@@ -423,9 +514,10 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
     const db = await this._getDb();
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS], 'readwrite');
+      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS, STORE_LOANS], 'readwrite');
       const itemStore = tx.objectStore(STORE_ITEMS);
       const reqStore = tx.objectStore(STORE_REQUESTS);
+      const loanStore = tx.objectStore(STORE_LOANS);
 
       // 1. Verify item existence and availability
       const itemReq = itemStore.get(normalized.itemId);
@@ -446,33 +538,51 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
           return reject(new ItemUnavailableError(normalized.itemId, 'item is not available for borrowing'));
         }
 
-        // Attach item title snapshot if not already present
         if (!normalized.itemTitleSnapshot) {
           normalized.itemTitleSnapshot = item.title || '';
         }
 
-        // 2. Check for conflicting APPROVED reservations for this item
-        const reqIndex = reqStore.index('itemId');
-        const listReq = reqIndex.getAll(normalized.itemId);
+        // 2. Check for conflicting reservations in STORE_LOANS (and fallback to STORE_REQUESTS)
+        const loanIndex = loanStore.index('itemId');
+        const listLoansReq = loanIndex.getAll(normalized.itemId);
 
-        listReq.onsuccess = () => {
-          const existingRequests = listReq.result || [];
-          const conflicts = findConflictingReservations(normalized, existingRequests);
+        listLoansReq.onsuccess = () => {
+          const existingLoans = listLoansReq.result || [];
+          const loanConflicts = findConflictingReservations(normalized, existingLoans);
 
-          if (conflicts.length > 0) {
+          if (loanConflicts.length > 0) {
             tx.abort();
-            return reject(new ReservationConflictError(conflicts));
+            return reject(new ReservationConflictError(loanConflicts));
           }
 
-          // 3. Put normalized request record
-          const addReq = reqStore.put(normalized);
-          addReq.onerror = (e) => {
-            reject(this._handleError(e.target.error, `Failed to persist borrowing request "${normalized.id}"`));
+          // Also check requests in case of legacy records without loans
+          const reqIndex = reqStore.index('itemId');
+          const listReq = reqIndex.getAll(normalized.itemId);
+
+          listReq.onsuccess = () => {
+            const existingRequests = listReq.result || [];
+            if (existingLoans.length === 0) {
+              const conflicts = findConflictingReservations(normalized, existingRequests);
+              if (conflicts.length > 0) {
+                tx.abort();
+                return reject(new ReservationConflictError(conflicts));
+              }
+            }
+
+            // 3. Put normalized request record
+            const addReq = reqStore.put(normalized);
+            addReq.onerror = (e) => {
+              reject(this._handleError(e.target.error, `Failed to persist borrowing request "${normalized.id}"`));
+            };
+          };
+
+          listReq.onerror = (e) => {
+            reject(this._handleError(e.target.error, `Failed to query existing requests for "${normalized.itemId}"`));
           };
         };
 
-        listReq.onerror = (e) => {
-          reject(this._handleError(e.target.error, `Failed to query existing reservations for "${normalized.itemId}"`));
+        listLoansReq.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to query existing loans for "${normalized.itemId}"`));
         };
       };
 
@@ -554,13 +664,14 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
   }
 
   /**
-   * Atomically approves a pending borrowing request.
-   * Executes within a single 'readwrite' transaction covering both items and requests.
+   * Atomically approves a pending borrowing request (DR-02 + DR-04).
+   * Executes within a single 'readwrite' transaction covering items, requests, and loans.
    * Enforces all approval-time invariants:
    * - Request is still PENDING
    * - Item is still ACTIVE and AVAILABLE
-   * - Re-validates inclusive date range overlap against other APPROVED reservations
+   * - Re-validates inclusive date range overlap against RESERVED and ACTIVE loans
    * - Serializes competing approvals so only one can succeed
+   * - Creates exactly one RESERVED loan lifecycle record in STORE_LOANS
    */
   async approveBorrowRequest(id) {
     if (!id) {
@@ -569,10 +680,12 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
     const db = await this._getDb();
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS], 'readwrite');
+      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS, STORE_LOANS], 'readwrite');
       const itemStore = tx.objectStore(STORE_ITEMS);
       const reqStore = tx.objectStore(STORE_REQUESTS);
+      const loanStore = tx.objectStore(STORE_LOANS);
       let approvedRecord = null;
+      let createdLoan = null;
 
       // 1. Retrieve the target request
       const targetReq = reqStore.get(id);
@@ -607,37 +720,69 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
             return reject(new ItemUnavailableError(request.itemId, 'item is marked unavailable'));
           }
 
-          // 3. Query all other requests for this item to re-verify schedule conflict
-          const reqIndex = reqStore.index('itemId');
-          const allReqs = reqIndex.getAll(request.itemId);
+          // 3. Query all loans for this item to re-verify schedule conflict
+          const loanIndex = loanStore.index('itemId');
+          const allLoansReq = loanIndex.getAll(request.itemId);
 
-          allReqs.onsuccess = () => {
-            const requests = allReqs.result || [];
-            const conflicts = findConflictingReservations(request, requests, id);
+          allLoansReq.onsuccess = () => {
+            const existingLoans = allLoansReq.result || [];
+            const loanConflicts = findConflictingReservations(request, existingLoans, id);
 
-            if (conflicts.length > 0) {
+            if (loanConflicts.length > 0) {
               tx.abort();
-              return reject(new ReservationConflictError(conflicts));
+              return reject(new ReservationConflictError(loanConflicts));
             }
 
-            // 4. Update request to APPROVED
-            const now = new Date().toISOString();
-            approvedRecord = normalizeBorrowRequest({
-              ...request,
-              status: REQUEST_STATUS.APPROVED,
-              updatedAt: now,
-              decidedAt: now,
-              decisionAt: now,
-            });
+            // Also check requests in case of legacy records without loans
+            const reqIndex = reqStore.index('itemId');
+            const allReqs = reqIndex.getAll(request.itemId);
 
-            const putReq = reqStore.put(approvedRecord);
-            putReq.onerror = (e) => {
-              reject(this._handleError(e.target.error, `Failed to update approved request "${id}"`));
+            allReqs.onsuccess = () => {
+              const requests = allReqs.result || [];
+              if (existingLoans.length === 0) {
+                const conflicts = findConflictingReservations(request, requests, id);
+                if (conflicts.length > 0) {
+                  tx.abort();
+                  return reject(new ReservationConflictError(conflicts));
+                }
+              }
+
+              // 4. Update request to APPROVED
+              const now = new Date().toISOString();
+              approvedRecord = normalizeBorrowRequest({
+                ...request,
+                status: REQUEST_STATUS.APPROVED,
+                updatedAt: now,
+                decidedAt: now,
+                decisionAt: now,
+              });
+
+              reqStore.put(approvedRecord);
+
+              // 5. Create corresponding RESERVED loan lifecycle record (DR-04)
+              createdLoan = normalizeLoanRecord({
+                requestId: request.id,
+                itemId: request.itemId,
+                itemTitleSnapshot: request.itemTitleSnapshot || item.title || '',
+                borrowerAlias: request.borrowerAlias || request.requestedBy || '',
+                collectionDate: request.startDate || request.collectionDate,
+                returnDeadline: request.endDate || request.returnDeadline,
+                status: LOAN_STATUS.RESERVED,
+                reservedAt: now,
+                createdAt: now,
+                updatedAt: now,
+              });
+
+              loanStore.put(createdLoan);
+            };
+
+            allReqs.onerror = (e) => {
+              reject(this._handleError(e.target.error, `Failed to query existing requests for item "${request.itemId}"`));
             };
           };
 
-          allReqs.onerror = (e) => {
-            reject(this._handleError(e.target.error, `Failed to query existing requests for item "${request.itemId}"`));
+          allLoansReq.onerror = (e) => {
+            reject(this._handleError(e.target.error, `Failed to query existing loans for item "${request.itemId}"`));
           };
         };
 
@@ -651,6 +796,7 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
       };
 
       tx.oncomplete = () => {
+        approvedRecord.loan = createdLoan;
         resolve(approvedRecord);
       };
 
@@ -798,13 +944,11 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
   async clearAllBorrowRequests() {
     const db = await this._getDb();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_REQUESTS, 'readwrite');
-      const store = tx.objectStore(STORE_REQUESTS);
-      const req = store.clear();
-
-      req.onerror = (e) => {
-        reject(this._handleError(e.target.error, 'Failed to clear borrowing requests'));
-      };
+      const tx = db.transaction([STORE_REQUESTS, STORE_LOANS], 'readwrite');
+      const reqStore = tx.objectStore(STORE_REQUESTS);
+      const loanStore = tx.objectStore(STORE_LOANS);
+      reqStore.clear();
+      loanStore.clear();
 
       tx.oncomplete = () => {
         resolve(true);
@@ -816,25 +960,479 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
     });
   }
 
+  async clearAllLoans() {
+    const db = await this._getDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_LOANS, 'readwrite');
+      const store = tx.objectStore(STORE_LOANS);
+      store.clear();
+
+      tx.oncomplete = () => {
+        resolve(true);
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target.error, 'Transaction failed clearing loans'));
+      };
+    });
+  }
+
   // ==========================================
-  // Unified Backup / Restore Transactions (Module 05)
+  // Module 06: Loan Lifecycle Operations (DR-04)
   // ==========================================
 
-  /**
-   * Atomically clears and replaces both items and borrowing requests within ONE single transaction.
-   * On any failure or aborted operation, prior contents of both stores are completely preserved.
-   */
-  async replaceAllData({ items = [], requests = [] } = {}) {
+  async getLoanByRequestId(requestId) {
+    if (!requestId) {
+      throw new StorageError('getLoanByRequestId requires a valid requestId');
+    }
     const db = await this._getDb();
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS], 'readwrite');
+      const tx = db.transaction(STORE_LOANS, 'readonly');
+      const store = tx.objectStore(STORE_LOANS);
+      const req = store.get(requestId);
+
+      req.onsuccess = () => {
+        if (!req.result) {
+          reject(new LoanNotFoundError(requestId));
+        } else {
+          resolve(normalizeLoanRecord(req.result));
+        }
+      };
+
+      req.onerror = (e) => {
+        reject(this._handleError(e.target.error, `Failed to get loan for request "${requestId}"`));
+      };
+    });
+  }
+
+  async listLoans(options = {}) {
+    const db = await this._getDb();
+    const { itemId, status } = options;
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_LOANS, 'readonly');
+      const store = tx.objectStore(STORE_LOANS);
+
+      let req;
+      if (itemId) {
+        const index = store.index('itemId');
+        req = index.getAll(itemId);
+      } else if (status) {
+        const index = store.index('status');
+        req = index.getAll(status);
+      } else {
+        req = store.getAll();
+      }
+
+      req.onsuccess = () => {
+        let results = (req.result || []).map(normalizeLoanRecord);
+
+        if (itemId && status) {
+          results = results.filter((l) => l.status === status);
+        }
+
+        // Sort descending by createdAt
+        results.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        resolve(results);
+      };
+
+      req.onerror = (e) => {
+        reject(this._handleError(e.target.error, 'Failed to list loans'));
+      };
+    });
+  }
+
+  async listLoansByItem(itemId) {
+    return this.listLoans({ itemId });
+  }
+
+  /**
+   * Records owner-side physical handover condition checkpoint (DR-04).
+   * Loan remains RESERVED until borrower confirms physical receipt.
+   */
+  async recordCollectionHandover(requestId, checkpoint) {
+    if (!requestId) {
+      throw new StorageError('recordCollectionHandover requires a valid requestId');
+    }
+    const { isValid, errors } = validateConditionCheckpoint(checkpoint, { type: 'collection' });
+    if (!isValid) {
+      throw new ConditionValidationError(errors);
+    }
+
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_LOANS, 'readwrite');
+      const store = tx.objectStore(STORE_LOANS);
+      let updatedLoan = null;
+
+      const getReq = store.get(requestId);
+      getReq.onsuccess = () => {
+        const loan = getReq.result;
+        if (!loan) {
+          tx.abort();
+          return reject(new LoanNotFoundError(requestId));
+        }
+
+        if (loan.status !== LOAN_STATUS.RESERVED) {
+          tx.abort();
+          return reject(new LoanStateTransitionError(loan.status, 'COLLECTION_RECORDED', `Cannot record collection for loan with status "${loan.status}". Only RESERVED loans can be collected.`));
+        }
+
+        if (loan.collectionCheckpoint?.ownerRecordedAt) {
+          tx.abort();
+          return reject(new CollectionAlreadyRecordedError(requestId));
+        }
+
+        const today = getLocalToday();
+        const start = loan.collectionDate;
+        const end = loan.returnDeadline;
+
+        if (today < start) {
+          tx.abort();
+          return reject(new CollectionDateNotReachedError(start, today));
+        }
+
+        if (today > end) {
+          tx.abort();
+          return reject(new ReservationExpiredError(end, today));
+        }
+
+        const now = new Date().toISOString();
+        const tier = CONDITION_TIERS[checkpoint.conditionGrade];
+        const collectionCheckpoint = {
+          recordedAt: now,
+          ownerRecordedAt: now,
+          conditionGrade: Number(checkpoint.conditionGrade),
+          conditionLabel: tier ? tier.label : `Grade ${checkpoint.conditionGrade}`,
+          notes: (checkpoint.notes || '').trim(),
+          photos: Array.isArray(checkpoint.photos) ? checkpoint.photos : [],
+          borrowerReviewedAt: null,
+          borrowerObservation: '',
+        };
+
+        updatedLoan = normalizeLoanRecord({
+          ...loan,
+          collectionCheckpoint,
+          updatedAt: now,
+        });
+
+        const putReq = store.put(updatedLoan);
+        putReq.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to record collection handover for "${requestId}"`));
+        };
+      };
+
+      getReq.onerror = (e) => {
+        reject(this._handleError(e.target.error, `Failed to retrieve loan "${requestId}"`));
+      };
+
+      tx.oncomplete = () => {
+        resolve(updatedLoan);
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target?.error || e, `Transaction failed recording collection handover for "${requestId}"`));
+      };
+    });
+  }
+
+  /**
+   * Confirms borrower physical receipt and transitions loan RESERVED -> ACTIVE (DR-04).
+   */
+  async confirmCollectionReceipt(requestId, { observation } = {}) {
+    if (!requestId) {
+      throw new StorageError('confirmCollectionReceipt requires a valid requestId');
+    }
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_LOANS, 'readwrite');
+      const store = tx.objectStore(STORE_LOANS);
+      let updatedLoan = null;
+
+      const getReq = store.get(requestId);
+      getReq.onsuccess = () => {
+        const loan = getReq.result;
+        if (!loan) {
+          tx.abort();
+          return reject(new LoanNotFoundError(requestId));
+        }
+
+        if (loan.status !== LOAN_STATUS.RESERVED) {
+          tx.abort();
+          return reject(new LoanStateTransitionError(loan.status, LOAN_STATUS.ACTIVE, `Cannot confirm receipt for loan with status "${loan.status}".`));
+        }
+
+        if (!loan.collectionCheckpoint?.ownerRecordedAt) {
+          tx.abort();
+          return reject(new BorrowerReceiptRequiredError(requestId, 'Owner handover must be recorded before borrower receipt can be confirmed.'));
+        }
+
+        if (loan.collectedAt) {
+          tx.abort();
+          return reject(new CollectionAlreadyRecordedError(requestId, 'Physical receipt has already been confirmed.'));
+        }
+
+        const now = new Date().toISOString();
+        const collectionCheckpoint = {
+          ...loan.collectionCheckpoint,
+          borrowerReviewedAt: now,
+          borrowerObservation: observation ? observation.trim() : (loan.collectionCheckpoint.borrowerObservation || ''),
+        };
+
+        updatedLoan = normalizeLoanRecord({
+          ...loan,
+          status: LOAN_STATUS.ACTIVE,
+          collectedAt: now,
+          collectionCheckpoint,
+          updatedAt: now,
+        });
+
+        const putReq = store.put(updatedLoan);
+        putReq.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to confirm receipt for "${requestId}"`));
+        };
+      };
+
+      getReq.onerror = (e) => {
+        reject(this._handleError(e.target.error, `Failed to retrieve loan "${requestId}"`));
+      };
+
+      tx.oncomplete = () => {
+        resolve(updatedLoan);
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target?.error || e, `Transaction failed confirming receipt for "${requestId}"`));
+      };
+    });
+  }
+
+  /**
+   * Records borrower marking that the item has physically been returned.
+   */
+  async markLoanReturned(requestId) {
+    if (!requestId) {
+      throw new StorageError('markLoanReturned requires a valid requestId');
+    }
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_LOANS, 'readwrite');
+      const store = tx.objectStore(STORE_LOANS);
+      let updatedLoan = null;
+
+      const getReq = store.get(requestId);
+      getReq.onsuccess = () => {
+        const loan = getReq.result;
+        if (!loan) {
+          tx.abort();
+          return reject(new LoanNotFoundError(requestId));
+        }
+
+        if (loan.status !== LOAN_STATUS.ACTIVE) {
+          tx.abort();
+          return reject(new LoanStateTransitionError(loan.status, 'RETURN_MARKED', `Only ACTIVE loans can be marked returned. Current status is "${loan.status}".`));
+        }
+
+        const now = new Date().toISOString();
+        const returnCheckpoint = {
+          ...(loan.returnCheckpoint || {}),
+          borrowerReturnMarkedAt: now,
+        };
+
+        updatedLoan = normalizeLoanRecord({
+          ...loan,
+          returnCheckpoint,
+          updatedAt: now,
+        });
+
+        const putReq = store.put(updatedLoan);
+        putReq.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to mark return for "${requestId}"`));
+        };
+      };
+
+      getReq.onerror = (e) => {
+        reject(this._handleError(e.target.error, `Failed to retrieve loan "${requestId}"`));
+      };
+
+      tx.oncomplete = () => {
+        resolve(updatedLoan);
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target?.error || e, `Transaction failed marking return for "${requestId}"`));
+      };
+    });
+  }
+
+  /**
+   * Records owner return condition inspection and completes the loan ACTIVE -> COMPLETED (DR-04).
+   * The completed loan releases its reservation window without overriding the owner's item availability setting.
+   */
+  async completeReturnInspection(requestId, checkpoint) {
+    if (!requestId) {
+      throw new StorageError('completeReturnInspection requires a valid requestId');
+    }
+    const { isValid, errors } = validateConditionCheckpoint(checkpoint, { type: 'return' });
+    if (!isValid) {
+      throw new ConditionValidationError(errors);
+    }
+
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_LOANS, 'readwrite');
+      const store = tx.objectStore(STORE_LOANS);
+      let updatedLoan = null;
+
+      const getReq = store.get(requestId);
+      getReq.onsuccess = () => {
+        const loan = getReq.result;
+        if (!loan) {
+          tx.abort();
+          return reject(new LoanNotFoundError(requestId));
+        }
+
+        if (loan.status === LOAN_STATUS.COMPLETED) {
+          tx.abort();
+          return reject(new LoanAlreadyCompletedError(requestId));
+        }
+
+        if (loan.status !== LOAN_STATUS.ACTIVE) {
+          tx.abort();
+          return reject(new LoanStateTransitionError(loan.status, LOAN_STATUS.COMPLETED, `Cannot complete return inspection for loan with status "${loan.status}". Loan must be ACTIVE.`));
+        }
+
+        const now = new Date().toISOString();
+        const tier = CONDITION_TIERS[checkpoint.conditionGrade];
+        const returnCheckpoint = {
+          recordedAt: now,
+          ownerInspectedAt: now,
+          borrowerReturnMarkedAt: loan.returnCheckpoint?.borrowerReturnMarkedAt || now,
+          conditionGrade: Number(checkpoint.conditionGrade),
+          conditionLabel: tier ? tier.label : `Grade ${checkpoint.conditionGrade}`,
+          notes: (checkpoint.notes || '').trim(),
+          photos: Array.isArray(checkpoint.photos) ? checkpoint.photos : [],
+        };
+
+        updatedLoan = normalizeLoanRecord({
+          ...loan,
+          status: LOAN_STATUS.COMPLETED,
+          completedAt: now,
+          returnCheckpoint,
+          updatedAt: now,
+        });
+
+        const putReq = store.put(updatedLoan);
+        putReq.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to complete return inspection for "${requestId}"`));
+        };
+      };
+
+      getReq.onerror = (e) => {
+        reject(this._handleError(e.target.error, `Failed to retrieve loan "${requestId}"`));
+      };
+
+      tx.oncomplete = () => {
+        resolve(updatedLoan);
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target?.error || e, `Transaction failed completing return inspection for "${requestId}"`));
+      };
+    });
+  }
+
+  /**
+   * Explicitly releases an uncollected reservation whose agreed period elapsed without physical collection.
+   * RESERVED -> RELEASED_NOT_COLLECTED. Releases calendar reservation without falsely claiming return.
+   */
+  async releaseUncollectedReservation(requestId, { releaseNote } = {}) {
+    if (!requestId) {
+      throw new StorageError('releaseUncollectedReservation requires a valid requestId');
+    }
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_LOANS, 'readwrite');
+      const store = tx.objectStore(STORE_LOANS);
+      let updatedLoan = null;
+
+      const getReq = store.get(requestId);
+      getReq.onsuccess = () => {
+        const loan = getReq.result;
+        if (!loan) {
+          tx.abort();
+          return reject(new LoanNotFoundError(requestId));
+        }
+
+        if (loan.status !== LOAN_STATUS.RESERVED) {
+          tx.abort();
+          return reject(new UncollectedReleaseNotAllowedError(requestId, `only RESERVED loans can be released (current status: ${loan.status})`));
+        }
+
+        const today = getLocalToday();
+        if (today <= loan.returnDeadline) {
+          tx.abort();
+          return reject(new UncollectedReleaseNotAllowedError(requestId, `reservation return deadline (${loan.returnDeadline}) has not passed yet (today is ${today})`));
+        }
+
+        const now = new Date().toISOString();
+        updatedLoan = normalizeLoanRecord({
+          ...loan,
+          status: LOAN_STATUS.RELEASED_NOT_COLLECTED,
+          resolution: 'RELEASED_NOT_COLLECTED',
+          releasedAt: now,
+          releaseNote: (releaseNote || '').trim(),
+          updatedAt: now,
+        });
+
+        const putReq = store.put(updatedLoan);
+        putReq.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to release uncollected reservation "${requestId}"`));
+        };
+      };
+
+      getReq.onerror = (e) => {
+        reject(this._handleError(e.target.error, `Failed to retrieve loan "${requestId}"`));
+      };
+
+      tx.oncomplete = () => {
+        resolve(updatedLoan);
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target?.error || e, `Transaction failed releasing uncollected reservation "${requestId}"`));
+      };
+    });
+  }
+
+  // ==========================================
+  // Unified Backup / Restore Transactions (Module 06)
+  // ==========================================
+
+  /**
+   * Atomically clears and replaces items, borrowing requests, and loan lifecycles
+   * within ONE single transaction across all three object stores.
+   * On any failure or aborted operation, prior contents of all three stores are completely preserved.
+   */
+  async replaceAllData({ items = [], requests = [], loans = [] } = {}) {
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS, STORE_LOANS], 'readwrite');
       const itemStore = tx.objectStore(STORE_ITEMS);
       const reqStore = tx.objectStore(STORE_REQUESTS);
+      const loanStore = tx.objectStore(STORE_LOANS);
 
-      // 1. Clear both stores
+      // 1. Clear all three stores
       itemStore.clear();
       reqStore.clear();
+      loanStore.clear();
 
       // 2. Insert items
       let replacedItemsCount = 0;
@@ -850,7 +1448,7 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
       // 3. Insert requests
       let replacedRequestsCount = 0;
       for (const req of requests) {
-        const normalized = normalizeBorrowRequest(req);
+        const normalized = normalizeBorrowRequest(req, { generateId: false });
         if (!normalized || !normalized.id) {
           tx.abort();
           return reject(new StorageError('Atomic replace rejected: borrowing request record is missing valid id'));
@@ -859,11 +1457,24 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
         replacedRequestsCount++;
       }
 
+      // 4. Insert loans
+      let replacedLoansCount = 0;
+      for (const loan of loans) {
+        const normalized = normalizeLoanRecord(loan);
+        if (!normalized || !normalized.requestId) {
+          tx.abort();
+          return reject(new StorageError('Atomic replace rejected: loan record is missing valid requestId'));
+        }
+        loanStore.put(normalized);
+        replacedLoansCount++;
+      }
+
       tx.oncomplete = () => {
         resolve({
           replacedCount: replacedItemsCount,
           replacedItemsCount,
           replacedRequestsCount,
+          replacedLoansCount,
         });
       };
 
@@ -878,29 +1489,31 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
   }
 
   /**
-   * Atomically merges imported items and borrowing requests into existing stores within ONE single transaction.
-   * Preserves existing records by ID, adds novel records, validates referential integrity and schedule invariants.
+   * Atomically merges imported items, borrowing requests, and loan lifecycles into existing stores
+   * within ONE single transaction.
    */
-  async mergeAllData({ items = [], requests = [] } = {}) {
+  async mergeAllData({ items = [], requests = [], loans = [] } = {}) {
     const db = await this._getDb();
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS], 'readwrite');
+      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS, STORE_LOANS], 'readwrite');
       const itemStore = tx.objectStore(STORE_ITEMS);
       const reqStore = tx.objectStore(STORE_REQUESTS);
+      const loanStore = tx.objectStore(STORE_LOANS);
 
       let addedItemsCount = 0;
       let skippedItemsCount = 0;
       let addedRequestsCount = 0;
       let skippedRequestsCount = 0;
+      let addedLoansCount = 0;
+      let skippedLoansCount = 0;
 
-      // 1. Retrieve all existing items and requests to perform in-transaction conflict checks
+      // 1. Existing items
       const existingItemsReq = itemStore.getAll();
       existingItemsReq.onsuccess = () => {
         const existingItems = existingItemsReq.result || [];
         const existingItemIds = new Set(existingItems.map((i) => i.id));
 
-        // Merge Items
         for (const item of items) {
           if (!item?.id) {
             tx.abort();
@@ -915,7 +1528,7 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
           }
         }
 
-        // Merge Requests
+        // 2. Existing requests
         const existingReqsReq = reqStore.getAll();
         existingReqsReq.onsuccess = () => {
           const existingRequests = existingReqsReq.result || [];
@@ -932,13 +1545,12 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
           }
 
           for (const req of requests) {
-            const normalized = normalizeBorrowRequest(req);
+            const normalized = normalizeBorrowRequest(req, { generateId: false });
             if (!normalized?.id) {
               tx.abort();
               return reject(new StorageError('Cannot merge borrowing request record missing id'));
             }
 
-            // Referential integrity check: referenced item must exist in resulting database
             if (!existingItemIds.has(normalized.itemId)) {
               tx.abort();
               return reject(new StorageError(`Cannot merge request "${normalized.id}": referenced item "${normalized.itemId}" does not exist.`));
@@ -947,7 +1559,7 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
             if (existingReqIds.has(normalized.id)) {
               skippedRequestsCount++;
             } else {
-              // If incoming request is APPROVED, verify it does not conflict with existing or previously merged approved requests
+              // If incoming request is APPROVED, verify it does not conflict with existing approved reservations
               if (normalized.status === REQUEST_STATUS.APPROVED) {
                 const itemApproved = approvedByItem.get(normalized.itemId) || [];
                 const conflicts = findConflictingReservations(normalized, itemApproved);
@@ -964,6 +1576,56 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
               addedRequestsCount++;
             }
           }
+
+          // 3. Existing loans
+          const existingLoansReq = loanStore.getAll();
+          existingLoansReq.onsuccess = () => {
+            const existingLoans = existingLoansReq.result || [];
+            const existingLoanMap = new Map(existingLoans.map((l) => [l.requestId, l]));
+
+            // If an approved request exists without a corresponding loan, derive its RESERVED record
+            const incomingLoanMap = new Map(loans.map((l) => [l.requestId || l.id, l]));
+
+            for (const req of [...existingRequests, ...requests]) {
+              const reqId = req.id || req.requestId;
+              if (req.status === REQUEST_STATUS.APPROVED) {
+                if (!existingLoanMap.has(reqId) && !incomingLoanMap.has(reqId)) {
+                  const derived = normalizeLoanRecord({
+                    requestId: reqId,
+                    itemId: req.itemId,
+                    itemTitleSnapshot: req.itemTitleSnapshot || '',
+                    borrowerAlias: req.borrowerAlias || req.requestedBy || '',
+                    collectionDate: req.startDate || req.collectionDate,
+                    returnDeadline: req.endDate || req.returnDeadline,
+                    status: LOAN_STATUS.RESERVED,
+                    reservedAt: req.decidedAt || req.decisionAt || req.updatedAt || req.createdAt || new Date().toISOString(),
+                    provenance: 'DERIVED_FROM_APPROVED_REQUEST',
+                  });
+                  incomingLoanMap.set(reqId, derived);
+                }
+              }
+            }
+
+            for (const [, loanData] of incomingLoanMap) {
+              const normalizedLoan = normalizeLoanRecord(loanData);
+              if (!normalizedLoan?.requestId) {
+                tx.abort();
+                return reject(new StorageError('Cannot merge loan record missing requestId'));
+              }
+
+              if (existingLoanMap.has(normalizedLoan.requestId)) {
+                skippedLoansCount++;
+              } else {
+                loanStore.put(normalizedLoan);
+                existingLoanMap.set(normalizedLoan.requestId, normalizedLoan);
+                addedLoansCount++;
+              }
+            }
+          };
+
+          existingLoansReq.onerror = (e) => {
+            reject(this._handleError(e.target.error, 'Failed to inspect existing loans during merge'));
+          };
         };
 
         existingReqsReq.onerror = (e) => {
@@ -981,6 +1643,8 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
           skippedItemsCount,
           addedRequestsCount,
           skippedRequestsCount,
+          addedLoansCount,
+          skippedLoansCount,
         });
       };
 

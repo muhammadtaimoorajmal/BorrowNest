@@ -15,6 +15,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
   const [importPreview, setImportPreview] = useState(null);
   const [importItems, setImportItems] = useState([]);
   const [importRequests, setImportRequests] = useState([]);
+  const [importLoans, setImportLoans] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState(null);
   const [importResult, setImportResult] = useState(null);
@@ -23,6 +24,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
   const [storageEstimate, setStorageEstimate] = useState(null);
   const [localItemCount, setLocalItemCount] = useState(0);
   const [localRequestStats, setLocalRequestStats] = useState({ total: 0, pending: 0, approved: 0 });
+  const [localLoanStats, setLocalLoanStats] = useState({ total: 0, reserved: 0, active: 0, completed: 0, released: 0 });
 
   // Load storage diagnostics
   useEffect(() => {
@@ -39,6 +41,17 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
             const pending = reqs.filter((r) => r.status === 'PENDING').length;
             const approved = reqs.filter((r) => r.status === 'APPROVED').length;
             setLocalRequestStats({ total: reqs.length, pending, approved });
+          }
+        }
+
+        if (typeof storageAdapter.listLoans === 'function') {
+          const loans = await storageAdapter.listLoans();
+          if (isMounted) {
+            const reserved = loans.filter((l) => l.status === 'RESERVED').length;
+            const active = loans.filter((l) => l.status === 'ACTIVE').length;
+            const completed = loans.filter((l) => l.status === 'COMPLETED').length;
+            const released = loans.filter((l) => l.status === 'RELEASED_NOT_COLLECTED').length;
+            setLocalLoanStats({ total: loans.length, reserved, active, completed, released });
           }
         }
 
@@ -70,7 +83,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
       const backupData = await generateBackupData(storageAdapter);
       downloadBackupFile(backupData);
       setExportMessage(
-        `Successfully exported ${backupData.itemCount} items and ${backupData.requestCount || 0} borrowing requests with photographs.`,
+        `Successfully exported ${backupData.itemCount} items, ${backupData.requestCount || 0} borrowing requests, and ${backupData.loanCount || 0} loan lifecycles with photographs.`,
       );
     } catch (err) {
       setExportMessage(`Export failed: ${err.message}`);
@@ -88,14 +101,16 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
     setImportPreview(null);
     setImportItems([]);
     setImportRequests([]);
+    setImportLoans([]);
     setImportResult(null);
     setIsImporting(true);
 
     try {
-      const { preview, items, requests } = await parseAndValidateBackup(file);
+      const { preview, items, requests, loans } = await parseAndValidateBackup(file);
       setImportPreview(preview);
       setImportItems(items);
       setImportRequests(requests || []);
+      setImportLoans(loans || []);
     } catch (err) {
       setImportError(err.message || 'Failed to parse backup file.');
     } finally {
@@ -105,12 +120,12 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
   };
 
   const handleExecuteMerge = async () => {
-    if (!importItems.length && !importRequests.length) return;
+    if (!importItems.length && !importRequests.length && !importLoans.length) return;
     setIsImporting(true);
     setImportError(null);
     try {
       const { addedCount, skippedCount } = await executeMerge(
-        { items: importItems, requests: importRequests },
+        { items: importItems, requests: importRequests, loans: importLoans },
         storageAdapter,
       );
       setImportResult({
@@ -120,6 +135,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
       setImportPreview(null);
       setImportItems([]);
       setImportRequests([]);
+      setImportLoans([]);
       setImportFile(null);
       if (typeof onDataRestored === 'function') onDataRestored();
     } catch (err) {
@@ -130,22 +146,23 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
   };
 
   const handleExecuteReplace = async () => {
-    if (!importItems.length && !importRequests.length) return;
+    if (!importItems.length && !importRequests.length && !importLoans.length) return;
     setIsImporting(true);
     setImportError(null);
     setShowReplaceConfirm(false);
     try {
-      const { replacedCount, replacedRequestsCount } = await executeReplace(
-        { items: importItems, requests: importRequests },
+      const { replacedCount, replacedRequestsCount, replacedLoansCount } = await executeReplace(
+        { items: importItems, requests: importRequests, loans: importLoans },
         storageAdapter,
       );
       setImportResult({
         type: 'REPLACE',
-        message: `Replace complete: Local library replaced with ${replacedCount} items and ${replacedRequestsCount ?? importRequests.length} requests from backup.`,
+        message: `Replace complete: Local library replaced with ${replacedCount} items, ${replacedRequestsCount ?? importRequests.length} requests, and ${replacedLoansCount ?? importLoans.length} loan lifecycles from backup.`,
       });
       setImportPreview(null);
       setImportItems([]);
       setImportRequests([]);
+      setImportLoans([]);
       setImportFile(null);
       if (typeof onDataRestored === 'function') onDataRestored();
     } catch (err) {
@@ -245,7 +262,8 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
                 <li><strong>Total Items in Backup:</strong> {importPreview.itemCount} ({importPreview.activeCount} active, {importPreview.archivedCount} archived)</li>
                 <li><strong>Photographs in Backup:</strong> {importPreview.photoCount}</li>
                 <li><strong>Borrowing Requests in Backup:</strong> {importPreview.requestCount || 0} ({importPreview.pendingRequestCount || 0} pending, {importPreview.approvedRequestCount || 0} approved)</li>
-                <li><strong>Current Local Items:</strong> {localItemCount} (Requests: {localRequestStats.total})</li>
+                <li><strong>Loan Lifecycles in Backup:</strong> {importPreview.loanCount || 0} ({importPreview.activeLoanCount || 0} active, {importPreview.completedLoanCount || 0} completed)</li>
+                <li><strong>Current Local State:</strong> {localItemCount} items, {localRequestStats.total} requests, {localLoanStats.total} loans</li>
               </ul>
 
               <div className={styles.restoreActionsRow}>
@@ -291,6 +309,12 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
                 {localRequestStats.total} ({localRequestStats.pending} pending, {localRequestStats.approved} approved)
               </strong>
             </div>
+            <div className={styles.diagRow}>
+              <span>Physical Loan Lifecycles:</span>
+              <strong>
+                {localLoanStats.total} ({localLoanStats.active} active, {localLoanStats.reserved} reserved, {localLoanStats.completed} completed, {localLoanStats.released} released)
+              </strong>
+            </div>
             {storageEstimate && (
               <>
                 <div className={styles.diagRow}>
@@ -320,7 +344,10 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
               <strong>Coarse Location Privacy (DR-05):</strong> Exact residential street addresses and lockbox codes are strictly not collected or stored.
             </li>
             <li>
-              <strong>Authentic Imagery (DR-04):</strong> Photos must represent actual items. Original EXIF metadata and GPS coordinates are stripped before local persistence.
+              <strong>Structured Condition Checkpoints (DR-04):</strong> Condition ratings, notes, and photos at listing, handover, and return are informational records between neighbors. They are not legal determinations, insurance appraisals, or verified digital signatures.
+            </li>
+            <li>
+              <strong>Authentic Imagery:</strong> Photos must represent actual items. Original EXIF metadata and GPS coordinates are stripped before local persistence.
             </li>
             <li>
               <strong>Browser Storage Clearing:</strong> If you clear browser history or site data, local records may be erased. Export backups regularly to preserve your library.

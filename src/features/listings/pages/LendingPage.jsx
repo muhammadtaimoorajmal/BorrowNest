@@ -7,7 +7,12 @@ import DeleteConfirmDialog from '../components/DeleteConfirmDialog';
 import { useBorrowRequests } from '../../borrowing/hooks/useBorrowRequests';
 import RequestCard from '../../borrowing/components/RequestCard';
 import RequestActionConfirmDialog from '../../borrowing/components/RequestActionConfirmDialog';
+import CollectionHandoverDialog from '../../borrowing/components/CollectionHandoverDialog';
+import ReturnInspectionDialog from '../../borrowing/components/ReturnInspectionDialog';
+import ReleaseUncollectedDialog from '../../borrowing/components/ReleaseUncollectedDialog';
+import ConditionComparisonView from '../../borrowing/components/ConditionComparisonView';
 import { REQUEST_STATUS } from '../../borrowing/constants/requestStatus';
+import { LOAN_STATUS } from '../../borrowing/constants/loanStatus';
 import styles from './LendingPage.module.css';
 
 export function LendingPage({ adapter }) {
@@ -27,23 +32,37 @@ export function LendingPage({ adapter }) {
 
   const {
     requests,
+    loans,
+    loansMap,
     itemsMap,
     approveRequest,
     declineRequest,
+    recordCollectionHandover: recordHandover,
+    completeReturnInspection: inspectReturn,
+    releaseUncollectedReservation: releaseUncollected,
   } = useBorrowRequests(adapter);
 
-  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'archived' | 'requests'
+  const [activeTab, setActiveTab] = useState('active'); // 'active' | 'archived' | 'requests' | 'loans'
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [handoverModal, setHandoverModal] = useState(null);
+  const [inspectionModal, setInspectionModal] = useState(null);
+  const [comparisonModal, setComparisonModal] = useState(null);
+  const [releaseModal, setReleaseModal] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const pendingIncomingCount = requests.filter(
     (r) => r.status === REQUEST_STATUS.PENDING,
   ).length;
+
+  const activeLoans = loans.filter(
+    (l) => l.status === LOAN_STATUS.RESERVED || l.status === LOAN_STATUS.ACTIVE,
+  );
+  const activeLoansCount = activeLoans.length;
 
   const handleOpenCreate = () => {
     setEditingItem(null);
@@ -205,6 +224,17 @@ export function LendingPage({ adapter }) {
         >
           Incoming Requests <span className={styles.tabBadge}>{pendingIncomingCount}</span>
         </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-loans"
+          aria-selected={activeTab === 'loans'}
+          aria-controls="panel-loans"
+          onClick={() => setActiveTab('loans')}
+          className={`${styles.tabBtn} ${activeTab === 'loans' ? styles.activeTab : ''}`}
+        >
+          Items Lent Out <span className={styles.tabBadge}>{activeLoansCount}</span>
+        </button>
       </div>
 
       {/* Main Content Area */}
@@ -274,6 +304,44 @@ export function LendingPage({ adapter }) {
             </div>
           )}
         </section>
+      ) : activeTab === 'loans' ? (
+        <section id="panel-loans" role="tabpanel" aria-labelledby="tab-loans">
+          {activeLoans.length === 0 ? (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon} aria-hidden="true">🤝</div>
+              <h2 className={styles.emptyTitle}>No items currently lent out</h2>
+              <p className={styles.emptyText}>
+                When you approve borrowing requests and coordinate physical handovers, active loans and reservations will appear here with condition inspection tools.
+              </p>
+            </div>
+          ) : (
+            <div className={styles.requestsList}>
+              {activeLoans.map((loan) => {
+                const req = requests.find((r) => r.id === loan.requestId) || {
+                  id: loan.requestId,
+                  itemId: loan.itemId,
+                  borrowerAlias: loan.borrowerAlias,
+                  startDate: loan.collectionDate,
+                  endDate: loan.returnDeadline,
+                  status: REQUEST_STATUS.APPROVED,
+                };
+                return (
+                  <RequestCard
+                    key={loan.requestId}
+                    request={req}
+                    loan={loan}
+                    item={itemsMap.get(loan.itemId)}
+                    perspective="owner"
+                    onRecordHandover={(l) => setHandoverModal({ loan: l, mode: 'owner_handover' })}
+                    onInspectReturn={(l) => setInspectionModal({ loan: l, mode: 'owner_inspect' })}
+                    onViewComparison={(l) => setComparisonModal({ loan: l })}
+                    onReleaseUncollected={(l) => setReleaseModal({ loan: l })}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </section>
       ) : (
         <section id="panel-requests" role="tabpanel" aria-labelledby="tab-requests">
           {requests.length === 0 ? (
@@ -290,10 +358,15 @@ export function LendingPage({ adapter }) {
                 <RequestCard
                   key={req.id}
                   request={req}
+                  loan={loansMap.get(req.id)}
                   item={itemsMap.get(req.itemId)}
                   perspective="owner"
                   onApprove={(r) => setConfirmAction({ action: 'approve', request: r })}
                   onDecline={(r) => setConfirmAction({ action: 'decline', request: r })}
+                  onRecordHandover={(l) => setHandoverModal({ loan: l, mode: 'owner_handover' })}
+                  onInspectReturn={(l) => setInspectionModal({ loan: l, mode: 'owner_inspect' })}
+                  onViewComparison={(l) => setComparisonModal({ loan: l })}
+                  onReleaseUncollected={(l) => setReleaseModal({ loan: l })}
                 />
               ))}
             </div>
@@ -347,6 +420,60 @@ export function LendingPage({ adapter }) {
             }
           }}
           onClose={() => setConfirmAction(null)}
+        />
+      )}
+
+      {/* Collection Handover Dialog */}
+      {handoverModal && (
+        <CollectionHandoverDialog
+          loan={handoverModal.loan}
+          item={itemsMap.get(handoverModal.loan.itemId)}
+          mode={handoverModal.mode}
+          onSubmit={async (requestId, handoverData) => {
+            await recordHandover(requestId, handoverData);
+            setHandoverModal(null);
+          }}
+          onClose={() => setHandoverModal(null)}
+        />
+      )}
+
+      {/* Return Inspection Dialog */}
+      {inspectionModal && (
+        <ReturnInspectionDialog
+          loan={inspectionModal.loan}
+          item={itemsMap.get(inspectionModal.loan.itemId)}
+          mode={inspectionModal.mode}
+          onSubmit={async (requestId, returnData) => {
+            await inspectReturn(requestId, returnData);
+            setInspectionModal(null);
+          }}
+          onClose={() => setInspectionModal(null)}
+        />
+      )}
+
+      {/* Condition Comparison Modal */}
+      {comparisonModal && (
+        <div className={styles.modalBackdrop} onClick={() => setComparisonModal(null)}>
+          <div className={styles.comparisonModalWrapper} onClick={(e) => e.stopPropagation()}>
+            <ConditionComparisonView
+              item={itemsMap.get(comparisonModal.loan.itemId)}
+              loan={comparisonModal.loan}
+              onClose={() => setComparisonModal(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Release Uncollected Dialog */}
+      {releaseModal && (
+        <ReleaseUncollectedDialog
+          loan={releaseModal.loan}
+          item={itemsMap.get(releaseModal.loan.itemId)}
+          onSubmit={async (requestId, resolutionNote) => {
+            await releaseUncollected(requestId, resolutionNote);
+            setReleaseModal(null);
+          }}
+          onClose={() => setReleaseModal(null)}
         />
       )}
     </div>

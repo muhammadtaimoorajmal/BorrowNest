@@ -9,9 +9,12 @@ describe('LendingPage UI and Item Lifecycle', () => {
   let adapter;
 
   beforeEach(async () => {
-    adapter = new IndexedDbStorageAdapter(null, 'BorrowNest_LendingPage_Test');
+    adapter = new IndexedDbStorageAdapter(null, `BorrowNest_LendingPage_Test_${Date.now()}_${Math.random().toString(36).slice(2)}`);
     await adapter.initialize();
     await adapter.clearAllItems();
+    if (typeof adapter.clearAllBorrowRequests === 'function') {
+      await adapter.clearAllBorrowRequests();
+    }
   });
 
   it('renders honest empty state when no items exist', async () => {
@@ -291,5 +294,106 @@ describe('LendingPage UI and Item Lifecycle', () => {
     // Item must still be ACTIVE
     const itemInDb = await adapter.getItemById('item-with-approved-res');
     expect(itemInDb.status).toBe('ACTIVE');
+  });
+
+  it('permits archiving item when associated loan is COMPLETED', async () => {
+    const item = await adapter.createItem({
+      id: 'item-completed-loan',
+      title: 'Power Pressure Washer',
+      description: 'Electric pressure washer 2000 PSI.',
+      category: 'TOOLS',
+      conditionGrade: 4,
+      approximateArea: 'Greenwood',
+      availability: 'AVAILABLE',
+      status: 'ACTIVE',
+      photoAttestation: true,
+      photos: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    await adapter.mergeAllData({
+      items: [],
+      requests: [
+        {
+          id: 'completed-req-1',
+          itemId: item.id,
+          borrowerAlias: 'Pat Taylor',
+          startDate: '2026-11-01',
+          endDate: '2026-11-03',
+          status: 'APPROVED',
+          createdAt: '2026-11-01T10:00:00.000Z',
+          updatedAt: '2026-11-03T18:00:00.000Z',
+        },
+      ],
+      loans: [
+        {
+          requestId: 'completed-req-1',
+          itemId: item.id,
+          status: 'COMPLETED',
+          collectionDate: '2026-11-01',
+          returnDeadline: '2026-11-03',
+          collectedAt: '2026-11-01T10:00:00.000Z',
+          completedAt: '2026-11-03T18:00:00.000Z',
+          createdAt: '2026-11-01T10:00:00.000Z',
+          updatedAt: '2026-11-03T18:00:00.000Z',
+        },
+      ],
+    });
+
+    render(<LendingPage adapter={adapter} />);
+
+    expect(await screen.findByText('Power Pressure Washer')).toBeInTheDocument();
+
+    // Archive should succeed because loan is COMPLETED
+    const archiveBtn = screen.getByRole('button', { name: /Archive Power Pressure Washer/i });
+    fireEvent.click(archiveBtn);
+
+    await waitFor(async () => {
+      const updated = await adapter.getItemById('item-completed-loan');
+      expect(updated.status).toBe('ARCHIVED');
+    });
+  });
+
+  it('renders Items Lent Out tab with active loan and opens handover modal', async () => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const futureStr = new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10);
+
+    const item = await adapter.createItem({
+      id: 'item-for-lent-tab',
+      title: 'Post Hole Digger',
+      description: 'Heavy steel digger.',
+      category: 'GARDENING',
+      conditionGrade: 4,
+      approximateArea: 'Greenwood',
+      availability: 'AVAILABLE',
+      status: 'ACTIVE',
+      photoAttestation: true,
+      photos: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    const req = await adapter.createBorrowRequest({
+      itemId: item.id,
+      borrowerAlias: 'Fence Builder',
+      startDate: todayStr,
+      endDate: futureStr,
+    });
+    await adapter.approveBorrowRequest(req.id);
+
+    render(<LendingPage adapter={adapter} />);
+
+    // Click on "Items Lent Out" tab
+    const loansTab = await screen.findByRole('tab', { name: /Items Lent Out/i });
+    fireEvent.click(loansTab);
+
+    expect(await screen.findByText('Fence Builder')).toBeInTheDocument();
+    expect(screen.getByText('Reserved')).toBeInTheDocument();
+
+    const recordHandoverBtn = screen.getByRole('button', { name: /Record Handover/i });
+    fireEvent.click(recordHandoverBtn);
+
+    expect(await screen.findByText(/Physical Handover Recording/i)).toBeInTheDocument();
   });
 });

@@ -110,20 +110,27 @@ export function rangesOverlapInclusive(startA, endA, startB, endB) {
  * @param {string} [ignoreRequestId] - Optional request ID to exclude (e.g. self)
  * @returns {Array<object>} Conflicting reservation records
  */
-export function findConflictingReservations(candidateRange, approvedRequests, ignoreRequestId = null) {
-  if (!candidateRange || !Array.isArray(approvedRequests)) return [];
+export function findConflictingReservations(candidateRange, records, ignoreRequestId = null) {
+  if (!candidateRange || !Array.isArray(records)) return [];
 
   const candidateStart = candidateRange.startDate || candidateRange.collectionDate;
   const candidateEnd = candidateRange.endDate || candidateRange.returnDeadline;
 
   if (!isValidDateOnly(candidateStart) || !isValidDateOnly(candidateEnd)) return [];
 
-  return approvedRequests.filter((req) => {
-    if (ignoreRequestId && req.id === ignoreRequestId) return false;
-    if (req.status !== 'APPROVED') return false;
+  return records.filter((rec) => {
+    const id = rec.requestId || rec.id;
+    if (ignoreRequestId && id === ignoreRequestId) return false;
 
-    const existingStart = req.startDate || req.collectionDate;
-    const existingEnd = req.endDate || req.returnDeadline;
+    // In DR-04: RESERVED and ACTIVE loans block overlapping dates.
+    // Legacy APPROVED requests also block unless COMPLETED or RELEASED.
+    const isBlockingLoan = rec.status === 'RESERVED' || rec.status === 'ACTIVE';
+    const isBlockingRequest = rec.status === 'APPROVED';
+
+    if (!isBlockingLoan && !isBlockingRequest) return false;
+
+    const existingStart = rec.startDate || rec.collectionDate;
+    const existingEnd = rec.endDate || rec.returnDeadline;
 
     return rangesOverlapInclusive(candidateStart, candidateEnd, existingStart, existingEnd);
   });

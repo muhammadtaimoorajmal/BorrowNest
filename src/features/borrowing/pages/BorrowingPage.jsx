@@ -1,15 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { REQUEST_STATUS } from '../constants/requestStatus';
-import { formatDateRange } from '../services/dateRange';
+import {
+  LOAN_STATUS,
+  isLoanOverdue,
+  isReservationUncollected,
+} from '../constants/loanStatus';
+import { formatDateRange, getLocalToday } from '../services/dateRange';
 import { useBorrowRequests } from '../hooks/useBorrowRequests';
 import RequestCard from '../components/RequestCard';
 import RequestActionConfirmDialog from '../components/RequestActionConfirmDialog';
+import CollectionHandoverDialog from '../components/CollectionHandoverDialog';
+import ReturnInspectionDialog from '../components/ReturnInspectionDialog';
+import ConditionComparisonView from '../components/ConditionComparisonView';
+import ReleaseUncollectedDialog from '../components/ReleaseUncollectedDialog';
 import styles from './BorrowingPage.module.css';
 
 /**
- * Functional Borrowing Workspace for BorrowNest (DR-02 & DR-03).
- * Enables borrowers to monitor and cancel their requests, and owners to review
- * and decide on incoming requests with atomic reservation conflict prevention.
+ * Functional Borrowing Workspace for BorrowNest (DR-02, DR-03 & DR-04).
+ * Coordinates structured requests, decision reviews, collection handovers,
+ * condition comparisons, and return inspections.
  *
  * @param {object} props
  * @param {object} props.adapter - Storage adapter instance
@@ -19,6 +28,7 @@ import styles from './BorrowingPage.module.css';
 export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLending }) {
   const {
     requests,
+    loansMap,
     itemsMap,
     loading,
     error,
@@ -26,11 +36,24 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
     approveRequest,
     declineRequest,
     cancelRequest,
+    recordCollectionHandover,
+    confirmCollectionReceipt,
+    markLoanReturned,
+    completeReturnInspection,
+    releaseUncollectedReservation,
   } = useBorrowRequests(adapter);
 
   const [perspective, setPerspective] = useState('borrower'); // 'borrower' | 'owner'
   const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | REQUEST_STATUS.*
   const [confirmAction, setConfirmAction] = useState(null); // { action: 'approve'|'decline'|'cancel', request: object }
+
+  // Modal dialog states
+  const [handoverDialog, setHandoverDialog] = useState(null); // { mode, loan, item }
+  const [returnDialog, setReturnDialog] = useState(null); // { mode, loan, item }
+  const [comparisonDialog, setComparisonDialog] = useState(null); // { loan, item }
+  const [releaseDialog, setReleaseDialog] = useState(null); // { loan, item }
+
+  const today = getLocalToday();
 
   // Filter requests based on status
   const filteredRequests = useMemo(() => {
@@ -38,7 +61,7 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
     return requests.filter((r) => r.status === statusFilter);
   }, [requests, statusFilter]);
 
-  // Approved reservations list for active schedule summary
+  // Active Approved Reservations List
   const approvedReservations = useMemo(() => {
     return requests.filter((r) => r.status === REQUEST_STATUS.APPROVED);
   }, [requests]);
@@ -138,10 +161,14 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
           <div className={styles.reservationsGrid}>
             {approvedReservations.map((res) => {
               const item = itemsMap.get(res.itemId);
+              const loan = loansMap.get(res.id);
+              const overdue = loan ? isLoanOverdue(loan, today) : false;
+              const uncollected = loan ? isReservationUncollected(loan, today) : false;
+
               return (
                 <div key={res.id} className={styles.reservationMiniCard}>
                   <span className={styles.reservationMiniTitle}>
-                    {item?.title || `Item #${res.itemId}`}
+                    {item?.title || res.itemTitleSnapshot || `Item #${res.itemId}`}
                   </span>
                   <span className={styles.reservationMiniDates}>
                     {formatDateRange(res.startDate, res.endDate)}
@@ -149,6 +176,22 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
                   <span className={styles.reservationMiniAlias}>
                     Borrower: {res.borrowerAlias}
                   </span>
+                  {loan && (
+                    <span className={styles.reservationMiniStatus}>
+                      Status:{' '}
+                      <strong>
+                        {overdue
+                          ? '⚠️ Overdue'
+                          : uncollected
+                            ? '⚠️ Uncollected'
+                            : loan.status === LOAN_STATUS.ACTIVE
+                              ? 'Active Loan'
+                              : loan.status === LOAN_STATUS.COMPLETED
+                                ? 'Completed'
+                                : 'Reserved'}
+                      </strong>
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -284,18 +327,37 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
               <RequestCard
                 key={req.id}
                 request={req}
+                loan={loansMap.get(req.id)}
                 item={itemsMap.get(req.itemId)}
                 perspective={perspective}
                 onApprove={(r) => handleOpenConfirm('approve', r)}
                 onDecline={(r) => handleOpenConfirm('decline', r)}
                 onCancel={(r) => handleOpenConfirm('cancel', r)}
+                onRecordHandover={(l, it) =>
+                  setHandoverDialog({ mode: 'owner_handover', loan: l, item: it })
+                }
+                onConfirmReceipt={(l, it) =>
+                  setHandoverDialog({ mode: 'borrower_receipt', loan: l, item: it })
+                }
+                onMarkReturned={(l, it) =>
+                  setReturnDialog({ mode: 'borrower_mark_return', loan: l, item: it })
+                }
+                onInspectReturn={(l, it) =>
+                  setReturnDialog({ mode: 'owner_inspection', loan: l, item: it })
+                }
+                onReleaseUncollected={(l, it) =>
+                  setReleaseDialog({ loan: l, item: it })
+                }
+                onViewComparison={(l, it) =>
+                  setComparisonDialog({ loan: l, item: it })
+                }
               />
             ))}
           </div>
         )}
       </section>
 
-      {/* Confirmation Dialog */}
+      {/* Confirmation Dialog for Approve / Decline / Cancel */}
       {confirmAction && (
         <RequestActionConfirmDialog
           action={confirmAction.action}
@@ -303,6 +365,55 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
           item={itemsMap.get(confirmAction.request.itemId)}
           onConfirm={handleExecuteConfirm}
           onClose={handleCloseConfirm}
+        />
+      )}
+
+      {/* Collection Handover / Receipt Dialog */}
+      {handoverDialog && (
+        <CollectionHandoverDialog
+          mode={handoverDialog.mode}
+          loan={handoverDialog.loan}
+          item={handoverDialog.item}
+          onSubmit={
+            handoverDialog.mode === 'owner_handover'
+              ? (reqId, cp) => recordCollectionHandover(reqId, cp)
+              : (reqId, obs) => confirmCollectionReceipt(reqId, obs)
+          }
+          onClose={() => setHandoverDialog(null)}
+        />
+      )}
+
+      {/* Return Marking / Inspection Dialog */}
+      {returnDialog && (
+        <ReturnInspectionDialog
+          mode={returnDialog.mode}
+          loan={returnDialog.loan}
+          item={returnDialog.item}
+          onSubmit={
+            returnDialog.mode === 'borrower_mark_return'
+              ? (reqId) => markLoanReturned(reqId)
+              : (reqId, cp) => completeReturnInspection(reqId, cp)
+          }
+          onClose={() => setReturnDialog(null)}
+        />
+      )}
+
+      {/* Release Uncollected Reservation Dialog */}
+      {releaseDialog && (
+        <ReleaseUncollectedDialog
+          loan={releaseDialog.loan}
+          item={releaseDialog.item}
+          onRelease={(reqId, note) => releaseUncollectedReservation(reqId, note)}
+          onClose={() => setReleaseDialog(null)}
+        />
+      )}
+
+      {/* Side-by-Side Condition Comparison View */}
+      {comparisonDialog && (
+        <ConditionComparisonView
+          loan={comparisonDialog.loan}
+          item={comparisonDialog.item}
+          onClose={() => setComparisonDialog(null)}
         />
       )}
     </div>

@@ -28,13 +28,13 @@ This matrix establishes bidirectional traceability between architectural decisio
 | **FR-005** | Borrowing Request Submission | **DECIDED (DR-02, DR-03)** | IMPLEMENTED (Module 05) | VERIFIED (Vitest & CI) |
 | **FR-006** | Request Decision Workflow | **DECIDED (DR-02)** | IMPLEMENTED (Module 05) | VERIFIED (Vitest & CI) |
 | **FR-007** | Borrowing Period Scheduling | **DECIDED (DR-02, DR-03)** | IMPLEMENTED (Module 05) | VERIFIED (Vitest & CI) |
-| **FR-008** | Collection & Return Logging | **DECIDED (DR-03, DR-04, DR-05)** | PLANNED (Module 06) | PENDING MODULE 06 |
-| **FR-009** | Item Condition Recording | **DECIDED (DR-04)** | PLANNED (Module 06) | PENDING MODULE 06 |
-| **FR-010** | Borrowing History & Status | **DECIDED (DR-03, DR-06)** | PLANNED (Module 06) | PENDING MODULE 06 |
-| **NFR-001** | Usability & Interaction | **DECIDED (DR-01, 02, 03, 06)** | Implemented & Verified | VERIFIED (Modules 01–05) |
-| **NFR-002** | Accessibility (WCAG 2.2 AA) | **DECIDED (DR-01, 06)** | Implemented & Verified | VERIFIED (Modules 01–05) |
+| **FR-008** | Collection & Return Logging | **DECIDED (DR-03, DR-04, DR-05)** | IMPLEMENTED (Module 06) | VERIFIED (Vitest & CI) |
+| **FR-009** | Item Condition Recording | **DECIDED (DR-04)** | IMPLEMENTED (Module 06) | VERIFIED (Vitest & CI) |
+| **FR-010** | Borrowing History & Status | **DECIDED (DR-03, DR-06)** | IMPLEMENTED (Module 06) | VERIFIED (Vitest & CI) |
+| **NFR-001** | Usability & Interaction | **DECIDED (DR-01, 02, 03, 06)** | Implemented & Verified | VERIFIED (Modules 01–06) |
+| **NFR-002** | Accessibility (WCAG 2.2 AA) | **DECIDED (DR-01, 06)** | Implemented & Verified | VERIFIED (Modules 01–06) |
 | **NFR-003** | Responsiveness & Mobile Ergonomics | **DECIDED (DR-06)** | Implemented & Verified | VERIFIED (48px Touch Targets) |
 | **NFR-004** | Data Privacy & Security | **DECIDED (DR-04, DR-05)** | Implemented & Verified | VERIFIED (Canvas EXIF & Address Guard) |
-| **NFR-005** | Reliability & Data Integrity | **DECIDED (DR-02, 03, 04, 05)** | Implemented & Verified | VERIFIED (Zero-Fake-Data & DB v2) |
-| **NFR-006** | Performance | **DECIDED (DR-01, 03)** | Implemented & Verified | VERIFIED (Build < 300ms, Bundle 352 kB) |
-| **NFR-007** | Maintainability & Quality | **DECIDED (DR-01 through 06)** | CI Automated | VERIFIED (0 lint, 163 tests passing) |
+| **NFR-005** | Reliability & Data Integrity | **DECIDED (DR-02, 03, 04, 05)** | Implemented & Verified | VERIFIED (Zero-Fake-Data & DB v3) |
+| **NFR-006** | Performance | **DECIDED (DR-01, 03)** | Implemented & Verified | VERIFIED (Build ~1.2s, Bundle ~116 kB gzip) |
+| **NFR-007** | Maintainability & Quality | **DECIDED (DR-01 through 06)** | CI Automated | VERIFIED (0 lint, 205 tests passing) |

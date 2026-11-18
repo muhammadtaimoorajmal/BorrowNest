@@ -566,4 +566,176 @@ describe('Backup and Restore Subsystem (Schema V1 & V2)', () => {
       expect(processedPhoto.height).toBeLessThanOrEqual(1600);
     });
   });
+
+  describe('Schema Version 3 & Loan Lifecycle Backup/Restore (DR-04)', () => {
+    const validBackupFixtureV3 = {
+      format: BACKUP_FORMAT,
+      schemaVersion: 3,
+      exportedAt: new Date().toISOString(),
+      itemCount: 1,
+      requestCount: 1,
+      loanCount: 1,
+      items: [
+        {
+          ...validItemFixture,
+          id: 'item-v3',
+        },
+      ],
+      borrowingRequests: [
+        {
+          id: 'req-v3-approved',
+          itemId: 'item-v3',
+          borrowerAlias: 'Morgan Reed',
+          startDate: '2026-12-01',
+          endDate: '2026-12-04',
+          status: REQUEST_STATUS.APPROVED,
+          createdAt: '2026-11-18T10:00:00.000Z',
+          updatedAt: '2026-11-18T11:00:00.000Z',
+          decidedAt: '2026-11-18T11:00:00.000Z',
+        },
+      ],
+      loans: [
+        {
+          schemaVersion: 1,
+          requestId: 'req-v3-approved',
+          itemId: 'item-v3',
+          borrowerAlias: 'Morgan Reed',
+          collectionDate: '2026-12-01',
+          returnDeadline: '2026-12-04',
+          status: 'ACTIVE',
+          reservedAt: '2026-11-18T11:00:00.000Z',
+          collectedAt: '2026-12-01T10:00:00.000Z',
+          collectionCheckpoint: {
+            conditionGrade: 4,
+            conditionLabel: 'Good',
+            notes: 'Handover complete and clean',
+            ownerRecordedAt: '2026-12-01T09:50:00.000Z',
+            borrowerReviewedAt: '2026-12-01T10:00:00.000Z',
+            borrowerObservation: 'Confirmed',
+            photos: [
+              {
+                id: 'cp-photo-1',
+                altText: 'Collection handover photo of pressure washer',
+                dataUrl: 'data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAADwAQCdASoBAAEAAkA4JaQAA3AA/vuUAAA=',
+              },
+            ],
+          },
+          createdAt: '2026-11-18T11:00:00.000Z',
+          updatedAt: '2026-12-01T10:00:00.000Z',
+        },
+      ],
+    };
+
+    it('generates valid schema v3 backup including loans and checkpoint photos', async () => {
+      await adapter.createItem({ ...validItemFixture, id: 'item-export-test' });
+      const req = await adapter.createBorrowRequest({
+        itemId: 'item-export-test',
+        borrowerAlias: 'Riley Quinn',
+        startDate: '2026-12-20',
+        endDate: '2026-12-23',
+      });
+      await adapter.approveBorrowRequest(req.id);
+
+      const backup = await generateBackupData(adapter);
+      expect(backup.schemaVersion).toBe(3);
+      expect(backup.format).toBe(BACKUP_FORMAT);
+      expect(backup.loanCount).toBeGreaterThanOrEqual(1);
+      expect(Array.isArray(backup.loans)).toBe(true);
+
+      const exportedLoan = backup.loans.find((l) => l.requestId === req.id);
+      expect(exportedLoan).toBeDefined();
+      expect(exportedLoan.status).toBe('RESERVED');
+    });
+
+    it('parses and previews valid v3 backup with active loans', async () => {
+      const parsed = await parseAndValidateBackup(JSON.stringify(validBackupFixtureV3));
+      expect(parsed.preview.schemaVersion).toBe(3);
+      expect(parsed.preview.loanCount).toBe(1);
+      expect(parsed.preview.activeLoanCount).toBe(1);
+      expect(parsed.loans.length).toBe(1);
+
+      const loan = parsed.loans[0];
+      expect(loan.requestId).toBe('req-v3-approved');
+      expect(loan.status).toBe('ACTIVE');
+      expect(loan.collectionCheckpoint.photos.length).toBe(1);
+      expect(loan.collectionCheckpoint.photos[0].blob).toBeInstanceOf(Blob);
+    });
+
+    it('derives RESERVED loans when importing v2 backup archives', async () => {
+      const parsed = await parseAndValidateBackup(JSON.stringify(validBackupFixtureV2));
+      expect(parsed.preview.schemaVersion).toBe(2);
+      expect(parsed.loans.length).toBe(1);
+      expect(parsed.loans[0].status).toBe('RESERVED');
+      expect(parsed.loans[0].provenance).toBe('MIGRATED_FROM_V2_BACKUP');
+    });
+
+    it('rejects v3 backup when approved request is missing its corresponding loan', async () => {
+      const missingLoanBackup = {
+        ...validBackupFixtureV3,
+        loans: [], // Empty loans array despite having an approved request
+      };
+
+      await expect(parseAndValidateBackup(JSON.stringify(missingLoanBackup))).rejects.toThrow(
+        /missing its corresponding loan lifecycle record/i,
+      );
+    });
+
+    it('rejects v3 backup when loan references a non-existent or unapproved request', async () => {
+      const orphanedLoanBackup = {
+        ...validBackupFixtureV3,
+        loans: [
+          {
+            ...validBackupFixtureV3.loans[0],
+            requestId: 'non-existent-req-id',
+          },
+        ],
+      };
+
+      await expect(parseAndValidateBackup(JSON.stringify(orphanedLoanBackup))).rejects.toThrow(
+        /does not correspond to an approved borrowing request/i,
+      );
+    });
+
+    it('executes atomic three-store REPLACE and MERGE restoring items, requests, and loans', async () => {
+      const parsed = await parseAndValidateBackup(JSON.stringify(validBackupFixtureV3));
+
+      // Replace
+      const replaceRes = await executeReplace(parsed, adapter);
+      expect(replaceRes.replacedItemsCount).toBe(1);
+      expect(replaceRes.replacedRequestsCount).toBe(1);
+      expect(replaceRes.replacedLoansCount).toBe(1);
+
+      const items = await adapter.listItems();
+      const requests = await adapter.listBorrowRequests();
+      const loans = await adapter.listLoans();
+      expect(items.length).toBe(1);
+      expect(requests.length).toBe(1);
+      expect(loans.length).toBe(1);
+      expect(loans[0].status).toBe('ACTIVE');
+
+      // Merge another novel payload
+      const mergePayload = {
+        items: [{ ...validItemFixture, id: 'item-merge-v3' }],
+        requests: [
+          {
+            id: 'req-merge-v3',
+            itemId: 'item-merge-v3',
+            borrowerAlias: 'Novel Merger',
+            startDate: '2026-12-25',
+            endDate: '2026-12-28',
+            status: REQUEST_STATUS.PENDING,
+          },
+        ],
+        loans: [],
+      };
+
+      const mergeRes = await executeMerge(mergePayload, adapter);
+      expect(mergeRes.addedItemsCount).toBe(1);
+      expect(mergeRes.addedRequestsCount).toBe(1);
+
+      expect((await adapter.listItems()).length).toBe(2);
+      expect((await adapter.listBorrowRequests()).length).toBe(2);
+      expect((await adapter.listLoans()).length).toBe(1);
+    });
+  });
 });

@@ -263,6 +263,18 @@ erDiagram
   - **Relational Integrity Guards**: Deleting an item with associated borrowing request history is blocked (`ItemHasRequestHistoryError`), preserving historical audit records. Archiving an item with an active approved reservation is blocked (`ItemHasActiveReservationError`).
   - **Backup & Restore Version 2**: Extended backup schema version 2 serializing both `items` and `borrowingRequests`. Provides full backward compatibility for version 1 backups, atomic multi-store replacement (`replaceAllData`), and conflict-validating atomic merge (`mergeAllData`).
 
+- **Module 06 Physical Handover, Return Verification & Condition Inspection Architecture (DR-04)**:
+  - **IndexedDB Schema Version 3 Upgrade**: Native `BorrowNest` database is upgraded to version 3 adding the `loans` object store with indexes on `itemId`, `status`, `collectionDate`, `returnDeadline`, `createdAt`, `collectedAt`, and `completedAt`. Includes non-destructive migration backfilling legacy `APPROVED` requests as `RESERVED` loans.
+  - **Request State vs. Loan State Decoupling**: Request status describes the owner's decision (`PENDING`, `APPROVED`, `DECLINED`, `CANCELLED`) and remains historically immutable. Loan lifecycle records physical custody separately: `RESERVED` $\rightarrow$ `ACTIVE` $\rightarrow$ `COMPLETED` or `RELEASED_NOT_COLLECTED`.
+  - **Physical Handover Protocol**: Collection handover requires explicit owner handover recording (standardized condition grade, notes, optional photos) followed by borrower physical receipt confirmation before the loan transitions to `ACTIVE` and sets `collectedAt`.
+  - **Return Inspection Protocol**: Physical return requires borrower return marking followed by owner standardized return condition inspection before the loan transitions to `COMPLETED` and sets `completedAt`.
+  - **Derived Overdue Status**: Overdue is strictly a derived display state for active physical loans past return deadline (`loan.status === 'ACTIVE' && loan.returnDeadline < today`). Uncollected reservations whose deadline passed without physical collection display "Collection not recorded — owner resolution required" and support explicit owner release (`RELEASED_NOT_COLLECTED`).
+  - **Structured Condition Checkpoints (DR-04 Option C)**: Standardized 5-tier evaluation across Listing Baseline, Collection Handover, and Return Inspection with notes and optional authentic photos. Side-by-side comparison interface provides objective transition indicators without subjective fault or liability attribution, accompanied by transparent local disclosures.
+  - **Relational Safeguards**: Item deletion is permanently blocked if any request or loan history exists. Item archiving is blocked while associated loans are in `RESERVED` or `ACTIVE`, but permitted when all associated loans are `COMPLETED` or `RELEASED_NOT_COLLECTED`.
+  - **Atomic Three-Store Transactions**: Request approval, uncollected release, backup replacement, and backup merge execute atomically across all three stores `[items, borrowingRequests, loans]`.
+  - **Backup & Restore Schema Version 3**: Serializes `items`, `borrowingRequests`, and `loans` with checkpoint photographs. Provides backwards compatibility for v1 and v2, and strictly requires atomic multi-store transaction execution.
+  - **Monotonic Request Sequencing**: Request sequencing in `useBorrowRequests` guards against race conditions across asynchronous multi-store mutations.
+
 ---
 
 ## 6. Technical Constraints & Trade-offs

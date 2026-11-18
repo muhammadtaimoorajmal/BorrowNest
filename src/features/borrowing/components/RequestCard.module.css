@@ -24,6 +24,46 @@
   border-bottom: 1px solid var(--bn-border-subtle);
 }
 
+.badgesCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.loanStatusBadge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--bn-radius-full, 9999px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badgeReserved {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.badgeActive {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.badgeCompleted {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.badgeReleased {
+  background-color: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #ffedd5;
+}
+
 .itemHeaderInfo {
   display: flex;
   align-items: center;
@@ -131,6 +171,58 @@
   gap: var(--bn-spacing-2);
 }
 
+.activeLoanBanner {
+  background-color: #dbeafe;
+  border: 1px solid #93c5fd;
+  border-radius: var(--bn-radius-md);
+  padding: var(--bn-spacing-2) var(--bn-spacing-3);
+  font-size: var(--bn-font-size-xs);
+  color: #1e40af;
+  font-weight: var(--bn-font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--bn-spacing-2);
+}
+
+.completedBanner {
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--bn-radius-md);
+  padding: var(--bn-spacing-2) var(--bn-spacing-3);
+  font-size: var(--bn-font-size-xs);
+  color: #334155;
+  font-weight: var(--bn-font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--bn-spacing-2);
+}
+
+.releasedBanner {
+  background-color: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: var(--bn-radius-md);
+  padding: var(--bn-spacing-2) var(--bn-spacing-3);
+  font-size: var(--bn-font-size-xs);
+  color: #9a3412;
+  font-weight: var(--bn-font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--bn-spacing-2);
+}
+
+.uncollectedBanner {
+  background-color: #fff7ed;
+  border: 1px solid #fb923c;
+  border-radius: var(--bn-radius-md);
+  padding: var(--bn-spacing-2) var(--bn-spacing-3);
+  font-size: var(--bn-font-size-xs);
+  color: #9a3412;
+  font-weight: var(--bn-font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--bn-spacing-2);
+}
+
 .overdueBanner {
   background-color: #fef2f2;
   border: 1px solid #fca5a5;
@@ -150,6 +242,63 @@
   gap: var(--bn-spacing-3);
   padding-top: var(--bn-spacing-3);
   border-top: 1px solid var(--bn-border-subtle);
+  flex-wrap: wrap;
+}
+
+.actionBtnPrimary {
+  padding: var(--bn-spacing-2) var(--bn-spacing-4);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-semibold);
+  color: #ffffff;
+  background-color: var(--bn-color-primary, #0284c7);
+  border: none;
+  border-radius: var(--bn-radius-md);
+  cursor: pointer;
+  min-height: 38px;
+  transition: background-color var(--bn-transition-fast);
+}
+
+.actionBtnPrimary:hover {
+  background-color: #0369a1;
+}
+
+.actionBtnSecondary {
+  padding: var(--bn-spacing-2) var(--bn-spacing-4);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-medium);
+  color: var(--bn-text-primary);
+  background-color: var(--bn-surface-subtle, #f8fafc);
+  border: 1px solid var(--bn-border-subtle, #cbd5e1);
+  border-radius: var(--bn-radius-md);
+  cursor: pointer;
+  min-height: 38px;
+  transition: all var(--bn-transition-fast);
+}
+
+.actionBtnSecondary:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.actionBtnWarn {
+  padding: var(--bn-spacing-2) var(--bn-spacing-4);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-medium);
+  color: #c2410c;
+  background-color: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: var(--bn-radius-md);
+  cursor: pointer;
+  min-height: 38px;
+  transition: all var(--bn-transition-fast);
+}
+
+.actionBtnWarn:hover {
+  background-color: #ffedd5;
+  border-color: #fb923c;
 }
 
 .actionBtnApprove {

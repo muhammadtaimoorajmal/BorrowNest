@@ -91,4 +91,38 @@ export class StorageAdapter {
   async mergeAllData(_data) {
     throw new Error('Method not implemented: mergeAllData');
   }
+
+  // Module 06: Physical Handover, Return Verification & Condition Inspection (DR-04)
+  async getLoanByRequestId(_requestId) {
+    throw new Error('Method not implemented: getLoanByRequestId');
+  }
+
+  async listLoans(_options = {}) {
+    throw new Error('Method not implemented: listLoans');
+  }
+
+  async listLoansByItem(_itemId) {
+    throw new Error('Method not implemented: listLoansByItem');
+  }
+
+  async recordCollectionHandover(_requestId, _checkpoint) {
+    throw new Error('Method not implemented: recordCollectionHandover');
+  }
+
+  async confirmCollectionReceipt(_requestId, _options = {}) {
+    throw new Error('Method not implemented: confirmCollectionReceipt');
+  }
+
+  async markLoanReturned(_requestId) {
+    throw new Error('Method not implemented: markLoanReturned');
+  }
+
+  async completeReturnInspection(_requestId, _checkpoint) {
+    throw new Error('Method not implemented: completeReturnInspection');
+  }
+
+  async releaseUncollectedReservation(_requestId, _options = {}) {
+    throw new Error('Method not implemented: releaseUncollectedReservation');
+  }
 }
+

@@ -1,5 +1,5 @@
 import { REQUEST_STATUS } from '../constants/requestStatus';
-import { validateDateRange, getLocalToday } from './dateRange';
+import { validateDateRange, isValidDateOnly, getLocalToday } from './dateRange';
 
 export const REQUEST_SCHEMA_VERSION = 1;
 
@@ -8,6 +8,17 @@ export const CONSTRAINTS = Object.freeze({
   BORROWER_ALIAS_MAX_LEN: 50,
   REQUEST_NOTE_MAX_LEN: 500,
 });
+
+/**
+ * Generates a unique borrowing request ID.
+ * @returns {string}
+ */
+export function generateBorrowRequestId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
 
 /**
  * Normalizes a borrowing request object to provide dual canonical and alias field access.
@@ -19,14 +30,20 @@ export const CONSTRAINTS = Object.freeze({
  * - decidedAt & decisionAt
  *
  * @param {object} raw - Input request object
- * @returns {object} Normalized borrowing request record
+ * @param {object} [options]
+ * @param {boolean} [options.generateId=true] - Whether to generate an ID if missing (false for import validation)
+ * @returns {object|null} Normalized borrowing request record
  */
-export function normalizeBorrowRequest(raw) {
+export function normalizeBorrowRequest(raw, { generateId = true } = {}) {
   if (!raw || typeof raw !== 'object') return null;
 
-  const id = raw.id || `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-  const itemId = raw.itemId || '';
-  const itemTitleSnapshot = raw.itemTitleSnapshot || raw.itemTitle || '';
+  let id = typeof raw.id === 'string' ? raw.id.trim() : '';
+  if (!id && generateId) {
+    id = generateBorrowRequestId();
+  }
+
+  const itemId = typeof raw.itemId === 'string' ? raw.itemId.trim() : '';
+  const itemTitleSnapshot = (raw.itemTitleSnapshot || raw.itemTitle || '').trim();
 
   const alias = (raw.borrowerAlias || raw.requestedBy || '').trim();
   const start = (raw.startDate || raw.collectionDate || '').trim();
@@ -51,44 +68,46 @@ export function normalizeBorrowRequest(raw) {
     endDate: end,
     returnDeadline: end,
     requestNote: note,
-    note: note,
+    note,
     status,
     createdAt,
     updatedAt,
     decidedAt: decisionAt,
-    decisionAt: decisionAt,
+    decisionAt,
   };
 }
 
 /**
- * Validates a user-submitted request payload from form inputs.
+ * Validates a user-submitted borrow request payload from the UI form.
  *
- * @param {object} payload
- * @param {object} [options]
- * @param {string} [options.today=getLocalToday()]
+ * @param {object} payload - Normalized payload
+ * @param {object} options
+ * @param {string} [options.today=getLocalToday()] - Baseline date string
  * @returns {{ isValid: boolean, errors: Record<string, string> }}
  */
 export function validateBorrowRequestPayload(payload, { today = getLocalToday() } = {}) {
   const errors = {};
 
   if (!payload || typeof payload !== 'object') {
-    return { isValid: false, errors: { form: 'Invalid request payload provided.' } };
+    return {
+      isValid: false,
+      errors: { form: 'Request payload is required.' },
+    };
   }
 
-  // 1. Item ID
-  const itemId = (payload.itemId || '').trim();
-  if (!itemId) {
+  // 1. Target Item ID
+  if (!payload.itemId || !payload.itemId.trim()) {
     errors.itemId = 'Target item ID is required.';
   }
 
-  // 2. Borrower Alias / Display Name
+  // 2. Borrower Alias
   const alias = (payload.borrowerAlias || payload.requestedBy || '').trim();
   if (!alias) {
     errors.borrowerAlias = 'Please enter a borrower display name.';
   } else if (alias.length < CONSTRAINTS.BORROWER_ALIAS_MIN_LEN) {
-    errors.borrowerAlias = `Borrower display name must be at least ${CONSTRAINTS.BORROWER_ALIAS_MIN_LEN} characters.`;
+    errors.borrowerAlias = `Borrower name must be at least ${CONSTRAINTS.BORROWER_ALIAS_MIN_LEN} characters.`;
   } else if (alias.length > CONSTRAINTS.BORROWER_ALIAS_MAX_LEN) {
-    errors.borrowerAlias = `Borrower display name cannot exceed ${CONSTRAINTS.BORROWER_ALIAS_MAX_LEN} characters.`;
+    errors.borrowerAlias = `Borrower name cannot exceed ${CONSTRAINTS.BORROWER_ALIAS_MAX_LEN} characters.`;
   }
 
   // 3. Date Range
@@ -138,23 +157,27 @@ export function validateBorrowRequestRecord(record) {
     return { isValid: false, errors: { record: 'Request record must be a valid object.' } };
   }
 
-  if (!record.id || typeof record.id !== 'string') {
-    errors.id = 'Request record must possess a valid string ID.';
+  if (!record.id || typeof record.id !== 'string' || !record.id.trim()) {
+    errors.id = 'Request record must possess a valid non-empty string ID.';
   }
 
-  if (!record.itemId || typeof record.itemId !== 'string') {
+  if (!record.itemId || typeof record.itemId !== 'string' || !record.itemId.trim()) {
     errors.itemId = 'Request record must possess a valid target item ID.';
   }
 
   const alias = (record.borrowerAlias || record.requestedBy || '').trim();
   if (!alias) {
     errors.borrowerAlias = 'Request record is missing a borrower display name.';
+  } else if (alias.length < CONSTRAINTS.BORROWER_ALIAS_MIN_LEN || alias.length > CONSTRAINTS.BORROWER_ALIAS_MAX_LEN) {
+    errors.borrowerAlias = `Borrower display name must be between ${CONSTRAINTS.BORROWER_ALIAS_MIN_LEN} and ${CONSTRAINTS.BORROWER_ALIAS_MAX_LEN} characters.`;
   }
 
   const start = (record.startDate || record.collectionDate || '').trim();
   const end = (record.endDate || record.returnDeadline || '').trim();
   if (!start || !end) {
     errors.dates = 'Request record is missing start or end dates.';
+  } else if (!isValidDateOnly(start) || !isValidDateOnly(end)) {
+    errors.dates = 'Request dates must be valid calendar dates formatted as YYYY-MM-DD.';
   } else if (end < start) {
     errors.dates = 'Return deadline cannot precede collection date.';
   }
@@ -162,6 +185,11 @@ export function validateBorrowRequestRecord(record) {
   const validStatuses = Object.values(REQUEST_STATUS);
   if (!record.status || !validStatuses.includes(record.status)) {
     errors.status = `Invalid request status "${record.status}". Allowed values: ${validStatuses.join(', ')}.`;
+  }
+
+  const note = (record.requestNote || record.note || '').trim();
+  if (note.length > CONSTRAINTS.REQUEST_NOTE_MAX_LEN) {
+    errors.note = `Request note cannot exceed ${CONSTRAINTS.REQUEST_NOTE_MAX_LEN} characters.`;
   }
 
   return {
