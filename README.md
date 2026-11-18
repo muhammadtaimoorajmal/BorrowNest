@@ -2,7 +2,16 @@
 
 > **Share what you own. Borrow what you need.**
 
-BorrowNest is an open-source, local-first item-sharing and lending coordination application. It helps individuals and small communities organize useful household and workshop equipment, log borrowing requests, agree on loan durations, coordinate item collection and returns, and maintain transparent item-condition records.
+BorrowNest is an open-source, local-first item-sharing and lending coordination application. It helps individuals and local community members catalog useful household and workshop equipment, submit structured borrowing requests, agree on loan durations, coordinate item collection and returns, and maintain transparent, objective item condition records across physical handovers.
+
+[![BorrowNest CI](https://github.com/muhammadtaimoorajmal/BorrowNest/actions/workflows/ci.yml/badge.svg)](https://github.com/muhammadtaimoorajmal/BorrowNest/actions/workflows/ci.yml)
+[![Deploy to GitHub Pages](https://github.com/muhammadtaimoorajmal/BorrowNest/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/muhammadtaimoorajmal/BorrowNest/actions/workflows/deploy-pages.yml)
+[![Release v0.1.0](https://img.shields.io/badge/release-v0.1.0-blue.svg)](https://github.com/muhammadtaimoorajmal/BorrowNest/releases/tag/v0.1.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+- **Live Application**: [https://muhammadtaimoorajmal.github.io/BorrowNest/](https://muhammadtaimoorajmal.github.io/BorrowNest/)
+- **GitHub Repository**: [https://github.com/muhammadtaimoorajmal/BorrowNest](https://github.com/muhammadtaimoorajmal/BorrowNest)
+- **First Official Release**: [v0.1.0 Release Notes](https://github.com/muhammadtaimoorajmal/BorrowNest/releases/tag/v0.1.0)
 
 ---
 
@@ -30,49 +39,68 @@ BorrowNest provides a focused coordination workspace to:
 - **Media Pipeline**: Client-side HTML5 Canvas EXIF/GPS stripping, downscaling, and compression
 - **Testing**: Vitest & React Testing Library (JSDOM environment with fake-indexeddb)
 - **Code Quality**: ESLint 10 (Flat Config)
-- **Deployment & Automation**: GitHub Actions CI Workflow
+- **Deployment & Automation**: GitHub Actions CI Workflow and GitHub Pages automated deployment
 
-BorrowNest is architected as a **local-first client-side application**. It stores information directly within the user's browser environment using native IndexedDB and operates without third-party tracking, external telemetry, or mandatory remote cloud backends.
+### Local-First Architectural Boundary
+BorrowNest is architected as a **purely client-side, local-first application**:
+- **Browser-Local Storage**: All data is stored directly in the visitor's individual browser environment using native IndexedDB across three dedicated stores: `items`, `borrowingRequests`, and `loans`. Photographs are preserved as native Blobs within item records and loan condition checkpoints.
+- **No Cloud Backend**: BorrowNest does **not** connect to a remote cloud database, central API server, or external telemetry service.
+- **No Remote Identity Verification**: Borrower and owner perspectives are local task views, not authenticated multi-tenant user accounts.
+- **No Cross-Device Synchronization**: Data created in one browser or device does not automatically sync to another visitor's browser.
+- **Backup & Portability**: Users can export and restore their complete local dataset at any time as an encrypted/validated JSON backup (`#account` tab) to migrate between devices or guard against browser cache eviction.
 
 ---
 
-## Prototype Boundaries and Current Status
+## Prototype Scope & Completed Modules
 
-BorrowNest has completed **Module 06 (Physical Handover, Return Verification & Condition Inspection)** — the final planned functional application module:
-- **Decoupled Request Decision vs. Physical Custody State Machine**: Request decisions remain immutable records (`PENDING`, `APPROVED`, `DECLINED`, `CANCELLED`). Physical custody progresses through a dedicated `loans` store: `RESERVED` $\rightarrow$ `ACTIVE` $\rightarrow$ `COMPLETED` or `RELEASED_NOT_COLLECTED`.
-- **Physical Collection Handover Protocol**: Owner records initial physical handover condition (1–5 tier, observations, max 5 sanitized photos); borrower physically inspects the item and confirms receipt (`confirmCollectionReceipt`), transitioning the loan to `ACTIVE` and stamping `collectedAt`.
-- **Physical Return & Inspection Protocol**: Borrower marks the item physically returned; owner conducts a standardized return condition inspection (1–5 tier, observations, photos) and closes the loan to `COMPLETED` (`completeReturnInspection`), stamping `completedAt` and unlocking calendar dates.
+BorrowNest has completed all six planned functional application modules (Modules 01–06):
+
+| Module | Scope | Status |
+| :--- | :--- | :--- |
+| **Module 01** | Project foundation, identity, architectural principles, repository setup, and CI automation | **Completed** |
+| **Module 02** | Formal Question-Option-Criteria (QOC) design rationale across 6 key architectural decision areas ([docs/design-rationale/](docs/design-rationale/)) | **Completed** |
+| **Module 03** | Genuine item listing management, native IndexedDB persistence, photo processing, and backup/restore | **Completed & Verified** |
+| **Module 04** | Unified item discovery, category browsing, search filtering, and modal detail inspection | **Completed & Verified** |
+| **Module 05** | Structured borrowing requests, owner approval workflow, date scheduling, and overlap prevention | **Completed & Verified** |
+| **Module 06** | Physical handover condition inspection, return verification handshake, side-by-side comparison, and uncollected release | **Completed & Verified** |
+
+### Key Implemented Capabilities
+- **Decoupled State Machine**: Distinct separation between immutable request decisions (`PENDING`, `APPROVED`, `DECLINED`, `CANCELLED`) and physical loan lifecycles (`RESERVED` $\rightarrow$ `ACTIVE` $\rightarrow$ `COMPLETED` or `RELEASED_NOT_COLLECTED`).
+- **Physical Collection Handover Protocol**: Owner records initial physical handover condition (1–5 tier, observations, photos); borrower inspects the item and confirms receipt (`confirmCollectionReceipt`), transitioning the loan to `ACTIVE` and stamping `collectedAt`.
+- **Physical Return & Inspection Protocol**: Borrower marks the item physically returned (`borrowerReturnMarkedAt`); owner conducts a standardized return condition inspection (1–5 tier, observations, photos) and closes the loan to `COMPLETED` (`completeReturnInspection`), stamping `completedAt` and unlocking calendar dates.
 - **Side-by-Side Condition Comparison View (DR-04 Option C)**: 3-column comparative view across Listing Baseline, Collection Handover, and Return Inspection with objective delta summary pills and explicit peer transparency disclaimers.
 - **Uncollected Reservation Release**: Explicit owner resolution workflow (`releaseUncollectedReservation`) for approved reservations whose pickup window elapsed without collection, transitioning status to `RELEASED_NOT_COLLECTED` and safely unlocking calendar dates without deleting audit history.
-- **Derived Overdue Status**: Overdue is strictly a derived display state for active physical loans past their return deadline (`loan.status === 'ACTIVE' && loan.returnDeadline < today`), distinct from uncollected reservations.
-- **Relational Integrity Safeguards**: Deleting items with request or loan history remains permanently blocked (`ItemHasRequestHistoryError`). Archiving items is blocked while associated loans are in `RESERVED` or `ACTIVE`, but is permitted when all associated loans are `COMPLETED` or `RELEASED_NOT_COLLECTED`.
-- **Lending Workspace Integration**: Dedicated "Items Lent Out" tab alongside Active Listings, Archived, and Incoming Requests, displaying active loan counts and action triggers.
-- **IndexedDB Schema Version 3 & Multi-Store Backup Version 3**: Native `loans` store with indexes, non-destructive migration backfilling legacy `APPROVED` requests as `RESERVED` loans, and version 3 backup/restore serializing items, photos, borrowing requests, and loan lifecycles with checkpoint photographs. All multi-store operations execute atomically.
-- **Comprehensive Quality Gates**: 207 automated tests passing across 24 test suites with 0 ESLint warnings/errors and clean Vite production build.
+- **Relational Integrity Safeguards**: Deleting items with request or loan history is permanently blocked (`ItemHasRequestHistoryError`). Archiving items is blocked while associated loans are in `RESERVED` or `ACTIVE`, but is permitted when all associated loans are `COMPLETED` or `RELEASED_NOT_COLLECTED`.
+- **IndexedDB Schema Version 3 & Multi-Store Backup Version 3**: Dedicated `items`, `borrowingRequests`, and `loans` stores with indexes, non-destructive migration, and version 3 backup/restore serializing all records atomically.
 
 ---
 
 ## Privacy Principles & Genuine Asset Policy
 
 - **Data Minimization**: BorrowNest requests only information strictly necessary for lending coordination.
-- **Collection Privacy**: Only coarse neighborhood or landmark areas are collected and displayed. Exact residential street addresses and private lockbox codes are strictly prevented via real-time heuristic warning safeguards (DR-05).
-- **Borrower Identity Transparency**: Borrower aliases are explicitly identified as local display names stored client-side rather than cryptographically verified network identities.
+- **Collection Privacy (DR-05)**: Only coarse neighborhood or landmark areas are collected and displayed (e.g. "Greenwood / Pine St area"). Exact residential street addresses and lockbox codes are strictly prevented via heuristic warning safeguards.
 - **EXIF & Metadata Stripping**: Uploaded photos are stripped of all camera metadata, embedded GPS coordinates, and device identifiers client-side before storage.
 - **Genuine Imagery**: BorrowNest strictly prohibits generic stock photographs, clip art, or synthetic renders. All listings rely exclusively on genuine photographs captured directly by item owners.
-- **Design Target**: Built with semantic HTML, ARIA landmarks, and keyboard navigation targeting WCAG 2.2 Level AA, with mobile navigation touch targets meeting or exceeding 44 × 44 CSS pixels.
+- **Accessibility Baseline**: Built with semantic HTML, ARIA landmarks, and keyboard navigation targeting WCAG 2.2 Level AA, with mobile touch targets meeting or exceeding 44 × 44 CSS pixels.
 
 ---
 
-## Feature Roadmap
+## Verification & Quality Gates
 
-| Module | Scope | Status |
-| :--- | :--- | :--- |
-| **Module 01** | Project foundation, identity, architectural principles, repository setup, and CI automation | **Implemented** |
-| **Module 02** | Formal Question-Option-Criteria (QOC) design rationale across 6 key architectural decision areas ([docs/design-rationale/](docs/design-rationale/)) | **Implemented** |
-| **Module 03** | Genuine item listing management, native IndexedDB persistence, photo processing, and backup/restore | **Implemented & Verified** |
-| **Module 04** | Discovery, category browsing, and search filtering | **Implemented & Verified** |
-| **Module 05** | Request submission, owner approval flow, and loan period scheduling | **Implemented & Verified** |
-| **Module 06** | Handover inspection, condition documentation, and return completion | **Implemented & Verified** |
+The codebase has undergone verification across all engineering dimensions:
+
+| Gate | Tooling | Status | Details |
+| :--- | :--- | :--- | :--- |
+| **Linting** | ESLint 10 | **Passing** | 0 errors, 0 warnings across all JavaScript and JSX source files |
+| **Automated Tests** | Vitest 5 + Testing Library | **Passing** | 207 automated tests passing across 24 test suites |
+| **Production Build** | Vite 8 | **Passing** | Clean, optimized production bundle built in ~250ms |
+| **Production Audit** | `npm audit --omit=dev` | **Passing** | 0 vulnerabilities in production runtime dependencies |
+| **Pages Deployment** | GitHub Actions | **Automated** | Build and deploy pipeline targeting GitHub Pages |
+
+### Known Development Dependency Advisory
+- A high-severity advisory (`GHSA-fc5q-39xc-vjpf`) exists in transitive development dependency `picomatch` used by `vite` and `vitest` during local build/test execution.
+- This advisory affects only local build-time glob parsing and is **not** included in the client bundle.
+- Runtime production dependencies have **0 vulnerabilities** (`npm audit --omit=dev`). Details are tracked in [docs/design-rationale/TECHNICAL_RISK_REGISTER.md](docs/design-rationale/TECHNICAL_RISK_REGISTER.md).
 
 ---
 
@@ -88,22 +116,24 @@ Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/muhammadtaimoorajmal/BorrowNest.git
 cd BorrowNest
-npm install
+npm ci
 ```
 
 ### Development Scripts
 
-- `npm run dev`: Launch the Vite local development server with hot module reloading.
+- `npm run dev`: Launch the local development server with hot module reloading.
 - `npm run build`: Compile the production application bundle into `dist/`.
 - `npm run lint`: Verify code style and syntax rules using ESLint.
-- `npm run test`: Run the test suite with Vitest.
+- `npm run test`: Run the full automated test suite with Vitest.
 - `npm run preview`: Preview the compiled production build locally.
 
 ---
 
-## Contributing
+## Deployment
 
-Contributions that adhere to our local-first architecture and genuine data policy are welcome. Please ensure that all pull requests pass `npm run lint`, `npm run test`, and `npm run build`.
+BorrowNest is automatically built and deployed to GitHub Pages via GitHub Actions:
+- **Live URL**: [https://muhammadtaimoorajmal.github.io/BorrowNest/](https://muhammadtaimoorajmal.github.io/BorrowNest/)
+- **Deployment Documentation**: See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for full configuration and workflow details.
 
 ---
 

@@ -72,9 +72,9 @@ This register documents genuine technical, security, and methodological limitati
   - **Remediation Status**: npm's automated fix recommends major semver downgrades to Vite 6 (`vite@6.2.7`), which would break React 19 compatibility. Running `npm audit fix --force` is strictly prohibited in Module 02.
 - **Impact**: Zero runtime production exposure. The vulnerability exists exclusively in development build tools (`vite` and `vitest` file globbing during local build/test execution) and is not bundled into client-facing production JavaScript.
 - **Likelihood / Basis**: **Verified** via direct CLI audit.
-- **Mitigation**: Monitor upstream patch releases from the Vite and Vitest core teams that upgrade `picomatch` / `tinyglobby` cleanly. Retain existing build lockfiles without forced breakage.
+- **Mitigation**: Monitor upstream patch releases from the Vite and Vitest core teams that upgrade `picomatch` / `tinyglobby` cleanly. Retain existing build lockfiles without forced breakage. Automated `.github/dependabot.yml` configured to monitor updates weekly. Verified `npm audit --omit=dev` reports 0 vulnerabilities in production bundle.
 - **Blocks Current Prototype?**: **No**. Dev-only tooling advisory; does not affect production code.
-- **Relevant Future Module**: Future routine dependency maintenance.
+- **Relevant Future Module**: Routine dependency maintenance (v0.1.0 release verified).
 
 ---
 
