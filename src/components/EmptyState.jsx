@@ -57,9 +57,9 @@ export function EmptyState() {
         </div>
 
         <div className={styles.infoCard}>
-          <h3 className={styles.cardHeading}>Next Milestones</h3>
+          <h3 className={styles.cardHeading}>Community Equipment Sharing</h3>
           <p className={styles.cardText}>
-            Module 02 establishes formalized Question-Option-Criteria (QOC) architectural decisions before item creation and borrowing coordination are implemented.
+            Coordinate lending and borrowing with neighborhood peers through transparent condition checkpoints and structured requests.
           </p>
         </div>
       </div>

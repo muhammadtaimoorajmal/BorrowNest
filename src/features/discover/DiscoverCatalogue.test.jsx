@@ -52,18 +52,18 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
 
     // 1. Search by title
     fireEvent.change(searchInput, { target: { value: 'drill' } });
-    expect(screen.getByText(/DeWalt 20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Coleman 6-Person Instant Cabin Tent/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
+    expect(screen.queryByText(/6-Person Family Cabin Camping Tent/i)).not.toBeInTheDocument();
 
     // 2. Search by specification (USB-C)
     fireEvent.change(searchInput, { target: { value: 'USB-C' } });
-    expect(screen.getByText(/Rechargeable Electric Screwdriver/i)).toBeInTheDocument();
-    expect(screen.queryByText(/DeWalt 20V MAX Cordless Compact Drill/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Rechargeable Precision Electric Screwdriver/i)).toBeInTheDocument();
+    expect(screen.queryByText(/20V MAX Cordless Compact Drill/i)).not.toBeInTheDocument();
 
     // 3. Clear search restores all 10 items
     fireEvent.change(searchInput, { target: { value: '' } });
-    expect(screen.getByText(/DeWalt 20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
-    expect(screen.getByText(/Coleman 6-Person Instant Cabin Tent/i)).toBeInTheDocument();
+    expect(screen.getByText(/20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
+    expect(screen.getByText(/6-Person Family Cabin Camping Tent/i)).toBeInTheDocument();
   });
 
   it('filters curated example items by category pills and resets cleanly', async () => {
@@ -74,17 +74,17 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
     const gardeningPill = screen.getByRole('button', { name: /^Gardening$/i });
     fireEvent.click(gardeningPill);
 
-    expect(screen.getByText(/Fiskars Bypass Pruning Shears/i)).toBeInTheDocument();
-    expect(screen.getByText(/Makita 18V LXT Cordless Hedge Trimmer/i)).toBeInTheDocument();
-    expect(screen.queryByText(/DeWalt 20V MAX Cordless Compact Drill/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Coleman 6-Person Instant Cabin Tent/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Bypass Pruning Shears/i)).toBeInTheDocument();
+    expect(screen.getByText(/18V Cordless Garden Hedge Trimmer/i)).toBeInTheDocument();
+    expect(screen.queryByText(/20V MAX Cordless Compact Drill/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/6-Person Family Cabin Camping Tent/i)).not.toBeInTheDocument();
 
     // Reset with "All Categories"
     const allPill = screen.getByRole('button', { name: /All Categories/i });
     fireEvent.click(allPill);
 
-    expect(screen.getByText(/DeWalt 20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
-    expect(screen.getByText(/Coleman 6-Person Instant Cabin Tent/i)).toBeInTheDocument();
+    expect(screen.getByText(/20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
+    expect(screen.getByText(/6-Person Family Cabin Camping Tent/i)).toBeInTheDocument();
   });
 
   it('opens example ItemDetailModal with curated specifications, photo, and demo disclaimer', async () => {
@@ -100,12 +100,12 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
     await screen.findByRole('heading', { name: /No items listed yet/i });
 
     const viewBtn = screen.getByRole('button', {
-      name: /View details for DeWalt 20V MAX Cordless Compact Drill\/Driver/i,
+      name: /View details for 20V MAX Cordless Compact Drill\/Driver/i,
     });
     fireEvent.click(viewBtn);
 
     const dialog = screen.getByRole('dialog', {
-      name: /DeWalt 20V MAX Cordless Compact Drill\/Driver/i,
+      name: /20V MAX Cordless Compact Drill\/Driver/i,
     });
     expect(dialog).toBeInTheDocument();
 
@@ -123,6 +123,10 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
     expect(modalContent.getByText(/Key Specifications/i)).toBeInTheDocument();
     expect(modalContent.getByText(/Voltage: 20V MAX/i)).toBeInTheDocument();
     expect(modalContent.getByText(/Potential Use Case/i)).toBeInTheDocument();
+
+    // Section 8.1: Confirms zero fabricated neighbourhood areas are displayed
+    expect(modalContent.queryByText(/Greenwood/i)).not.toBeInTheDocument();
+    expect(modalContent.queryByText(/Maple Ridge/i)).not.toBeInTheDocument();
 
     // Safe interaction handshake: does NOT render "Request to Borrow"
     expect(modalContent.queryByRole('button', { name: /Request to Borrow/i })).not.toBeInTheDocument();
@@ -172,7 +176,7 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
     expect(within(realCard).getByText('Available')).toBeInTheDocument();
 
     // Example catalogue items are still accessible below
-    expect(screen.getByText(/DeWalt 20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
+    expect(screen.getByText(/20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
 
     unmountSecond();
   });

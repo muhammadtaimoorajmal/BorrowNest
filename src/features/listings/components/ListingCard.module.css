@@ -74,15 +74,15 @@
 }
 
 .badgeAvailable {
-  background-color: #d1fae5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background-color: var(--bn-color-success-100);
+  color: var(--bn-color-success-800);
+  border: 1px solid var(--bn-color-success-200);
 }
 
 .badgeUnavailable {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  background-color: var(--bn-surface-subtle);
+  color: var(--bn-text-secondary);
+  border: 1px solid var(--bn-border-subtle);
 }
 
 .archivedBadge {
@@ -90,9 +90,9 @@
   font-weight: var(--bn-font-weight-semibold);
   padding: 3px 8px;
   border-radius: var(--bn-radius-full);
-  background-color: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
+  background-color: var(--bn-color-accent-100);
+  color: var(--bn-color-accent-800);
+  border: 1px solid var(--bn-color-accent-200);
 }
 
 .content {
@@ -184,6 +184,11 @@
   background-color: var(--bn-surface-subtle);
 }
 
+.actionBtn:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 1px;
+}
+
 .viewBtn {
   border-color: var(--bn-color-primary-500);
   color: var(--bn-color-primary-800);
@@ -194,16 +199,16 @@
 }
 
 .deleteBtn {
-  border-color: #fca5a5;
-  color: #b91c1c;
+  border-color: var(--bn-color-danger-300);
+  color: var(--bn-color-danger-700);
   margin-left: auto;
 }
 
 .deleteBtn:hover {
-  background-color: #fef2f2;
+  background-color: var(--bn-color-danger-50);
 }
 
 .restoreBtn {
-  border-color: #fbbf24;
-  color: #b45309;
+  border-color: var(--bn-color-accent-400);
+  color: var(--bn-color-accent-800);
 }

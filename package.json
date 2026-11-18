@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "check:tokens": "node scripts/validate-tokens.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview"

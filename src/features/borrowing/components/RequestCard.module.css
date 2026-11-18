@@ -41,27 +41,27 @@
 }
 
 .badgeReserved {
-  background-color: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
+  background-color: var(--bn-color-primary-50);
+  color: var(--bn-color-primary-700);
+  border: 1px solid var(--bn-color-primary-200);
 }
 
 .badgeActive {
-  background-color: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+  background-color: var(--bn-color-success-50);
+  color: var(--bn-color-success-700);
+  border: 1px solid var(--bn-color-success-200);
 }
 
 .badgeCompleted {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background-color: var(--bn-surface-subtle);
+  color: var(--bn-text-secondary);
+  border: 1px solid var(--bn-border-subtle);
 }
 
 .badgeReleased {
-  background-color: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #ffedd5;
+  background-color: var(--bn-color-accent-50);
+  color: var(--bn-color-accent-700);
+  border: 1px solid var(--bn-color-accent-200);
 }
 
 .itemHeaderInfo {
@@ -159,12 +159,12 @@
 }
 
 .activeReservationBanner {
-  background-color: #dcfce7;
-  border: 1px solid #86efac;
+  background-color: var(--bn-color-success-50);
+  border: 1px solid var(--bn-color-success-300);
   border-radius: var(--bn-radius-md);
   padding: var(--bn-spacing-2) var(--bn-spacing-3);
   font-size: var(--bn-font-size-xs);
-  color: #166534;
+  color: var(--bn-color-success-800);
   font-weight: var(--bn-font-weight-medium);
   display: flex;
   align-items: center;
@@ -172,12 +172,12 @@
 }
 
 .activeLoanBanner {
-  background-color: #dbeafe;
-  border: 1px solid #93c5fd;
+  background-color: var(--bn-color-primary-50);
+  border: 1px solid var(--bn-color-primary-300);
   border-radius: var(--bn-radius-md);
   padding: var(--bn-spacing-2) var(--bn-spacing-3);
   font-size: var(--bn-font-size-xs);
-  color: #1e40af;
+  color: var(--bn-color-primary-800);
   font-weight: var(--bn-font-weight-medium);
   display: flex;
   align-items: center;
@@ -185,12 +185,12 @@
 }
 
 .completedBanner {
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
+  background-color: var(--bn-surface-subtle);
+  border: 1px solid var(--bn-border-subtle);
   border-radius: var(--bn-radius-md);
   padding: var(--bn-spacing-2) var(--bn-spacing-3);
   font-size: var(--bn-font-size-xs);
-  color: #334155;
+  color: var(--bn-text-secondary);
   font-weight: var(--bn-font-weight-medium);
   display: flex;
   align-items: center;
@@ -198,12 +198,12 @@
 }
 
 .releasedBanner {
-  background-color: #fff7ed;
-  border: 1px solid #fed7aa;
+  background-color: var(--bn-color-accent-50);
+  border: 1px solid var(--bn-color-accent-200);
   border-radius: var(--bn-radius-md);
   padding: var(--bn-spacing-2) var(--bn-spacing-3);
   font-size: var(--bn-font-size-xs);
-  color: #9a3412;
+  color: var(--bn-color-accent-800);
   font-weight: var(--bn-font-weight-medium);
   display: flex;
   align-items: center;
@@ -211,12 +211,12 @@
 }
 
 .uncollectedBanner {
-  background-color: #fff7ed;
-  border: 1px solid #fb923c;
+  background-color: var(--bn-color-accent-50);
+  border: 1px solid var(--bn-color-accent-400);
   border-radius: var(--bn-radius-md);
   padding: var(--bn-spacing-2) var(--bn-spacing-3);
   font-size: var(--bn-font-size-xs);
-  color: #9a3412;
+  color: var(--bn-color-accent-800);
   font-weight: var(--bn-font-weight-medium);
   display: flex;
   align-items: center;
@@ -224,12 +224,12 @@
 }
 
 .overdueBanner {
-  background-color: #fef2f2;
-  border: 1px solid #fca5a5;
+  background-color: var(--bn-color-danger-50);
+  border: 1px solid var(--bn-color-danger-300);
   border-radius: var(--bn-radius-md);
   padding: var(--bn-spacing-2) var(--bn-spacing-3);
   font-size: var(--bn-font-size-xs);
-  color: #991b1b;
+  color: var(--bn-color-danger-800);
   font-weight: var(--bn-font-weight-medium);
   display: flex;
   align-items: center;
@@ -237,12 +237,12 @@
 }
 
 .awaitingReturnBanner {
-  background-color: #f8fafc;
-  border: 1px solid #cbd5e1;
+  background-color: var(--bn-surface-subtle);
+  border: 1px solid var(--bn-border-subtle);
   border-radius: var(--bn-radius-md);
   padding: var(--bn-spacing-2) var(--bn-spacing-3);
   font-size: var(--bn-font-size-xs);
-  color: #475569;
+  color: var(--bn-text-secondary);
   font-weight: var(--bn-font-weight-medium);
   display: flex;
   align-items: center;
@@ -250,12 +250,12 @@
 }
 
 .returnMarkedBanner {
-  background-color: #f0fdf4;
-  border: 1px solid #86efac;
+  background-color: var(--bn-color-success-50);
+  border: 1px solid var(--bn-color-success-300);
   border-radius: var(--bn-radius-md);
   padding: var(--bn-spacing-2) var(--bn-spacing-3);
   font-size: var(--bn-font-size-xs);
-  color: #166534;
+  color: var(--bn-color-success-800);
   font-weight: var(--bn-font-weight-medium);
   display: flex;
   align-items: center;
@@ -277,16 +277,21 @@
   font-size: var(--bn-font-size-xs);
   font-weight: var(--bn-font-weight-semibold);
   color: #ffffff;
-  background-color: var(--bn-color-primary, #0284c7);
+  background-color: var(--bn-color-primary-700);
   border: none;
   border-radius: var(--bn-radius-md);
   cursor: pointer;
-  min-height: 38px;
+  min-height: 44px;
   transition: background-color var(--bn-transition-fast);
 }
 
 .actionBtnPrimary:hover {
-  background-color: #0369a1;
+  background-color: var(--bn-color-primary-800);
+}
+
+.actionBtnPrimary:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
 }
 
 .actionBtnSecondary {
@@ -295,17 +300,21 @@
   font-size: var(--bn-font-size-xs);
   font-weight: var(--bn-font-weight-medium);
   color: var(--bn-text-primary);
-  background-color: var(--bn-surface-subtle, #f8fafc);
-  border: 1px solid var(--bn-border-subtle, #cbd5e1);
+  background-color: var(--bn-surface-subtle);
+  border: 1px solid var(--bn-border-strong);
   border-radius: var(--bn-radius-md);
   cursor: pointer;
-  min-height: 38px;
+  min-height: 44px;
   transition: all var(--bn-transition-fast);
 }
 
 .actionBtnSecondary:hover {
-  background-color: #f1f5f9;
-  border-color: #94a3b8;
+  background-color: var(--bn-border-subtle);
+}
+
+.actionBtnSecondary:focus-visible {
+  outline: 2px solid var(--bn-color-slate-500);
+  outline-offset: 2px;
 }
 
 .actionBtnWarn {
@@ -313,18 +322,23 @@
   font-family: var(--bn-font-sans);
   font-size: var(--bn-font-size-xs);
   font-weight: var(--bn-font-weight-medium);
-  color: #c2410c;
-  background-color: #fff7ed;
-  border: 1px solid #fdba74;
+  color: var(--bn-color-accent-800);
+  background-color: var(--bn-color-accent-50);
+  border: 1px solid var(--bn-color-accent-300);
   border-radius: var(--bn-radius-md);
   cursor: pointer;
-  min-height: 38px;
+  min-height: 44px;
   transition: all var(--bn-transition-fast);
 }
 
 .actionBtnWarn:hover {
-  background-color: #ffedd5;
-  border-color: #fb923c;
+  background-color: var(--bn-color-accent-100);
+  border-color: var(--bn-color-accent-400);
+}
+
+.actionBtnWarn:focus-visible {
+  outline: 2px solid var(--bn-color-accent-600);
+  outline-offset: 2px;
 }
 
 .actionBtnApprove {
@@ -333,15 +347,21 @@
   font-size: var(--bn-font-size-xs);
   font-weight: var(--bn-font-weight-semibold);
   color: #ffffff;
-  background-color: var(--bn-color-success-600, #16a34a);
+  background-color: var(--bn-color-success-700);
   border: none;
   border-radius: var(--bn-radius-md);
   cursor: pointer;
+  min-height: 44px;
   transition: background-color var(--bn-transition-fast);
 }
 
 .actionBtnApprove:hover {
-  background-color: var(--bn-color-success-700, #15803d);
+  background-color: var(--bn-color-success-800);
+}
+
+.actionBtnApprove:focus-visible {
+  outline: 2px solid var(--bn-color-success-600);
+  outline-offset: 2px;
 }
 
 .actionBtnDecline {
@@ -349,16 +369,22 @@
   font-family: var(--bn-font-sans);
   font-size: var(--bn-font-size-xs);
   font-weight: var(--bn-font-weight-medium);
-  color: var(--bn-color-danger-700, #b91c1c);
+  color: var(--bn-color-danger-700);
   background-color: transparent;
-  border: 1px solid var(--bn-color-danger-300, #fca5a5);
+  border: 1px solid var(--bn-color-danger-300);
   border-radius: var(--bn-radius-md);
   cursor: pointer;
+  min-height: 44px;
   transition: background-color var(--bn-transition-fast);
 }
 
 .actionBtnDecline:hover {
-  background-color: #fee2e2;
+  background-color: var(--bn-color-danger-50);
+}
+
+.actionBtnDecline:focus-visible {
+  outline: 2px solid var(--bn-color-danger-600);
+  outline-offset: 2px;
 }
 
 .actionBtnCancel {
@@ -366,16 +392,22 @@
   font-family: var(--bn-font-sans);
   font-size: var(--bn-font-size-xs);
   font-weight: var(--bn-font-weight-medium);
-  color: var(--bn-color-danger-700, #b91c1c);
+  color: var(--bn-color-danger-700);
   background-color: transparent;
   border: 1px solid var(--bn-border-subtle);
   border-radius: var(--bn-radius-md);
   cursor: pointer;
+  min-height: 44px;
 }
 
 .actionBtnCancel:hover {
-  background-color: #fee2e2;
-  border-color: #fca5a5;
+  background-color: var(--bn-color-danger-50);
+  border-color: var(--bn-color-danger-300);
+}
+
+.actionBtnCancel:focus-visible {
+  outline: 2px solid var(--bn-color-danger-600);
+  outline-offset: 2px;
 }
 
 .terminalNotice {

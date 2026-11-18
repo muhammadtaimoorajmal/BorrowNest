@@ -112,15 +112,17 @@ export function DiscoverPage({
         className={styles.resultsBar}
       >
         <div className={styles.resultCount}>
-          {localLoading ? (
-            'Loading community catalog...'
-          ) : localTotalCount === 0 ? (
-            '0 items in local catalog'
-          ) : (
-            `Showing ${localResultCount} of ${localTotalCount} ${
-              localTotalCount === 1 ? 'item' : 'items'
-            }`
-          )}
+          <span className={styles.localCount}>
+            {localLoading
+              ? 'Loading community catalog...'
+              : localTotalCount === 0
+              ? 'Your local listings: 0 items in local catalog'
+              : `Showing ${localResultCount} of ${localTotalCount} items (local)`}
+          </span>
+          <span className={styles.countSeparator} aria-hidden="true"> • </span>
+          <span className={styles.exampleCount}>
+            {`Example catalogue: ${filteredExampleItems.length} of ${EXAMPLE_CATALOGUE.length} illustrative items`}
+          </span>
         </div>
 
         {localHasFilters && !localLoading && (
@@ -192,15 +194,15 @@ export function DiscoverPage({
             <section className={styles.exampleSection} aria-label="Curated Example Equipment">
               <div className={styles.exampleHeader}>
                 <div className={styles.exampleHeaderBadge}>
-                  <span aria-hidden="true">✨</span> Curated Demonstration Catalogue
+                  <span aria-hidden="true">✨</span> Illustrative Demonstration Catalogue
                 </div>
                 <h2 className={styles.exampleTitle}>
                   Explore Community Equipment ({EXAMPLE_CATALOGUE.length} Example Items)
                 </h2>
                 <p className={styles.exampleSubtitle}>
-                  Browse genuine examples with real photography to explore what equipment neighbors
+                  Illustrative examples, not live community listings. Browse genuine equipment photography to explore what neighbors
                   share on BorrowNest. These illustrative items showcase specifications, condition
-                  grades, and use cases.
+                  grades, and use cases without geographic restrictions.
                 </p>
               </div>
 

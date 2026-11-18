@@ -50,10 +50,15 @@
   transform: translateY(-1px);
 }
 
+.primaryAddBtn:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
+}
+
 .errorAlert {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background-color: var(--bn-color-danger-50);
+  border: 1px solid var(--bn-color-danger-200);
+  color: var(--bn-color-danger-700);
   padding: var(--bn-space-3) var(--bn-space-4);
   border-radius: var(--bn-radius-md);
   display: flex;
@@ -98,7 +103,7 @@
 }
 
 .statAvailable {
-  color: #059669;
+  color: var(--bn-color-success-700);
 }
 
 .tabBar {
@@ -126,6 +131,11 @@
 
 .tabBtn:hover {
   color: var(--bn-text-primary);
+}
+
+.tabBtn:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: -2px;
 }
 
 .activeTab {
@@ -210,9 +220,14 @@
   background-color: var(--bn-color-primary-800);
 }
 
+.emptyActionBtn:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
+}
+
 .cardsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: var(--bn-space-6);
 }
 

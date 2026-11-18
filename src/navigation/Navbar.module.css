@@ -28,6 +28,12 @@
   align-items: center;
 }
 
+.brandLink:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 4px;
+  border-radius: var(--bn-radius-sm);
+}
+
 .desktopNav {
   display: flex;
   align-items: center;
@@ -60,6 +66,11 @@
 .navLink:hover {
   color: var(--bn-color-primary-800);
   background-color: var(--bn-color-primary-50);
+}
+
+.navLink:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
 }
 
 .activeNavLink {

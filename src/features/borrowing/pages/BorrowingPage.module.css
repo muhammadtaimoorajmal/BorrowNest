@@ -30,15 +30,15 @@
 }
 
 .disclosureBanner {
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background-color: var(--bn-color-primary-50);
+  border: 1px solid var(--bn-color-primary-200);
   border-radius: var(--bn-radius-lg);
   padding: var(--bn-spacing-3) var(--bn-spacing-4);
   display: flex;
   align-items: flex-start;
   gap: var(--bn-spacing-3);
   font-size: var(--bn-font-size-xs);
-  color: #1e40af;
+  color: var(--bn-color-primary-800);
   line-height: var(--bn-line-height-relaxed);
 }
 
@@ -68,12 +68,18 @@
   border: none;
   border-radius: var(--bn-radius-md);
   cursor: pointer;
+  min-height: 44px;
   transition: all var(--bn-transition-fast);
 }
 
 .perspectiveTab:hover:not(.perspectiveTabActive) {
   color: var(--bn-text-primary);
   background-color: rgba(255, 255, 255, 0.5);
+}
+
+.perspectiveTab:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: -2px;
 }
 
 .perspectiveTabActive {
@@ -109,12 +115,20 @@
   border: 1px solid var(--bn-border-subtle);
   border-radius: var(--bn-radius-full);
   cursor: pointer;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
   transition: all var(--bn-transition-fast);
 }
 
 .statusPill:hover:not(.statusPillActive) {
   border-color: var(--bn-border-strong);
   color: var(--bn-text-primary);
+}
+
+.statusPill:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
 }
 
 .statusPillActive {
@@ -125,8 +139,8 @@
 }
 
 .reservationsSection {
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background-color: var(--bn-color-success-50);
+  border: 1px solid var(--bn-color-success-200);
   border-radius: var(--bn-radius-xl);
   padding: var(--bn-spacing-5);
   display: flex;
@@ -137,7 +151,7 @@
 .reservationsSectionTitle {
   font-size: var(--bn-font-size-base);
   font-weight: var(--bn-font-weight-bold);
-  color: #166534;
+  color: var(--bn-color-success-800);
   margin: 0;
   display: flex;
   align-items: center;
@@ -146,13 +160,13 @@
 
 .reservationsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: var(--bn-spacing-3);
 }
 
 .reservationMiniCard {
   background-color: #ffffff;
-  border: 1px solid #86efac;
+  border: 1px solid var(--bn-color-success-300);
   border-radius: var(--bn-radius-lg);
   padding: var(--bn-spacing-3) var(--bn-spacing-4);
   display: flex;
@@ -169,7 +183,7 @@
 
 .reservationMiniDates {
   font-size: var(--bn-font-size-xs);
-  color: #15803d;
+  color: var(--bn-color-success-700);
   font-weight: var(--bn-font-weight-medium);
 }
 
@@ -210,11 +224,11 @@
 }
 
 .errorBanner {
-  background-color: #fee2e2;
-  border: 1px solid #f87171;
+  background-color: var(--bn-color-danger-50);
+  border: 1px solid var(--bn-color-danger-300);
   border-radius: var(--bn-radius-lg);
   padding: var(--bn-spacing-4);
-  color: #991b1b;
+  color: var(--bn-color-danger-800);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -263,9 +277,15 @@
   border: none;
   border-radius: var(--bn-radius-md);
   cursor: pointer;
+  min-height: 44px;
   transition: background-color var(--bn-transition-fast);
 }
 
 .actionBtn:hover {
   background-color: var(--bn-color-primary-700);
+}
+
+.actionBtn:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
 }

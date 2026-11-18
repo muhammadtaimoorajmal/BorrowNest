@@ -49,7 +49,7 @@ export function Navbar({ currentSection = 'lending', onNavigate }) {
 
           <div className={styles.prototypePill} role="status">
             <span className={styles.pillDot} aria-hidden="true"></span>
-            <span className={styles.pillText}>Local-First Prototype</span>
+            <span className={styles.pillText}>Local-First Storage</span>
           </div>
         </div>
       </header>

@@ -8,7 +8,7 @@ All demonstration photographs are licensed under the [Unsplash License](https://
 
 ## Catalogue Imagery Registry
 
-### 1. DeWalt 20V MAX Cordless Compact Drill
+### 1. 20V MAX Cordless Compact Drill/Driver
 - **File Name**: `cordless-drill.jpg`
 - **Product Represented**: Cordless power drill/driver with keyless chuck and battery pack
 - **Category**: `TOOLS`

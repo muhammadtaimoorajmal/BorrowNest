@@ -11,7 +11,7 @@ export function Header() {
         </div>
         <div className={styles.statusPill} role="status">
           <span className={styles.statusDot} aria-hidden="true"></span>
-          <span className={styles.statusText}>Local-First Prototype</span>
+          <span className={styles.statusText}>Local-First Storage</span>
         </div>
       </div>
     </header>

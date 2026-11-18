@@ -66,6 +66,9 @@ describe('Curated Example Catalogue Data (Module 06)', () => {
       expect(item.imageAlt.trim().length).toBeGreaterThan(15);
 
       expect(item.isDemo).toBe(true);
+
+      // Section 8.1 Content Integrity: Zero fabricated neighbourhood names
+      expect(item.approximateArea).toBeUndefined();
     }
   });
 

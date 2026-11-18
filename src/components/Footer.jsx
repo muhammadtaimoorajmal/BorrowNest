@@ -17,7 +17,7 @@ export function Footer() {
             </p>
           </div>
           <div className={styles.metaBadge}>
-            <span>Module 01 Foundation</span>
+            <span>Local-First Community Sharing</span>
           </div>
         </div>
 

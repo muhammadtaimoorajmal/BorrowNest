@@ -346,3 +346,11 @@
 .addOwnItemBtn:hover {
   background-color: var(--bn-color-primary-700);
 }
+
+.conditionDisclaimer {
+  font-size: var(--bn-font-size-xs);
+  color: var(--bn-text-muted);
+  margin-bottom: var(--bn-spacing-2);
+  line-height: var(--bn-line-height-normal);
+  font-style: italic;
+}

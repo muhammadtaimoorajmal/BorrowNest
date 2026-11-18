@@ -64,12 +64,12 @@
   display: flex;
   align-items: flex-start;
   gap: var(--bn-space-2);
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background-color: var(--bn-color-success-50);
+  border: 1px solid var(--bn-color-success-200);
   border-radius: var(--bn-radius-md);
   padding: var(--bn-space-3);
   font-size: var(--bn-font-size-xs);
-  color: #166534;
+  color: var(--bn-color-success-800);
   margin-bottom: var(--bn-space-5);
 }
 
@@ -88,6 +88,11 @@
 
 .primaryActionBtn:hover:not(:disabled) {
   background-color: var(--bn-color-primary-800);
+}
+
+.primaryActionBtn:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
 }
 
 .primaryActionBtn:disabled {
@@ -139,9 +144,9 @@
 }
 
 .successBanner {
-  background-color: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #065f46;
+  background-color: var(--bn-color-success-50);
+  border: 1px solid var(--bn-color-success-200);
+  color: var(--bn-color-success-800);
   padding: var(--bn-space-3);
   border-radius: var(--bn-radius-md);
   font-size: var(--bn-font-size-xs);
@@ -149,9 +154,9 @@
 }
 
 .errorBanner {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background-color: var(--bn-color-danger-50);
+  border: 1px solid var(--bn-color-danger-200);
+  color: var(--bn-color-danger-700);
   padding: var(--bn-space-3);
   border-radius: var(--bn-radius-md);
   font-size: var(--bn-font-size-xs);
@@ -207,12 +212,17 @@
   background-color: var(--bn-color-primary-800);
 }
 
+.mergeBtn:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
+}
+
 .replaceBtn {
   flex: 1;
   padding: var(--bn-space-2) var(--bn-space-3);
-  background-color: #fff1f2;
-  color: #be123c;
-  border: 1px solid #fecdd3;
+  background-color: var(--bn-color-danger-50);
+  color: var(--bn-color-danger-700);
+  border: 1px solid var(--bn-color-danger-200);
   border-radius: var(--bn-radius-md);
   font-size: var(--bn-font-size-xs);
   font-weight: var(--bn-font-weight-semibold);
@@ -221,7 +231,12 @@
 }
 
 .replaceBtn:hover:not(:disabled) {
-  background-color: #ffe4e6;
+  background-color: var(--bn-color-danger-100);
+}
+
+.replaceBtn:focus-visible {
+  outline: 2px solid var(--bn-color-danger-600);
+  outline-offset: 2px;
 }
 
 .diagnosticsList {
@@ -277,7 +292,7 @@
 .confirmTitle {
   font-size: var(--bn-font-size-xl);
   font-weight: var(--bn-font-weight-bold);
-  color: #b91c1c;
+  color: var(--bn-color-danger-700);
   margin-bottom: var(--bn-space-2);
 }
 
@@ -304,9 +319,14 @@
   min-height: 44px;
 }
 
+.cancelBtn:focus-visible {
+  outline: 2px solid var(--bn-color-slate-500);
+  outline-offset: 2px;
+}
+
 .dangerReplaceBtn {
   padding: var(--bn-space-2) var(--bn-space-5);
-  background-color: #dc2626;
+  background-color: var(--bn-color-danger-600);
   color: white;
   border: none;
   border-radius: var(--bn-radius-md);
@@ -316,7 +336,12 @@
 }
 
 .dangerReplaceBtn:hover {
-  background-color: #b91c1c;
+  background-color: var(--bn-color-danger-700);
+}
+
+.dangerReplaceBtn:focus-visible {
+  outline: 2px solid var(--bn-color-danger-600);
+  outline-offset: 2px;
 }
 
 @media (max-width: 860px) {
