@@ -31,6 +31,20 @@ BorrowNest/
 │   └── workflows/
 │       └── ci.yml               # GitHub Actions CI workflow (lint, test, build)
 ├── docs/                        # Architectural and governance documentation
+│   ├── design-rationale/        # Formal QOC decisions and blueprints (Module 02)
+│   │   ├── README.md
+│   │   ├── QOC_METHOD_AND_SCORING.md
+│   │   ├── DR-01_ITEM_DISCOVERY.md
+│   │   ├── DR-02_BORROWING_APPROVAL.md
+│   │   ├── DR-03_AVAILABILITY_SCHEDULING.md
+│   │   ├── DR-04_CONDITION_HANDOVER.md
+│   │   ├── DR-05_LOCATION_PRIVACY.md
+│   │   ├── DR-06_RESPONSIVE_NAVIGATION.md
+│   │   ├── DECISION_LOG.md
+│   │   ├── EVIDENCE_REGISTER.md
+│   │   ├── TRACEABILITY_MATRIX.md
+│   │   ├── SELECTED_DESIGN_BLUEPRINT.md
+│   │   └── TECHNICAL_RISK_REGISTER.md
 │   ├── ARCHITECTURE.md
 │   ├── ASSET_POLICY.md
 │   ├── DESIGN_DECISION_AREAS.md
@@ -86,7 +100,6 @@ erDiagram
         string conditionGrade
         string conditionNotes
         string approximateArea
-        string detailedCollectionInfo
         string availabilityStatus
         string createdAt
     }
@@ -114,7 +127,7 @@ erDiagram
 ```
 
 ### Key Entity Descriptions:
-1. **Item**: Represents a tangible good offered for lending. Stores public metadata (title, category, condition) and private collection instructions.
+1. **Item**: Represents a tangible good offered for lending. Stores public metadata (title, category, condition) and coarse neighborhood locality (per DR-05; exact street addresses are deliberately not stored).
 2. **BorrowRequest**: Encapsulates a proposed loan period, borrower identification, and current decision status (`PENDING`, `APPROVED`, `DECLINED`, `CANCELLED`).
 3. **LoanRecord**: Tracks the physical lifecycle of an approved loan, capturing timestamped collection, condition verification, return timestamp, and closing notes.
 

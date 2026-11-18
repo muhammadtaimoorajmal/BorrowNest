@@ -15,16 +15,14 @@ BorrowNest strictly practices **data minimization**:
 
 ---
 
-## 3. Two-Tier Collection Location Privacy
+## 3. Collection Location Privacy and Local-First Boundary (DR-05 Resolution)
 
-One of the primary safety concerns in peer item sharing is revealing residential addresses to unknown parties. BorrowNest implements a strict two-stage privacy gate:
+One of the primary safety concerns in peer item sharing is protecting residential addresses. In a local-first client application with no authenticated remote server, client-side conditional rendering (e.g., hiding text behind a React state flag) does **not** constitute an authorization security boundary. Storing exact home addresses in local browser storage creates an unacceptable risk of exposure.
 
-1. **Pre-Approval (Public Discovery Tier)**:
-   - Only a generalized pickup area is displayed (e.g., "Oakwood District", "Near North Library", "5-minute walk from Central Station").
-   - Exact building numbers, apartment codes, and private lockbox combinations remain completely invisible to browsing users.
-2. **Post-Approval (Private Handover Tier)**:
-   - Detailed collection instructions (such as exact address, specific porch guidance, or collection time windows) are revealed **only after** the owner explicitly clicks to approve a specific borrowing request.
-   - If a request is declined, cancelled, or expires, the sensitive collection information is never revealed.
+In accordance with formal design decision [DR-05](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-05_LOCATION_PRIVACY.md):
+- **Coarse Area Only in Current Prototype**: Item listings gather and display only a coarse, user-defined neighborhood, district, or nearby public landmark area (e.g., "Oakwood District", "Near North Library").
+- **Zero Address Harvesting**: Exact residential street addresses, apartment unit numbers, and private access codes are **strictly NOT collected or stored** in the local-first prototype.
+- **Future Post-Approval Disclosure**: Two-tier private disclosure (revealing exact addresses only to an approved borrower) is formally recognized as a future capability requiring authenticated user identities, server-side authorization filters, and secure encrypted persistence. In the local-first prototype, what is never collected cannot be compromised.
 
 ---
 

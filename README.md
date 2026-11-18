@@ -46,9 +46,9 @@ BorrowNest is currently at **Module 01 (Project Foundation)**:
 ## Privacy Principles & Genuine Asset Policy
 
 - **Data Minimization**: BorrowNest requests only information strictly necessary for lending coordination.
-- **Collection Privacy**: Detailed pickup addresses or handoff notes are never exposed publicly; general areas are shown until a loan request is mutually confirmed.
+- **Collection Privacy**: Only coarse neighborhood or landmark areas are collected and displayed. Exact residential street addresses and private lockbox codes are strictly not collected or stored in the local prototype (DR-05).
 - **Genuine Imagery**: BorrowNest strictly prohibits generic stock photographs in place of genuine items. Future listings rely solely on genuine photographs provided directly by the item owner.
-- **Design Target**: Built with semantic HTML and keyboard navigation aiming for WCAG 2.2 Level AA as an intentional design target.
+- **Design Target**: Built with semantic HTML and keyboard navigation aiming for WCAG 2.2 Level AA as an intentional design target, with 44 × 44 CSS pixel touch targets on primary mobile navigation.
 
 ---
 
@@ -57,7 +57,7 @@ BorrowNest is currently at **Module 01 (Project Foundation)**:
 | Module | Scope | Status |
 | :--- | :--- | :--- |
 | **Module 01** | Project foundation, identity, architectural principles, repository setup, and CI automation | **Implemented** |
-| **Module 02** | Formal Question-Option-Criteria (QOC) design rationale across 6 key architectural decision areas | Planned |
+| **Module 02** | Formal Question-Option-Criteria (QOC) design rationale across 6 key architectural decision areas ([docs/design-rationale/](docs/design-rationale/)) | **Implemented** |
 | **Module 03** | Genuine item listing management and local persistence | Planned |
 | **Module 04** | Discovery, category browsing, and search filtering | Planned |
 | **Module 05** | Request submission, owner approval flow, and loan period scheduling | Planned |

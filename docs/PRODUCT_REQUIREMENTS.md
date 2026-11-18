@@ -37,19 +37,19 @@ Status Definitions:
 - **NFR-002.1**: Target compliance is **WCAG 2.2 Level AA**.
 - **NFR-002.2**: All interactive components must be navigable and operable using standard keyboard navigation (`Tab`, `Enter`, `Space`, `Escape`).
 - **NFR-002.3**: High contrast ratios (minimum 4.5:1 for normal text, 3:1 for large text and UI components) must be maintained across all color tokens.
-- **NFR-002.4**: Semantic HTML landmarks (`banner`, `main`, `contentinfo`, `section`) and ARIA labels must be properly structured.
-- **Status**: Foundation Shell: **VERIFIED**; Full Application: **PLANNED**.
+- **NFR-002.4**: Semantic HTML landmarks (`banner`, `main`, `contentinfo`, `section`, `nav`) and ARIA labels must be properly structured.
+- **Status**: Foundation Shell: **VERIFIED**; Architecture Specified: **DECIDED (DR-01, DR-06)**; Full Application: **PLANNED**.
 
 ### NFR-003: Responsiveness & Mobile Ergonomics
 - **NFR-003.1**: The application layout shall seamlessly adapt across mobile devices (320px+), tablets (768px+), and desktop screens (1024px+).
-- **NFR-003.2**: Touch target sizes for primary buttons and interactive elements shall meet or exceed 44×44 CSS pixels.
-- **Status**: Foundation Shell: **VERIFIED**; Full Application: **PLANNED**.
+- **NFR-003.2**: Touch target sizes for primary buttons and mobile navigation items shall meet or exceed **44 × 44 CSS pixels**. (Note: While WCAG 2.2 Success Criterion 2.5.8 defines 24 × 24 CSS pixels as the Level AA minimum, BorrowNest adopts 44 × 44 CSS pixels—aligning with Level AAA SC 2.5.5—as an intentional, stricter ergonomic project standard).
+- **Status**: Foundation Shell: **VERIFIED**; Architecture Specified: **DECIDED (DR-06)**; Full Application: **PLANNED**.
 
 ### NFR-004: Data Privacy & Security
-- **NFR-004.1**: Private collection instructions (such as exact home street address) must remain hidden from view until a loan request is explicitly approved by the owner.
+- **NFR-004.1**: The local prototype shall collect and display only coarse neighborhood or public landmark areas; exact residential street addresses, unit numbers, and private lockbox codes shall **not** be collected or stored (DR-05).
 - **NFR-004.2**: No user data, telemetry, or listing details shall be sent to external servers or third-party tracking services.
 - **NFR-004.3**: All storage operations must occur strictly client-side using browser-managed secure storage APIs.
-- **Status**: Architecture Policy: **VERIFIED**; Implementation: **PLANNED**.
+- **Status**: Architecture Policy: **VERIFIED**; Architecture Specified: **DECIDED (DR-04, DR-05)**; Implementation: **PLANNED**.
 
 ### NFR-005: Reliability & Data Integrity
 - **NFR-005.1**: The system must never auto-generate fake listings, synthetic accounts, or fictitious transactions.

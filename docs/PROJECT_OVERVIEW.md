@@ -49,7 +49,7 @@ BorrowNest is engineered to achieve seven core product objectives:
 3. **Owner Control Over Requests**: Grant item owners unilateral discretion to approve, decline, or communicate terms for any borrowing request.
 4. **Visibility of Collection and Return Timelines**: Present clear indicators of upcoming return dates, active loans, and overdue items.
 5. **Transparency in Item Condition**: Provide simple, honest records of pre-existing wear at checkout and condition verification upon return.
-6. **Privacy Around Collection Information**: Shield sensitive home addresses and collection instructions until an owner explicitly approves a request.
+6. **Privacy Around Collection Information**: Shield residential privacy by collecting and displaying only coarse neighborhood areas, avoiding exact address harvesting entirely (DR-05).
 7. **Cross-Device Usability**: Offer an accessible, responsive interface optimized for both mobile devices and desktop displays.
 
 ---
@@ -60,7 +60,7 @@ BorrowNest is engineered to achieve seven core product objectives:
 | :--- | :--- |
 | Forgotten loan timelines and awkward follow-ups | Explicit, agreed dates with visible countdowns |
 | Disputes over pre-existing scuffs or damage | Documented condition checkpoints at handoff and return |
-| Public exposure of residential addresses | Two-stage disclosure: general neighborhood initially, precise instructions only post-approval |
+| Public exposure of residential addresses | Coarse neighborhood tags only; zero collection of private street addresses in the local prototype (DR-05) |
 | Bloated cloud platforms requiring logins, tracking, and ads | Private, client-side, local-first application with zero surveillance |
 
 ---
@@ -78,7 +78,7 @@ BorrowNest is engineered to achieve seven core product objectives:
 | Milestone | Deliverables | Current Status |
 | :--- | :--- | :--- |
 | **Module 01: Project Foundation** | React 19 + Vite 8 workspace, design tokens, responsive empty-state shell, unit tests, GitHub Actions CI workflow, and architectural documentation | **COMPLETED & VERIFIED** |
-| **Module 02: Architectural Decision Records** | Formal Question-Option-Criteria (QOC) analysis for six core design areas | Pending Module 02 |
+| **Module 02: Architectural Decision Records** | Formal Question-Option-Criteria (QOC) analysis for six core design areas ([docs/design-rationale/](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/)) | **COMPLETED & VERIFIED** |
 | **Module 03: Item Management** | Item listing creation, local storage schema, and condition tagging | Planned |
 | **Module 04: Discovery & Search** | Keyword filtering, category exploration, and availability toggles | Planned |
 | **Module 05: Borrowing Flow** | Request submissions, owner approval states, and scheduling calendar | Planned |

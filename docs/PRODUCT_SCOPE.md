@@ -32,11 +32,11 @@ The full planned capabilities of BorrowNest comprise six foundational modules:
 - **Descriptive Observations**: Document pre-existing marks, scratches, or handling quirks prior to lending.
 - **Handover Comparison**: Record observations at return to verify consistent condition and note any maintenance required.
 
-### E. Privacy Architecture
-- **Two-Tier Pickup Location Disclosure**:
-  - *Tier 1 (Public / Pre-Approval)*: General neighborhood or public landmark zone only.
-  - *Tier 2 (Post-Approval)*: Exact street address, locker code, or detailed porch instructions visible solely to the approved borrower.
-- **Data Minimization**: Collect only essential fields; avoid telephone numbers, social links, or unnecessary identity identifiers.
+### E. Privacy Architecture (DR-05 Resolution)
+- **Coarse Neighborhood Disclosure**: Listings collect and display only general neighborhood, district, or public landmark areas (e.g., "Oakwood / Near Central Park").
+- **Zero Exact Address Storage in Local Prototype**: Exact residential street addresses, apartment unit numbers, and private access codes are explicitly **not collected or stored** in the local-first prototype, establishing an architecturally honest privacy boundary.
+- **Future Post-Approval Disclosure**: Two-tier private disclosure is a planned capability requiring authenticated user identities, server-side authorization controls, and secure cloud storage in future enterprise releases.
+- **Data Minimization**: Collect only essential fields; avoid telephone numbers, social links, or invasive identity identifiers.
 
 ### F. Activity & Schedule Management
 - **Active Loans Dashboard**: Immediate visibility into items currently borrowed and items lent out.
@@ -58,20 +58,19 @@ To preserve data privacy, operational simplicity, and architectural focus, the f
 
 ---
 
-## 3. User Perspectives
+## 3. User Perspectives (Functional Task Views)
 
-*(Note: These perspectives represent functional viewpoints within the application, not verified personas derived from empirical user research.)*
+*(Note: In accordance with DR-06, Borrower and Lender/Owner represent functional task perspectives within a unified application shell, not separate authenticated user roles. No verified empirical personas are claimed.)*
 
-### The Borrower Perspective
-- Needs to know what tools or items are currently accessible nearby.
+### The Borrower Perspective (Task View)
+- Needs to know what tools or items are currently accessible nearby via coarse neighborhood tags.
 - Needs clarity on the owner's availability rules and return expectations.
 - Wants prompt feedback on whether a request has been accepted.
-- Needs accurate collection details once approved.
-- Values proof of pre-existing item condition to prevent unfair disputes upon return.
+- Values documented pre-existing item condition to prevent unfair disputes upon return.
 
-### The Lender / Owner Perspective
+### The Lender / Owner Perspective (Task View)
 - Retains complete control over who borrows their property and for what duration.
-- Needs to safeguard their home privacy by withholding exact pickup directions from unapproved inquiries.
+- Safeguards residential privacy by avoiding the collection or public disclosure of exact street addresses.
 - Requires visibility into who possesses which item and when it will be returned.
 - Wants a lightweight method to log item condition before handoff and after return.
 

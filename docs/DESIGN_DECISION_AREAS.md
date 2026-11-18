@@ -1,80 +1,79 @@
-# BorrowNest — Design Decision Areas (Module 02 Pre-Registration)
+# BorrowNest — Design Decision Areas (Module 02 Resolutions)
 
-This document pre-registers the six core architectural and HCI decision areas scheduled for formal Question-Option-Criteria (QOC) analysis in Module 02.
-
-In accordance with Module 01 guidelines:
-- The design questions, rationale, and affected feature scope are identified below.
-- **No final design decisions, option evaluation matrices, synthetic criteria scores, or prefabricated resolutions are recorded in Module 01.**
-- All decision areas maintain the status: **PENDING QOC ANALYSIS**.
+This document records the formal resolutions of the six core architectural and HCI design decision areas for BorrowNest. Each decision was evaluated using the Question-Option-Criteria (QOC) framework and is documented in an authoritative standalone analysis file in [`docs/design-rationale/`](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/).
 
 ---
 
 ## Decision Area DR-01: Item Discovery and Search Structure
 
-- **Status**: **PENDING QOC ANALYSIS**
-- **Design Question**: How should available items be organized, browsed, and searched within a local-first catalog to optimize discoverability without cognitive overload?
-- **Why It Matters**: In peer item sharing, users search either with a specific tool in mind (e.g., "rotary hammer drill") or by general task category (e.g., "lawn care"). The navigation and filtering structure directly determines how fast a borrower can locate suitable equipment and evaluate its availability.
-- **Features Affected**:
-  - FR-002: Item Discovery
-  - FR-003: Search and Filtering
-  - FR-004: Item Detail Inspection
+- **Status**: **DECIDED (Module 02)**
+- **Selected Option**: **Option C — Unified Discovery** (Weighted Score: **90.0 / 100**)
+- **Design Question**: How should users discover, browse, and search genuine available items without unnecessary cognitive effort?
+- **Summary Resolution**: Unified interface combining a prominent persistent search bar with visible category filter pills (*All*, *Tools*, *Gardening*, *Household*, *Outdoor*, *Electronics*), an availability checkbox toggle, dynamic active filter indicators, and a one-click filter reset control.
+- **Detailed Analysis**: [DR-01_ITEM_DISCOVERY.md](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-01_ITEM_DISCOVERY.md)
+- **Features Affected**: FR-002, FR-003, FR-004, NFR-001, NFR-002.
+- **Target Implementation**: Module 04.
 
 ---
 
 ## Decision Area DR-02: Borrowing Request and Owner Approval Workflow
 
-- **Status**: **PENDING QOC ANALYSIS**
-- **Design Question**: What interaction model should govern how borrowers propose loans and how owners review, negotiate, and approve or decline borrowing requests?
-- **Why It Matters**: Peer lending depends entirely on owner confidence and clear mutual consent. If the approval workflow is too rigid, simple peer loans become cumbersome; if it is too unstructured, owners feel pressured or uncertain about borrower intentions and usage expectations.
-- **Features Affected**:
-  - FR-005: Borrowing Request Submission
-  - FR-006: Request Decision Workflow
-  - NFR-001: Usability & Interaction
+- **Status**: **DECIDED (Module 02)**
+- **Selected Option**: **Option C — Structured Borrowing Request** (Weighted Score: **90.0 / 100**)
+- **Design Question**: How should a borrower propose a borrowing arrangement and how should the item owner make a decision?
+- **Summary Resolution**: Structured request workflow where the borrower specifies start and return dates and an optional note. The request enters a visible `PENDING` state. The owner can explicitly **Approve** or **Decline**. The borrower can **Cancel** an unapproved pending request. Actions on finalized requests are disallowed.
+- **Local-First Boundary**: Represents an internal client state machine; does not transmit push notifications to external devices.
+- **Detailed Analysis**: [DR-02_BORROWING_APPROVAL.md](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-02_BORROWING_APPROVAL.md)
+- **Features Affected**: FR-005, FR-006, FR-007, NFR-001, NFR-005.
+- **Target Implementation**: Module 05.
 
 ---
 
 ## Decision Area DR-03: Borrowing Availability and Scheduling
 
-- **Status**: **PENDING QOC ANALYSIS**
+- **Status**: **DECIDED (Module 02)**
+- **Selected Option**: **Option B — Explicit Date-Range Scheduling** (Weighted Score: **86.0 / 100**)
 - **Design Question**: How should item availability dates, loan timeframes, and overlapping borrowing requests be visualized, scheduled, and validated?
-- **Why It Matters**: Double-booking an item or having ambiguous return deadlines causes interpersonal friction and coordination breakdowns. The scheduling interface must clearly convey calendar availability, active loans, and buffer periods for returns without overcomplicating data entry.
-- **Features Affected**:
-  - FR-007: Borrowing Period Scheduling
-  - FR-008: Collection and Return Logging
-  - FR-010: Borrowing History & Status
+- **Summary Resolution**: Explicit Collection Date and Return Deadline inputs validated via an inclusive interval overlap check: `candidateStart <= existingReturn AND existingStart <= candidateReturn`. Pending requests do not lock the calendar; overlap checks re-execute at approval time to prevent race conditions.
+- **Detailed Analysis**: [DR-03_AVAILABILITY_SCHEDULING.md](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-03_AVAILABILITY_SCHEDULING.md)
+- **Features Affected**: FR-007, FR-008, FR-010, NFR-001, NFR-005.
+- **Target Implementation**: Module 05.
 
 ---
 
 ## Decision Area DR-04: Item Condition and Handover Documentation
 
-- **Status**: **PENDING QOC ANALYSIS**
+- **Status**: **DECIDED (Module 02)**
+- **Selected Option**: **Option C — Structured Condition Checkpoints** (Weighted Score: **84.0 / 100**)
 - **Design Question**: What structure and protocol should be used to capture, verify, and compare item condition at the moments of collection and return?
-- **Why It Matters**: Disagreements regarding tool wear, preexisting scratches, or post-loan damage are major impediments to community item sharing. A reliable, lightweight condition-recording mechanism protects both the lender and borrower without creating onerous administrative friction.
-- **Features Affected**:
-  - FR-009: Item Condition Recording
-  - FR-008: Collection and Return Logging
-  - NFR-005: Reliability & Data Integrity
+- **Summary Resolution**: Standardized 5-tier condition classification (`Like New`, `Good`, `Fair`, `Poor`, `Not Functional`) recorded at listing baseline, confirmed at collection handoff, and re-inspected at return. Supported by optional authentic user photos with client-side EXIF GPS stripping and a side-by-side comparison view.
+- **Legal Distinction**: Condition logs are transparent informational records; they do not constitute legally binding contracts or automated liability determinations.
+- **Detailed Analysis**: [DR-04_CONDITION_HANDOVER.md](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-04_CONDITION_HANDOVER.md)
+- **Features Affected**: FR-008, FR-009, NFR-004, NFR-005.
+- **Target Implementation**: Module 06.
 
 ---
 
 ## Decision Area DR-05: Collection-Location Privacy and Disclosure
 
-- **Status**: **PENDING QOC ANALYSIS**
+- **Status**: **DECIDED (Module 02)**
+- **Selected Option**: **Option C — Coarse Area Only in Current Prototype** (Weighted Score: **92.0 / 100**)
 - **Design Question**: How should collection points and handoff instructions be structured and progressively disclosed across the discovery and approved loan stages?
-- **Why It Matters**: Displaying exact residential addresses publicly compromises homeowner safety and privacy. Conversely, disclosing zero geographical context prevents borrowers from knowing whether an item is reasonably close enough to collect.
-- **Features Affected**:
-  - FR-004: Item Detail Inspection
-  - FR-008: Collection and Return Logging
-  - NFR-004: Data Privacy & Security
+- **Summary Resolution**: Collect and display only a coarse, user-defined neighborhood or public landmark area (e.g., "North District"). Exact residential street addresses, apartment unit numbers, and private access codes are **not** collected or stored in the local-first prototype.
+- **Architectural Honesty**: Corrects preliminary Module 01 notes. Client-side UI toggles do not constitute an authorization boundary; what is never collected cannot be leaked.
+- **Detailed Analysis**: [DR-05_LOCATION_PRIVACY.md](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-05_LOCATION_PRIVACY.md)
+- **Features Affected**: FR-004, FR-008, NFR-004, NFR-005.
+- **Target Implementation**: Module 03 and Module 04.
 
 ---
 
 ## Decision Area DR-06: Responsive Navigation and Borrower/Owner Interaction Structure
 
-- **Status**: **PENDING QOC ANALYSIS**
+- **Status**: **DECIDED (Module 02)**
+- **Selected Option**: **Option C — Unified Application with Task-Oriented Sections** (Weighted Score: **89.0 / 100**)
 - **Design Question**: How should the application interface structure navigation between the Borrower perspective (discovering and requesting items) and the Owner perspective (managing items and approving requests) across desktop and mobile form factors?
-- **Why It Matters**: In peer-to-peer sharing, an individual user frequently acts as both a borrower of others' goods and a lender of their own. The navigation architecture must make role switching intuitive while maintaining a cohesive, uncluttered mental model on small mobile screens and large displays alike.
-- **Features Affected**:
-  - NFR-001: Usability & Interaction
-  - NFR-003: Responsiveness & Mobile Ergonomics
-  - All functional modules (FR-001 through FR-010)
+- **Summary Resolution**: Cohesive application shell with four primary task destinations (*Discover*, *Borrowing*, *Lending*, *Account*). Responsive desktop sticky top bar and mobile fixed bottom navigation bar with minimum 44×44 CSS pixel touch targets.
+- **Role Distinction**: Borrower and Owner are functional task perspectives, not authenticated security roles.
+- **Detailed Analysis**: [DR-06_RESPONSIVE_NAVIGATION.md](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-06_RESPONSIVE_NAVIGATION.md)
+- **Features Affected**: FR-001 through FR-010, NFR-001, NFR-002, NFR-003.
+- **Target Implementation**: Module 03.
