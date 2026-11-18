@@ -1175,6 +1175,20 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
           return reject(new CollectionAlreadyRecordedError(requestId, 'Physical receipt has already been confirmed.'));
         }
 
+        const today = getLocalToday();
+        const start = loan.collectionDate;
+        const end = loan.returnDeadline;
+
+        if (today < start) {
+          tx.abort();
+          return reject(new CollectionDateNotReachedError(start, today, `Physical collection receipt cannot be confirmed before agreed collection date (${start}). Today is ${today}.`));
+        }
+
+        if (today > end) {
+          tx.abort();
+          return reject(new ReservationExpiredError(end, today, `Agreed borrowing window has expired (deadline was ${end}, today is ${today}). Receipt cannot be confirmed.`));
+        }
+
         const now = new Date().toISOString();
         const collectionCheckpoint = {
           ...loan.collectionCheckpoint,
@@ -1235,6 +1249,12 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
         if (loan.status !== LOAN_STATUS.ACTIVE) {
           tx.abort();
           return reject(new LoanStateTransitionError(loan.status, 'RETURN_MARKED', `Only ACTIVE loans can be marked returned. Current status is "${loan.status}".`));
+        }
+
+        // If borrower has already marked return, preserve original timestamp without modification
+        if (loan.returnCheckpoint?.borrowerReturnMarkedAt) {
+          updatedLoan = normalizeLoanRecord(loan);
+          return;
         }
 
         const now = new Date().toISOString();
@@ -1307,12 +1327,17 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
           return reject(new LoanStateTransitionError(loan.status, LOAN_STATUS.COMPLETED, `Cannot complete return inspection for loan with status "${loan.status}". Loan must be ACTIVE.`));
         }
 
+        if (!loan.returnCheckpoint?.borrowerReturnMarkedAt) {
+          tx.abort();
+          return reject(new ReturnNotMarkedError(requestId, 'Borrower must mark item returned before owner return inspection can be completed.'));
+        }
+
         const now = new Date().toISOString();
         const tier = CONDITION_TIERS[checkpoint.conditionGrade];
         const returnCheckpoint = {
           recordedAt: now,
           ownerInspectedAt: now,
-          borrowerReturnMarkedAt: loan.returnCheckpoint?.borrowerReturnMarkedAt || now,
+          borrowerReturnMarkedAt: loan.returnCheckpoint.borrowerReturnMarkedAt,
           conditionGrade: Number(checkpoint.conditionGrade),
           conditionLabel: tier ? tier.label : `Grade ${checkpoint.conditionGrade}`,
           notes: (checkpoint.notes || '').trim(),

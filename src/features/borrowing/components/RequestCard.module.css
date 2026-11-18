@@ -236,6 +236,32 @@
   gap: var(--bn-spacing-2);
 }
 
+.awaitingReturnBanner {
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--bn-radius-md);
+  padding: var(--bn-spacing-2) var(--bn-spacing-3);
+  font-size: var(--bn-font-size-xs);
+  color: #475569;
+  font-weight: var(--bn-font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--bn-spacing-2);
+}
+
+.returnMarkedBanner {
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: var(--bn-radius-md);
+  padding: var(--bn-spacing-2) var(--bn-spacing-3);
+  font-size: var(--bn-font-size-xs);
+  color: #166534;
+  font-weight: var(--bn-font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--bn-spacing-2);
+}
+
 .cardFooter {
   display: flex;
   justify-content: flex-end;

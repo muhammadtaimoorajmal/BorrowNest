@@ -124,7 +124,7 @@ export function canMarkReturn(loan) {
  */
 export function canInspectReturn(loan) {
   if (!loan || loan.status !== LOAN_STATUS.ACTIVE) return false;
-  return true;
+  return Boolean(loan.returnCheckpoint?.borrowerReturnMarkedAt);
 }
 
 /**

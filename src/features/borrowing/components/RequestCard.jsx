@@ -201,6 +201,28 @@ export function RequestCard({
           </div>
         )}
 
+        {/* DR-04 Strict Lifecycle: Return Status Handshake */}
+        {loan?.status === LOAN_STATUS.ACTIVE && perspective === 'owner' && !loan.returnCheckpoint?.borrowerReturnMarkedAt && (
+          <div className={styles.awaitingReturnBanner} role="status">
+            <span aria-hidden="true">⏳</span>
+            <span>Awaiting borrower physical return. Borrower must mark the item as returned before owner condition inspection can proceed.</span>
+          </div>
+        )}
+
+        {loan?.status === LOAN_STATUS.ACTIVE && perspective === 'owner' && Boolean(loan.returnCheckpoint?.borrowerReturnMarkedAt) && (
+          <div className={styles.returnMarkedBanner} role="status">
+            <span aria-hidden="true">📦</span>
+            <span>Borrower marked item returned on {formatDateDisplay(loan.returnCheckpoint.borrowerReturnMarkedAt.split('T')[0])}. Ready for owner condition inspection.</span>
+          </div>
+        )}
+
+        {loan?.status === LOAN_STATUS.ACTIVE && perspective === 'borrower' && Boolean(loan.returnCheckpoint?.borrowerReturnMarkedAt) && (
+          <div className={styles.returnMarkedBanner} role="status">
+            <span aria-hidden="true">✅</span>
+            <span>Return reported on {formatDateDisplay(loan.returnCheckpoint.borrowerReturnMarkedAt.split('T')[0])}. Awaiting owner condition inspection.</span>
+          </div>
+        )}
+
         {isOverdue && (
           <div className={styles.overdueBanner} role="alert">
             <span aria-hidden="true">⚠️</span>

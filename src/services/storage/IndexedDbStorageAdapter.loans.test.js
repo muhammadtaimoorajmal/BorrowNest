@@ -7,6 +7,8 @@ import {
   ReservationExpiredError,
   CollectionAlreadyRecordedError,
   BorrowerReceiptRequiredError,
+  ReturnNotMarkedError,
+  LoanAlreadyCompletedError,
   UncollectedReleaseNotAllowedError,
   ConditionValidationError,
   ItemHasActiveReservationError,
@@ -188,6 +190,128 @@ describe('Storage Adapter: Loan Lifecycle Operations (DR-04)', () => {
     ).rejects.toThrow();
   });
 
+  it('strictly rejects owner inspection without borrower return marking and enforces idempotence (B1)', async () => {
+    await adapter.createItem(testItem);
+
+    const req = await adapter.createBorrowRequest({
+      itemId: testItem.id,
+      borrowerAlias: 'Morgan R.',
+      startDate: today,
+      endDate: addDays(today, 3),
+    });
+    await adapter.approveBorrowRequest(req.id);
+    await adapter.recordCollectionHandover(req.id, { conditionGrade: 4 });
+    await adapter.confirmCollectionReceipt(req.id);
+
+    // 1. Attempt inspection BEFORE borrower marks return -> MUST REJECT
+    await expect(
+      adapter.completeReturnInspection(req.id, { conditionGrade: 4, notes: 'Trying early inspection' }),
+    ).rejects.toThrow(ReturnNotMarkedError);
+
+    // 2. Verify state was NOT mutated
+    const activeLoan = await adapter.getLoanByRequestId(req.id);
+    expect(activeLoan.status).toBe(LOAN_STATUS.ACTIVE);
+    expect(activeLoan.completedAt).toBeNull();
+    expect(activeLoan.returnCheckpoint).toBeNull();
+
+    // 3. Borrower marks return
+    const markedLoan = await adapter.markLoanReturned(req.id);
+    expect(markedLoan.status).toBe(LOAN_STATUS.ACTIVE);
+    const firstMarkedAt = markedLoan.returnCheckpoint.borrowerReturnMarkedAt;
+    expect(firstMarkedAt).toBeDefined();
+
+    // 4. Repeated mark return is safe idempotent no-op without timestamp mutation
+    const repeatMarked = await adapter.markLoanReturned(req.id);
+    expect(repeatMarked.returnCheckpoint.borrowerReturnMarkedAt).toBe(firstMarkedAt);
+
+    // 5. Owner completes return inspection -> SUCCEEDS
+    const completedLoan = await adapter.completeReturnInspection(req.id, {
+      conditionGrade: 4,
+      notes: 'Item returned in expected condition.',
+    });
+    expect(completedLoan.status).toBe(LOAN_STATUS.COMPLETED);
+    expect(completedLoan.completedAt).toBeDefined();
+    expect(completedLoan.returnCheckpoint.borrowerReturnMarkedAt).toBe(firstMarkedAt);
+    expect(completedLoan.returnCheckpoint.ownerInspectedAt).toBeDefined();
+
+    // 6. Attempting further inspection on completed loan rejects with LoanAlreadyCompletedError
+    await expect(
+      adapter.completeReturnInspection(req.id, { conditionGrade: 4 }),
+    ).rejects.toThrow(LoanAlreadyCompletedError);
+  });
+
+  it('enforces collection receipt confirmation window [collectionDate, returnDeadline] (B2)', async () => {
+    await adapter.createItem(testItem);
+
+    // Case A: Future collection date (today < collectionDate)
+    const futureReqId = 'req-future-collection';
+    await adapter.mergeAllData({
+      items: [testItem],
+      requests: [
+        {
+          id: futureReqId,
+          itemId: testItem.id,
+          borrowerAlias: 'Future Borrower',
+          startDate: addDays(today, 3),
+          endDate: addDays(today, 6),
+          status: REQUEST_STATUS.APPROVED,
+        },
+      ],
+      loans: [
+        {
+          requestId: futureReqId,
+          itemId: testItem.id,
+          borrowerAlias: 'Future Borrower',
+          collectionDate: addDays(today, 3),
+          returnDeadline: addDays(today, 6),
+          status: LOAN_STATUS.RESERVED,
+          collectionCheckpoint: {
+            conditionGrade: 4,
+            ownerRecordedAt: '2026-11-18T10:00:00.000Z',
+          },
+        },
+      ],
+    });
+
+    await expect(adapter.confirmCollectionReceipt(futureReqId)).rejects.toThrow(
+      CollectionDateNotReachedError,
+    );
+
+    // Case B: Expired return deadline (today > returnDeadline)
+    const expiredReqId = 'req-expired-collection';
+    await adapter.mergeAllData({
+      items: [testItem],
+      requests: [
+        {
+          id: expiredReqId,
+          itemId: testItem.id,
+          borrowerAlias: 'Late Borrower',
+          startDate: addDays(today, -5),
+          endDate: addDays(today, -1),
+          status: REQUEST_STATUS.APPROVED,
+        },
+      ],
+      loans: [
+        {
+          requestId: expiredReqId,
+          itemId: testItem.id,
+          borrowerAlias: 'Late Borrower',
+          collectionDate: addDays(today, -5),
+          returnDeadline: addDays(today, -1),
+          status: LOAN_STATUS.RESERVED,
+          collectionCheckpoint: {
+            conditionGrade: 4,
+            ownerRecordedAt: '2026-11-18T10:00:00.000Z',
+          },
+        },
+      ],
+    });
+
+    await expect(adapter.confirmCollectionReceipt(expiredReqId)).rejects.toThrow(
+      ReservationExpiredError,
+    );
+  });
+
   it('completed loan no longer blocks new reservations for the same dates', async () => {
     await adapter.createItem(testItem);
 
@@ -200,6 +324,7 @@ describe('Storage Adapter: Loan Lifecycle Operations (DR-04)', () => {
     await adapter.approveBorrowRequest(req1.id);
     await adapter.recordCollectionHandover(req1.id, { conditionGrade: 4, notes: 'OK' });
     await adapter.confirmCollectionReceipt(req1.id);
+    await adapter.markLoanReturned(req1.id);
     await adapter.completeReturnInspection(req1.id, { conditionGrade: 4, notes: 'Completed' });
 
     // New request covering the SAME dates should now be permitted because loan is COMPLETED!
@@ -302,6 +427,7 @@ describe('Storage Adapter: Loan Lifecycle Operations (DR-04)', () => {
     await expect(adapter.archiveItem(testItem.id)).rejects.toThrow(ItemHasActiveReservationError);
 
     // Complete return
+    await adapter.markLoanReturned(req.id);
     await adapter.completeReturnInspection(req.id, { conditionGrade: 4 });
 
     // Archiving now SUCCEEDS because loan is COMPLETED!

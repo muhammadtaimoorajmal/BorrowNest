@@ -3,12 +3,16 @@ name: BorrowNest CI
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
-    name: Lint, Test and Build
+    name: Lint, Test, Audit and Build
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +27,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify production dependencies audit
+        run: npm audit --omit=dev
 
       - name: Run ESLint
         run: npm run lint

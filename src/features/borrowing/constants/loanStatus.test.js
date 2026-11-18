@@ -87,7 +87,12 @@ describe('loanStatus domain invariants', () => {
       returnCheckpoint: { borrowerReturnMarkedAt: '2026-12-05T12:00:00.000Z' },
     })).toBe(false);
 
-    expect(canInspectReturn(baseActiveLoan)).toBe(true);
+    // B1: canInspectReturn requires borrower to have marked return
+    expect(canInspectReturn(baseActiveLoan)).toBe(false);
+    expect(canInspectReturn({
+      ...baseActiveLoan,
+      returnCheckpoint: { borrowerReturnMarkedAt: '2026-12-05T12:00:00.000Z' },
+    })).toBe(true);
     expect(canInspectReturn(baseReservedLoan)).toBe(false);
   });
 

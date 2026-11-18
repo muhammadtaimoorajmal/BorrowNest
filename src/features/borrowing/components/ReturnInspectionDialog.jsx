@@ -104,6 +104,11 @@ export function ReturnInspectionDialog({
     e.preventDefault();
     setError(null);
 
+    if (!loan?.returnCheckpoint?.borrowerReturnMarkedAt) {
+      setError('Cannot complete return inspection: Borrower has not marked the physical item as returned.');
+      return;
+    }
+
     for (let i = 0; i < photos.length; i++) {
       const p = photos[i];
       const alt = (photoAltMap[p.id] || '').trim();
@@ -229,6 +234,15 @@ export function ReturnInspectionDialog({
           ) : (
             /* Mode === owner_inspection */
             <form onSubmit={handleSubmitOwnerInspection} className={styles.form}>
+              {!loan?.returnCheckpoint?.borrowerReturnMarkedAt && (
+                <div className={styles.awaitingWarning} role="alert">
+                  <span aria-hidden="true">⚠️</span>
+                  <span>
+                    Cannot complete inspection: The borrower has not marked this item as returned. Owner condition inspection is only permitted after physical return is acknowledged.
+                  </span>
+                </div>
+              )}
+
               {/* Prior Checkpoints Summary for Reference */}
               <div className={styles.checkpointReferenceGrid}>
                 <div className={styles.referenceCol}>
@@ -347,7 +361,7 @@ export function ReturnInspectionDialog({
                 <button
                   type="submit"
                   className={styles.submitBtn}
-                  disabled={isSubmitting || processingImage}
+                  disabled={isSubmitting || processingImage || !loan?.returnCheckpoint?.borrowerReturnMarkedAt}
                 >
                   {isSubmitting ? 'Completing Inspection...' : 'Complete Return Inspection'}
                 </button>

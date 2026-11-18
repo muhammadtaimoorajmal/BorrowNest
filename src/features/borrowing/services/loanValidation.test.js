@@ -65,7 +65,7 @@ describe('loanValidation', () => {
     expect(res.isValid).toBe(false);
     expect(res.errors.completedAt).toBeDefined();
 
-    const validCompleted = {
+    const missingBorrowerReturn = {
       ...invalidCompleted,
       collectedAt: '2026-12-10T11:00:00.000Z',
       collectionCheckpoint: {
@@ -75,6 +75,18 @@ describe('loanValidation', () => {
       completedAt: '2026-12-14T15:00:00.000Z',
       returnCheckpoint: {
         conditionGrade: 4,
+        ownerInspectedAt: '2026-12-14T15:00:00.000Z',
+      },
+    };
+    const missingBorrowerRes = validateLoanRecord(missingBorrowerReturn);
+    expect(missingBorrowerRes.isValid).toBe(false);
+    expect(missingBorrowerRes.errors.borrowerReturnMarkedAt).toBeDefined();
+
+    const validCompleted = {
+      ...missingBorrowerReturn,
+      returnCheckpoint: {
+        conditionGrade: 4,
+        borrowerReturnMarkedAt: '2026-12-14T14:30:00.000Z',
         ownerInspectedAt: '2026-12-14T15:00:00.000Z',
       },
     };

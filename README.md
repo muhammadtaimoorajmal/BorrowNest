@@ -17,7 +17,7 @@ BorrowNest provides a focused coordination workspace to:
 - Provide clear records of borrowing periods and expected return dates.
 - Keep item owners in full control of borrowing approvals.
 - Record item condition transparently before and after a loan.
-- Protect personal privacy by keeping sensitive collection details private until a request is confirmed.
+- Protect personal privacy by using coarse neighborhood area indicators only, eliminating exact address harvesting and location leakage by design (DR-05).
 
 ---
 
@@ -48,7 +48,7 @@ BorrowNest has completed **Module 06 (Physical Handover, Return Verification & C
 - **Relational Integrity Safeguards**: Deleting items with request or loan history remains permanently blocked (`ItemHasRequestHistoryError`). Archiving items is blocked while associated loans are in `RESERVED` or `ACTIVE`, but is permitted when all associated loans are `COMPLETED` or `RELEASED_NOT_COLLECTED`.
 - **Lending Workspace Integration**: Dedicated "Items Lent Out" tab alongside Active Listings, Archived, and Incoming Requests, displaying active loan counts and action triggers.
 - **IndexedDB Schema Version 3 & Multi-Store Backup Version 3**: Native `loans` store with indexes, non-destructive migration backfilling legacy `APPROVED` requests as `RESERVED` loans, and version 3 backup/restore serializing items, photos, borrowing requests, and loan lifecycles with checkpoint photographs. All multi-store operations execute atomically.
-- **Comprehensive Quality Gates**: 205 automated tests passing across 24 test suites with 0 ESLint warnings/errors and clean Vite production build.
+- **Comprehensive Quality Gates**: 207 automated tests passing across 24 test suites with 0 ESLint warnings/errors and clean Vite production build.
 
 ---
 

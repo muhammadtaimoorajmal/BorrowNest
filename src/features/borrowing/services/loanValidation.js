@@ -127,8 +127,11 @@ export function validateLoanRecord(loan) {
     if (!loan.completedAt) {
       errors.completedAt = 'Completed loans must have a completedAt timestamp.';
     }
+    if (!loan.returnCheckpoint?.borrowerReturnMarkedAt) {
+      errors.borrowerReturnMarkedAt = 'Completed loans require a recorded borrower return marking timestamp.';
+    }
     if (!loan.returnCheckpoint?.ownerInspectedAt) {
-      errors.returnCheckpoint = 'Completed loans must have an owner return inspection checkpoint.';
+      errors.ownerInspectedAt = 'Completed loans must have an owner return inspection checkpoint.';
     }
   }
 
