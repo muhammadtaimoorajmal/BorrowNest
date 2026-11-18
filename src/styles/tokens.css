@@ -1,0 +1,91 @@
+:root {
+  /* Brand color tokens */
+  --bn-color-primary-50: #f0fdfa;
+  --bn-color-primary-100: #ccfbf1;
+  --bn-color-primary-500: #14b8a6;
+  --bn-color-primary-600: #0d9488;
+  --bn-color-primary-700: #0f766e;
+  --bn-color-primary-800: #115e59;
+  --bn-color-primary-900: #134e4a;
+
+  --bn-color-accent-400: #fbbf24;
+  --bn-color-accent-500: #f59e0b;
+  --bn-color-accent-600: #d97706;
+
+  /* Neutral scale */
+  --bn-color-slate-50: #f8fafc;
+  --bn-color-slate-100: #f1f5f9;
+  --bn-color-slate-200: #e2e8f0;
+  --bn-color-slate-300: #cbd5e1;
+  --bn-color-slate-400: #94a3b8;
+  --bn-color-slate-500: #64748b;
+  --bn-color-slate-600: #475569;
+  --bn-color-slate-700: #334155;
+  --bn-color-slate-800: #1e293b;
+  --bn-color-slate-900: #0f172a;
+
+  /* Semantic surface & text tokens */
+  --bn-surface-bg: #f8fafc;
+  --bn-surface-card: #ffffff;
+  --bn-surface-subtle: #f1f5f9;
+  --bn-border-subtle: #e2e8f0;
+  --bn-border-strong: #cbd5e1;
+
+  --bn-text-primary: #0f172a;
+  --bn-text-secondary: #475569;
+  --bn-text-muted: #64748b;
+  --bn-text-inverse: #ffffff;
+
+  /* Status tokens */
+  --bn-status-info-bg: #f0fdfa;
+  --bn-status-info-text: #0f766e;
+  --bn-status-info-border: #99f6e4;
+
+  /* Typography tokens */
+  --bn-font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --bn-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+
+  --bn-font-size-xs: 0.75rem;    /* 12px */
+  --bn-font-size-sm: 0.875rem;   /* 14px */
+  --bn-font-size-base: 1rem;     /* 16px */
+  --bn-font-size-lg: 1.125rem;   /* 18px */
+  --bn-font-size-xl: 1.25rem;    /* 20px */
+  --bn-font-size-2xl: 1.5rem;    /* 24px */
+  --bn-font-size-3xl: 1.875rem;  /* 30px */
+
+  --bn-font-weight-normal: 400;
+  --bn-font-weight-medium: 500;
+  --bn-font-weight-semibold: 600;
+  --bn-font-weight-bold: 700;
+
+  --bn-line-height-tight: 1.25;
+  --bn-line-height-normal: 1.5;
+  --bn-line-height-relaxed: 1.625;
+
+  /* Spacing tokens */
+  --bn-space-1: 0.25rem;  /* 4px */
+  --bn-space-2: 0.5rem;   /* 8px */
+  --bn-space-3: 0.75rem;  /* 12px */
+  --bn-space-4: 1rem;     /* 16px */
+  --bn-space-5: 1.25rem;  /* 20px */
+  --bn-space-6: 1.5rem;   /* 24px */
+  --bn-space-8: 2rem;     /* 32px */
+  --bn-space-10: 2.5rem;  /* 40px */
+  --bn-space-12: 3rem;    /* 48px */
+  --bn-space-16: 4rem;    /* 64px */
+
+  /* Radii tokens */
+  --bn-radius-sm: 0.375rem; /* 6px */
+  --bn-radius-md: 0.5rem;   /* 8px */
+  --bn-radius-lg: 0.75rem;  /* 12px */
+  --bn-radius-xl: 1rem;     /* 16px */
+  --bn-radius-full: 9999px;
+
+  /* Elevation tokens */
+  --bn-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --bn-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --bn-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+
+  /* Layout tokens */
+  --bn-container-max-width: 1040px;
+}

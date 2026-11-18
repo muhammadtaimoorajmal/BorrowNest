@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" fill="none">
+  <!-- Mark icon -->
+  <g transform="translate(4, 4)">
+    <rect width="32" height="32" rx="8" fill="#0f766e"/>
+    <path d="M6 19C7.5 24 12 26 16 26C20 26 24.5 24 26 19C23 21 19 22 16 22C13 22 9 21 6 19Z" fill="#f8fafc" opacity="0.95"/>
+    <path d="M10 13C10 9.68629 12.6863 7 16 7C19.3137 7 22 9.68629 22 13C22 15 20.5 17 18.5 17.5" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M22 15C22 18.3137 19.3137 21 16 21C12.6863 21 10 18.3137 10 15C10 13 11.5 11 13.5 10.5" stroke="#f8fafc" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="16" cy="14" r="2.5" fill="#f59e0b"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="44" y="25" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#0f172a">
+    Borrow<tspan fill="#0f766e">Nest</tspan>
+  </text>
+</svg>

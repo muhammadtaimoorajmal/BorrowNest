@@ -1,0 +1,82 @@
+@import './tokens.css';
+
+/* Baseline Box Sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--bn-font-sans);
+  font-size: 16px;
+  line-height: var(--bn-line-height-normal);
+  color: var(--bn-text-primary);
+  background-color: var(--bn-surface-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography baseline */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--bn-text-primary);
+  font-weight: var(--bn-font-weight-bold);
+  line-height: var(--bn-line-height-tight);
+}
+
+p {
+  color: var(--bn-text-secondary);
+  line-height: var(--bn-line-height-relaxed);
+}
+
+/* Accessible focus visible ring */
+:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 1rem;
+  background: var(--bn-color-primary-700);
+  color: var(--bn-text-inverse);
+  padding: var(--bn-space-2) var(--bn-space-4);
+  z-index: 1000;
+  border-radius: var(--bn-radius-sm);
+  text-decoration: none;
+  font-weight: var(--bn-font-weight-medium);
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}

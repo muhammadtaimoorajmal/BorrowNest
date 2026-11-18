@@ -1,0 +1,51 @@
+.brandContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bn-space-3);
+  text-decoration: none;
+}
+
+.icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--bn-radius-md);
+}
+
+.textGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.wordmark {
+  font-size: var(--bn-font-size-xl);
+  font-weight: var(--bn-font-weight-bold);
+  color: var(--bn-text-primary);
+  letter-spacing: -0.02em;
+  line-height: var(--bn-line-height-tight);
+}
+
+.wordmarkAccent {
+  color: var(--bn-color-primary-700);
+}
+
+.tagline {
+  font-size: var(--bn-font-size-xs);
+  color: var(--bn-text-muted);
+  font-weight: var(--bn-font-weight-medium);
+  margin-top: 2px;
+}
+
+/* Size variants */
+.large .icon {
+  width: 3rem;
+  height: 3rem;
+}
+
+.large .wordmark {
+  font-size: var(--bn-font-size-2xl);
+}
+
+.large .tagline {
+  font-size: var(--bn-font-size-sm);
+}

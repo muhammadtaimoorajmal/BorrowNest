@@ -1,0 +1,58 @@
+.header {
+  background-color: var(--bn-surface-card);
+  border-bottom: 1px solid var(--bn-border-subtle);
+  padding: var(--bn-space-4) var(--bn-space-6);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--bn-shadow-sm);
+}
+
+.container {
+  max-width: var(--bn-container-max-width);
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--bn-space-4);
+}
+
+.brandWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bn-space-2);
+  padding: var(--bn-space-1) var(--bn-space-3);
+  background-color: var(--bn-status-info-bg);
+  border: 1px solid var(--bn-status-info-border);
+  border-radius: var(--bn-radius-full);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--bn-color-primary-600);
+}
+
+.statusText {
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-medium);
+  color: var(--bn-status-info-text);
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding: var(--bn-space-3) var(--bn-space-4);
+  }
+
+  .container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

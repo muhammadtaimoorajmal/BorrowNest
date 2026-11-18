@@ -1,0 +1,77 @@
+.emptyContainer {
+  background-color: var(--bn-surface-card);
+  border: 1px solid var(--bn-border-subtle);
+  border-radius: var(--bn-radius-xl);
+  padding: var(--bn-space-12) var(--bn-space-8);
+  text-align: center;
+  box-shadow: var(--bn-shadow-sm);
+  max-width: 800px;
+  margin: var(--bn-space-8) auto;
+}
+
+.iconWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--bn-space-6);
+}
+
+.emptyIcon {
+  width: 5rem;
+  height: 5rem;
+}
+
+.title {
+  font-size: var(--bn-font-size-2xl);
+  font-weight: var(--bn-font-weight-bold);
+  color: var(--bn-text-primary);
+  margin-bottom: var(--bn-space-3);
+}
+
+.description {
+  font-size: var(--bn-font-size-base);
+  color: var(--bn-text-secondary);
+  max-width: 600px;
+  margin: 0 auto var(--bn-space-8);
+  line-height: var(--bn-line-height-relaxed);
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--bn-space-4);
+  text-align: left;
+  border-top: 1px solid var(--bn-border-subtle);
+  padding-top: var(--bn-space-8);
+}
+
+.infoCard {
+  background-color: var(--bn-surface-subtle);
+  padding: var(--bn-space-5);
+  border-radius: var(--bn-radius-md);
+  border: 1px solid var(--bn-border-subtle);
+}
+
+.cardHeading {
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-semibold);
+  color: var(--bn-color-primary-800);
+  margin-bottom: var(--bn-space-2);
+}
+
+.cardText {
+  font-size: var(--bn-font-size-xs);
+  color: var(--bn-text-secondary);
+  line-height: var(--bn-line-height-normal);
+}
+
+@media (max-width: 768px) {
+  .emptyContainer {
+    padding: var(--bn-space-8) var(--bn-space-4);
+    margin: var(--bn-space-4) auto;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+    gap: var(--bn-space-3);
+  }
+}
