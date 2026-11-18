@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import App from './App';
 
-describe('BorrowNest Application Shell (Module 01)', () => {
-  it('renders the brand mark and product tagline', () => {
+describe('BorrowNest Application Shell and Core Navigation', () => {
+  it('renders the brand mark and product tagline', async () => {
     render(<App />);
 
     // Brand and wordmark presence
@@ -14,20 +14,19 @@ describe('BorrowNest Application Shell (Module 01)', () => {
     const nestOccurrences = screen.getAllByText(/Nest/i);
     expect(nestOccurrences.length).toBeGreaterThan(0);
 
-    // Check product tagline
+    // Check product tagline in footer
     const taglineMatches = screen.getAllByText(
       /Share what you own\. Borrow what you need\./i,
     );
     expect(taglineMatches.length).toBeGreaterThan(0);
   });
 
-  it('honestly displays the empty initial state without synthetic items', () => {
+  it('honestly displays the empty initial state without synthetic items', async () => {
     render(<App />);
 
-    // Must show genuine empty state title
-    expect(
-      screen.getByRole('heading', { name: /No items listed yet/i }),
-    ).toBeInTheDocument();
+    // Must show genuine empty state title after local storage check
+    const emptyTitle = await screen.findByRole('heading', { name: /No items listed yet/i });
+    expect(emptyTitle).toBeInTheDocument();
 
     // Must explain honest local-first state
     expect(
@@ -38,11 +37,10 @@ describe('BorrowNest Application Shell (Module 01)', () => {
 
     // Verify absence of fabricated marketplace items
     expect(screen.queryByTestId('fake-item-card')).not.toBeInTheDocument();
-    expect(screen.queryByText(/Drill/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Lawnmower/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Cordless Hammer Drill/i)).not.toBeInTheDocument();
   });
 
-  it('provides accessible landmark regions and skip link', () => {
+  it('provides accessible landmark regions, navigation, and skip link', async () => {
     render(<App />);
 
     expect(screen.getByRole('banner')).toBeInTheDocument();
@@ -51,5 +49,11 @@ describe('BorrowNest Application Shell (Module 01)', () => {
     expect(
       screen.getByRole('link', { name: /Skip to main content/i }),
     ).toBeInTheDocument();
+
+    // Check four task navigation destinations (DR-06) across responsive navigation
+    expect(screen.getAllByRole('link', { name: /Discover/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /Borrowing/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /Lending/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /Account/i }).length).toBeGreaterThan(0);
   });
 });

@@ -26,29 +26,36 @@ BorrowNest provides a focused coordination workspace to:
 - **Framework**: React 19 (JavaScript / JSX)
 - **Tooling & Build**: Vite 8
 - **Styling**: Standard CSS Custom Properties (Design Tokens) and CSS Modules
-- **Testing**: Vitest & React Testing Library (JSDOM environment)
+- **Local Persistence**: Native Browser IndexedDB via transactional `StorageAdapter`
+- **Media Pipeline**: Client-side HTML5 Canvas EXIF/GPS stripping, downscaling, and compression
+- **Testing**: Vitest & React Testing Library (JSDOM environment with fake-indexeddb)
 - **Code Quality**: ESLint 10 (Flat Config)
 - **Deployment & Automation**: GitHub Actions CI Workflow
 
-BorrowNest is architected as a **local-first client-side application**. It stores information directly within the user's browser environment and operates without third-party tracking, external telemetry, or mandatory remote cloud backends.
+BorrowNest is architected as a **local-first client-side application**. It stores information directly within the user's browser environment using native IndexedDB and operates without third-party tracking, external telemetry, or mandatory remote cloud backends.
 
 ---
 
-## Prototype Boundaries and Current Limitations
+## Prototype Boundaries and Current Status
 
-BorrowNest is currently at **Module 01 (Project Foundation)**:
-- **Local-Only Storage**: In this initial release, records exist solely within the local browser runtime. Cross-device synchronization and multi-user networking are deliberately not implemented at this stage.
+BorrowNest has completed **Module 03 (Genuine Item Listing Management & Local Persistence)**:
+- **Responsive 4-Section Application Shell**: Top desktop navbar and bottom mobile navbar with 48px touch targets (exceeding WCAG 44×44px minimum) navigating across `#discover`, `#borrowing`, `#lending`, and `#account`.
+- **Genuine Item Management**: Complete creation, editing, availability toggling, archiving, restoring, and deletion confirmation workflows.
+- **Native IndexedDB Persistence**: Structured transactional persistence store (`BorrowNest` v1) indexed by status, category, and timestamps.
+- **Privacy-Preserving Photo Pipeline**: Bounded proportional downscaling (max 1600px), complete EXIF and GPS metadata stripping via Canvas re-encoding, WebP/JPEG compression, and mandatory accessibility descriptions (`altText`).
+- **Data Portability**: Full JSON backup export (`borrownest-backup` v1) and schema-validated restore supporting both non-destructive merge and clean replace modes.
 - **No Mock Data**: Per our mandatory data-integrity policy, the application does not ship with pre-populated fake items, synthetic users, or artificial activity feeds.
-- **Authentication**: There is no remote authentication service or external identity verification in this local-first prototype.
+- **Future Module Roadmap**: Full catalog discovery and search are scheduled for Module 04; structured borrowing requests and calendar scheduling for Module 05; and handover condition inspection protocols for Module 06.
 
 ---
 
 ## Privacy Principles & Genuine Asset Policy
 
 - **Data Minimization**: BorrowNest requests only information strictly necessary for lending coordination.
-- **Collection Privacy**: Only coarse neighborhood or landmark areas are collected and displayed. Exact residential street addresses and private lockbox codes are strictly not collected or stored in the local prototype (DR-05).
-- **Genuine Imagery**: BorrowNest strictly prohibits generic stock photographs in place of genuine items. Future listings rely solely on genuine photographs provided directly by the item owner.
-- **Design Target**: Built with semantic HTML and keyboard navigation aiming for WCAG 2.2 Level AA as an intentional design target, with 44 × 44 CSS pixel touch targets on primary mobile navigation.
+- **Collection Privacy**: Only coarse neighborhood or landmark areas are collected and displayed. Exact residential street addresses and private lockbox codes are strictly prevented via real-time heuristic warning safeguards (DR-05).
+- **EXIF & Metadata Stripping**: Uploaded photos are stripped of all camera metadata, embedded GPS coordinates, and device identifiers client-side before storage.
+- **Genuine Imagery**: BorrowNest strictly prohibits generic stock photographs, clip art, or synthetic renders. All listings rely exclusively on genuine photographs captured directly by item owners.
+- **Design Target**: Built with semantic HTML, ARIA landmarks, and keyboard navigation targeting WCAG 2.2 Level AA, with mobile navigation touch targets meeting or exceeding 44 × 44 CSS pixels.
 
 ---
 
@@ -58,7 +65,7 @@ BorrowNest is currently at **Module 01 (Project Foundation)**:
 | :--- | :--- | :--- |
 | **Module 01** | Project foundation, identity, architectural principles, repository setup, and CI automation | **Implemented** |
 | **Module 02** | Formal Question-Option-Criteria (QOC) design rationale across 6 key architectural decision areas ([docs/design-rationale/](docs/design-rationale/)) | **Implemented** |
-| **Module 03** | Genuine item listing management and local persistence | Planned |
+| **Module 03** | Genuine item listing management, native IndexedDB persistence, photo processing, and backup/restore | **Implemented & Verified** |
 | **Module 04** | Discovery, category browsing, and search filtering | Planned |
 | **Module 05** | Request submission, owner approval flow, and loan period scheduling | Planned |
 | **Module 06** | Handover inspection, condition documentation, and return completion | Planned |

@@ -56,7 +56,7 @@ BorrowNest/
 │   ├── borrownest-logo.svg      # Original brand vector asset
 │   └── favicon.svg              # Browser tab icon
 ├── src/                         # Application source code
-│   ├── components/              # Modular React UI components
+│   ├── components/              # Shared Presentational Components
 │   │   ├── BrandMark.jsx        # SVG brand mark & wordmark
 │   │   ├── BrandMark.module.css
 │   │   ├── EmptyState.jsx       # Honest zero-state presentation
@@ -65,12 +65,61 @@ BorrowNest/
 │   │   ├── Footer.module.css
 │   │   ├── Header.jsx           # Responsive application header
 │   │   └── Header.module.css
+│   ├── features/                # Domain Feature Slices
+│   │   ├── account/             # Account & Local Storage Management
+│   │   │   └── pages/
+│   │   │       ├── AccountPage.jsx
+│   │   │       └── AccountPage.module.css
+│   │   ├── borrowing/           # Borrowing Requests (Module 05 Roadmap)
+│   │   │   └── BorrowingPlaceholder.jsx
+│   │   ├── discover/            # Item Catalog & Discovery (Module 04 Roadmap)
+│   │   │   ├── DiscoverPlaceholder.jsx
+│   │   │   └── Placeholder.module.css
+│   │   └── listings/            # Genuine Item Management (Module 03 Implemented)
+│   │       ├── components/
+│   │       │   ├── DeleteConfirmDialog.jsx
+│   │       │   ├── DeleteConfirmDialog.module.css
+│   │       │   ├── ListingCard.jsx
+│   │       │   ├── ListingCard.module.css
+│   │       │   ├── ListingDetailModal.jsx
+│   │       │   ├── ListingDetailModal.module.css
+│   │       │   ├── ListingForm.jsx
+│   │       │   └── ListingForm.module.css
+│   │       ├── hooks/
+│   │       │   └── useListings.js
+│   │       ├── pages/
+│   │       │   ├── LendingPage.jsx
+│   │       │   ├── LendingPage.module.css
+│   │       │   └── LendingPage.test.jsx
+│   │       ├── services/
+│   │       │   ├── processItemImage.js
+│   │       │   └── processItemImage.test.js
+│   │       └── validation/
+│   │           ├── itemValidation.js
+│   │           └── itemValidation.test.js
+│   ├── navigation/              # Responsive Navigation Subsystem (DR-06)
+│   │   ├── Navbar.jsx
+│   │   ├── Navbar.module.css
+│   │   ├── navigationConstants.js
+│   │   └── navigation.test.jsx
+│   ├── services/                # Cross-Cutting Infrastructure Services
+│   │   ├── backup/              # Local JSON Export & Validated Restore
+│   │   │   ├── backupSchema.js
+│   │   │   ├── exportBackup.js
+│   │   │   ├── importBackup.js
+│   │   │   └── backup.test.js
+│   │   └── storage/             # Abstract & Concrete Storage Layer
+│   │       ├── database.js
+│   │       ├── IndexedDbStorageAdapter.js
+│   │       ├── IndexedDbStorageAdapter.test.js
+│   │       ├── StorageAdapter.js
+│   │       └── storageErrors.js
 │   ├── styles/                  # Global CSS foundations
 │   │   ├── global.css           # Typography, reset, and a11y utilities
 │   │   └── tokens.css           # Custom properties design system
 │   ├── test/                    # Test configuration and setup
-│   │   └── setup.js             # Jest-DOM matcher extensions
-│   ├── App.jsx                  # Root application shell
+│   │   └── setup.js             # Fake-IndexedDB and canvas mock setup
+│   ├── App.jsx                  # Root application shell & hash router
 │   ├── App.module.css
 │   ├── App.test.jsx             # Shell verification test suite
 │   └── main.jsx                 # Client entry point
@@ -136,13 +185,18 @@ erDiagram
 ## 5. State Management & Local-First Strategy
 
 - **Module 01 Baseline**: Lightweight React local state and semantic components.
-- **Module 03+ State Management**: Local-first persistence layer using browser `localStorage` and `IndexedDB`.
-- **Decoupled Storage Layer**: Storage operations will be encapsulated behind an abstraction adapter interface (`StorageAdapter`), allowing future swap-out to encrypted local storage or peer-to-peer sync without modifying component business logic.
+- **Module 03 Persistence Architecture**:
+  - **Decoupled Storage Layer**: Storage operations are strictly abstracted behind `StorageAdapter`, an abstract interface defining transactional CRUD, archiving, restoration, counting, and bulk batch operations.
+  - **Native IndexedDB Adapter**: `IndexedDbStorageAdapter` provides the production browser persistence engine using the native `BorrowNest` database (schema version 1) and `items` object store. It utilizes secondary indexes on `status`, `category`, `createdAt`, and `updatedAt`. All write operations commit deterministically on transaction completion (`tx.oncomplete`), ensuring ACID durability.
+  - **Custom Reactive Hook**: `useListings` encapsulates reactive item state, lifecycle mutations, loading and error states, and live stats computation without component-level storage coupling.
+  - **Privacy-Preserving Media Pipeline**: `processItemImage` sanitizes owner-uploaded photographs client-side. Using an in-memory HTML5 Canvas, raw image pixels are re-encoded into clean WebP/JPEG Blobs (bounded to 1600px and 2.5MB), completely stripping EXIF metadata, camera serial numbers, and embedded GPS coordinates before persistence.
+  - **Data Portability & Backup Subsystem**: `exportBackup` and `importBackup` enable client-side JSON serialization (`borrownest-backup` format v1) with base64 photo rehydration, schema validation, and both non-destructive merge and clean replace restore strategies.
 
 ---
 
 ## 6. Technical Constraints & Trade-offs
 
-1. **Client-Side Storage Volatility**: Local browser storage can be cleared by user action. Mitigation: subsequent modules will provide a single-click JSON export/backup feature.
+1. **Client-Side Storage Volatility**: Local browser storage can be cleared by user action. Mitigation: Module 03 implements single-click JSON export/backup and validated restore via the Account page.
 2. **Absence of Remote Multi-User Network**: In the current local-first prototype, all actions happen on the local machine. We do not simulate fake remote networks; instead, the UI clearly delineates between the Lender perspective and the Borrower perspective.
-3. **Asset Storage Size**: Local storage has memory quotas (typically 5MB for `localStorage`, several GB for `IndexedDB`). Mitigation: user-uploaded photographs will be resized and compressed on the client before being persisted.
+3. **Asset Storage Size**: Local storage has memory quotas (typically several GB for `IndexedDB`). Mitigation: user-uploaded photographs are resized to a maximum dimension of 1600px and re-compressed to WebP/JPEG Blobs under 2.5MB client-side.
+4. **Coarse Location Boundary**: In accordance with DR-05, listings require broad neighborhood tags and feature real-time heuristic pattern detection warning users against entering specific street addresses or gate codes.

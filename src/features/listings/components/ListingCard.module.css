@@ -1,0 +1,209 @@
+.card {
+  background-color: var(--bn-surface-card);
+  border: 1px solid var(--bn-border-subtle);
+  border-radius: var(--bn-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--bn-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--bn-shadow-md);
+}
+
+.archivedCard {
+  opacity: 0.85;
+  background-color: var(--bn-surface-subtle);
+  border-style: dashed;
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background-color: var(--bn-color-slate-100);
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.noPhotoPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--bn-text-muted);
+  gap: var(--bn-space-2);
+}
+
+.noPhotoIcon {
+  font-size: 2rem;
+}
+
+.noPhotoText {
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-medium);
+}
+
+.badgeRow {
+  position: absolute;
+  top: var(--bn-space-3);
+  left: var(--bn-space-3);
+  right: var(--bn-space-3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.availabilityBadge {
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-semibold);
+  padding: 3px 8px;
+  border-radius: var(--bn-radius-full);
+  box-shadow: var(--bn-shadow-sm);
+}
+
+.badgeAvailable {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.badgeUnavailable {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.archivedBadge {
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-semibold);
+  padding: 3px 8px;
+  border-radius: var(--bn-radius-full);
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.content {
+  padding: var(--bn-space-5);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--bn-space-2);
+  margin-bottom: var(--bn-space-2);
+}
+
+.categoryPill {
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-bold);
+  color: var(--bn-color-primary-800);
+  background-color: var(--bn-color-primary-50);
+  padding: 2px 8px;
+  border-radius: var(--bn-radius-sm);
+}
+
+.conditionPill {
+  font-size: var(--bn-font-size-xs);
+  color: var(--bn-text-muted);
+  font-weight: var(--bn-font-weight-medium);
+}
+
+.title {
+  font-size: var(--bn-font-size-lg);
+  font-weight: var(--bn-font-weight-bold);
+  color: var(--bn-text-primary);
+  margin-bottom: var(--bn-space-2);
+  line-height: var(--bn-line-height-tight);
+}
+
+.areaRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--bn-text-secondary);
+  font-size: var(--bn-font-size-xs);
+  margin-bottom: var(--bn-space-3);
+}
+
+.areaIcon {
+  width: 14px;
+  height: 14px;
+  color: var(--bn-color-primary-600);
+  flex-shrink: 0;
+}
+
+.descriptionSnippet {
+  font-size: var(--bn-font-size-sm);
+  color: var(--bn-text-secondary);
+  margin-bottom: var(--bn-space-5);
+  line-height: var(--bn-line-height-normal);
+  flex: 1;
+}
+
+.actionToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bn-space-2);
+  border-top: 1px solid var(--bn-border-subtle);
+  padding-top: var(--bn-space-3);
+  margin-top: auto;
+}
+
+.actionBtn {
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-medium);
+  padding: var(--bn-space-2) var(--bn-space-3);
+  border-radius: var(--bn-radius-sm);
+  border: 1px solid var(--bn-border-strong);
+  background-color: var(--bn-surface-card);
+  color: var(--bn-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 34px;
+}
+
+.actionBtn:hover {
+  background-color: var(--bn-surface-subtle);
+}
+
+.viewBtn {
+  border-color: var(--bn-color-primary-500);
+  color: var(--bn-color-primary-800);
+}
+
+.viewBtn:hover {
+  background-color: var(--bn-color-primary-50);
+}
+
+.deleteBtn {
+  border-color: #fca5a5;
+  color: #b91c1c;
+  margin-left: auto;
+}
+
+.deleteBtn:hover {
+  background-color: #fef2f2;
+}
+
+.restoreBtn {
+  border-color: #fbbf24;
+  color: #b45309;
+}

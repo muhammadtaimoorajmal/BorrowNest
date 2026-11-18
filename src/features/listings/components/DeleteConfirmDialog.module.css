@@ -1,0 +1,99 @@
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--bn-space-4);
+  z-index: 1300;
+}
+
+.dialog {
+  background-color: var(--bn-surface-card);
+  border-radius: var(--bn-radius-lg);
+  max-width: 480px;
+  width: 100%;
+  padding: var(--bn-space-6);
+  box-shadow: var(--bn-shadow-lg);
+  border: 1px solid var(--bn-border-subtle);
+  animation: dialogScale 0.15s ease-out;
+}
+
+@keyframes dialogScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.iconWrapper {
+  font-size: 2.25rem;
+  margin-bottom: var(--bn-space-2);
+}
+
+.title {
+  font-size: var(--bn-font-size-xl);
+  font-weight: var(--bn-font-weight-bold);
+  color: var(--bn-text-primary);
+  margin-bottom: var(--bn-space-2);
+}
+
+.description {
+  font-size: var(--bn-font-size-sm);
+  color: var(--bn-text-secondary);
+  line-height: var(--bn-line-height-relaxed);
+  margin-bottom: var(--bn-space-6);
+}
+
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--bn-space-3);
+}
+
+.cancelBtn {
+  padding: var(--bn-space-2) var(--bn-space-4);
+  background-color: var(--bn-surface-subtle);
+  border: 1px solid var(--bn-border-strong);
+  color: var(--bn-text-primary);
+  border-radius: var(--bn-radius-md);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-medium);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background-color: var(--bn-border-subtle);
+}
+
+.deleteBtn {
+  padding: var(--bn-space-2) var(--bn-space-5);
+  background-color: #dc2626;
+  border: 1px solid #b91c1c;
+  color: white;
+  border-radius: var(--bn-radius-md);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-semibold);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.cancelBtn:disabled,
+.deleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

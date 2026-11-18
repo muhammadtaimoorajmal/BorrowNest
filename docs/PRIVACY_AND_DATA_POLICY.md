@@ -22,14 +22,16 @@ One of the primary safety concerns in peer item sharing is protecting residentia
 In accordance with formal design decision [DR-05](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-05_LOCATION_PRIVACY.md):
 - **Coarse Area Only in Current Prototype**: Item listings gather and display only a coarse, user-defined neighborhood, district, or nearby public landmark area (e.g., "Oakwood District", "Near North Library").
 - **Zero Address Harvesting**: Exact residential street addresses, apartment unit numbers, and private access codes are **strictly NOT collected or stored** in the local-first prototype.
+- **Client-Side Real-Time Pattern Guard**: The listing creation and editing forms incorporate a real-time heuristic analysis function (`checkPrivacyPatterns`) that flags street addresses, unit numbers, and lockbox PIN combinations, guiding users to enter only general neighborhood descriptions.
 - **Future Post-Approval Disclosure**: Two-tier private disclosure (revealing exact addresses only to an approved borrower) is formally recognized as a future capability requiring authenticated user identities, server-side authorization filters, and secure encrypted persistence. In the local-first prototype, what is never collected cannot be compromised.
 
 ---
 
 ## 4. User-Uploaded Images & Asset Handling
 
-- **Local Processing**: Any photograph uploaded by an item owner is processed entirely client-side.
-- **EXIF Stripping**: Image metadata (including embedded GPS coordinates, camera serial numbers, and device timestamps) must be stripped before persisting the image in local browser storage to prevent unintended geolocation leakage.
+- **Local Processing**: Any photograph uploaded by an item owner is processed entirely client-side using `processItemImage.js`.
+- **EXIF & GPS Stripping**: Raw user images are drawn to an in-memory HTML5 Canvas and re-encoded from raw pixel buffers into clean WebP/JPEG Blobs (bounded to 1600px and 2.5MB). This process completely destroys all EXIF metadata, camera serial numbers, and embedded GPS coordinates before the Blob is persisted to IndexedDB.
+- **Accessible Descriptions**: Every photograph requires an owner-provided descriptive text (`altText`) before submission to ensure complete accessibility for screen-reader users (WCAG 2.2 SC 1.1.1).
 - **No Remote Leakage**: Uploaded images remain stored in the user's browser environment and are not broadcast to third-party image hosting services.
 
 ---
@@ -57,9 +59,9 @@ BorrowNest enforces an explicit project-wide data-integrity rule: **No Fabricate
 
 ---
 
-## 6. Honest Local-Storage Limitations
+## 6. Honest Local-Storage Limitations & Implemented Safeguards
 
-Users must be informed transparently regarding the nature of local-first storage:
-- **Device-Bound**: Data stored in browser storage (`localStorage` or `IndexedDB`) does not automatically sync across separate browsers, incognito windows, or devices.
-- **Browser Clearing Risks**: If a user clears their browser cache or site data, locally saved records may be permanently erased.
-- **Export Recommendations**: Users are encouraged to utilize future backup/export capabilities to maintain long-term local archives of their lending histories.
+Users are informed transparently regarding the nature of local-first storage:
+- **Device-Bound**: Data stored in browser `IndexedDB` does not automatically sync across separate browsers, incognito windows, or devices.
+- **Browser Clearing Risks**: If a user clears their browser cache or site data, locally saved records may be erased.
+- **Implemented Backup Safeguard**: In Module 03, BorrowNest implements a single-click local JSON backup export (`exportBackup.js`) and schema-validated restore (`importBackup.js`) via the Account & Local Data Management view. Users can export their entire library including photos (encoded to base64) and restore it via Merge (preserving existing items) or Replace (full restore).

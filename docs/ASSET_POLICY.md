@@ -31,10 +31,11 @@ Module 01 does not include any external stock photographs. All visual brand asse
 
 ---
 
-## 4. Future User-Uploaded Item Photos
+## 4. Implemented User-Uploaded Item Photo Pipeline (Module 03)
 
-For Modules 03 through 06, user-uploaded listing photos will adhere to the following technical pipeline:
-- Client-side EXIF metadata stripping (eliminating GPS and device tags for privacy).
-- Client-side image resizing and compression (maintaining aspect ratio and bounding max dimensions to preserve local browser storage capacity).
-- Safe rendering using object URLs or Base64 data strings without external server round-trips.
-- Compulsory user prompt for accessible description / alt-text when listing an item.
+In Module 03, user-uploaded listing photos strictly adhere to the implemented client-side media pipeline (`src/features/listings/services/processItemImage.js`):
+- **EXIF & Geolocation Stripping**: Raw user images are drawn to an in-memory HTML5 Canvas and re-encoded from raw pixel buffers into clean WebP/JPEG Blobs. This process completely destroys all EXIF metadata, camera serial numbers, and embedded GPS coordinates before the Blob is persisted to IndexedDB.
+- **Client-Side Resizing & Compression**: Bounded to a maximum dimension of 1600px (`calculateBoundedDimensions`) and compressed to WebP/JPEG format bounded by a maximum file size of 2.5MB to preserve local IndexedDB storage capacity.
+- **Genuine Attestation Safeguard**: Owners must check a mandatory attestation confirming that the uploaded image depicts the actual, physical item they own rather than a stock photo or online render.
+- **Mandatory Accessible Alt Text**: Every uploaded photograph requires an owner-provided descriptive text (`altText`) before form submission, ensuring full accessibility for screen-reader users (WCAG 2.2 SC 1.1.1).
+- **Safe Object URL Rendering**: Rendered safely via `URL.createObjectURL` and revoked deterministically upon unmount or change to prevent browser memory leaks.

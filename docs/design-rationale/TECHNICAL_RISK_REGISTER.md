@@ -49,12 +49,13 @@ This register documents genuine technical, security, and methodological limitati
 - **Description**: Records stored in `localStorage` or `IndexedDB` can be cleared by the user (clearing browser history), aggressive private-browsing modes, or browser storage quota pressure.
 - **Impact**: Permanent loss of user-entered listings and loan records on that specific browser.
 - **Likelihood / Basis**: **Moderate** — Common behavior when users clear cookies and site data.
-- **Mitigation**:
-  1. Provide a single-click JSON export/backup feature in the *Account* section.
-  2. Allow importing backup JSON files to restore catalog and loan histories.
-  3. Inform users transparently of browser storage boundaries.
-- **Blocks Current Prototype?**: **No**. Standard constraint of local-first web applications.
-- **Relevant Future Module**: Module 03 (Storage Adapter).
+- **Mitigation (IMPLEMENTED IN MODULE 03)**:
+  1. Implemented a single-click JSON export/backup feature (`exportBackup.js`) in the *Account & Local Data Management* section.
+  2. Implemented schema-validated backup restoration (`importBackup.js`) supporting both non-destructive Merge and clean Replace options.
+  3. Real-time storage diagnostics displaying estimated quota and current usage via `navigator.storage.estimate()`.
+  4. Informs users transparently of browser storage boundaries.
+- **Blocks Current Prototype?**: **No**. Resolved with operational client-side backup tools.
+- **Implementation Status**: **VERIFIED** in Module 03 test suite.
 
 ---
 

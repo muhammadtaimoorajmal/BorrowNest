@@ -13,7 +13,7 @@ Status Definitions:
 
 | Requirement ID | Name | Description | Target Module | Current Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **FR-001** | Item Listing Creation | The owner can add an item with a genuine title, category, description, authentic photos, and condition rating. | Module 03 | **PLANNED** |
+| **FR-001** | Item Listing Creation | The owner can add an item with a genuine title, category, description, authentic photos, and condition rating. | Module 03 | **IMPLEMENTED & VERIFIED** |
 | **FR-002** | Item Discovery | The borrower can browse all active and available items saved within the local library. | Module 04 | **PLANNED** |
 | **FR-003** | Search and Filtering | Users can filter items by search keywords, category tags, and lending availability status. | Module 04 | **PLANNED** |
 | **FR-004** | Item Detail Inspection | The borrower can review full item details, usage guidelines, general pickup area, and owner condition notes. | Module 04 | **PLANNED** |
@@ -31,38 +31,38 @@ Status Definitions:
 ### NFR-001: Usability & Interaction
 - **NFR-001.1**: The user interface shall provide clear feedback for empty states, form validations, and status transitions without requiring technical knowledge.
 - **NFR-001.2**: Critical workflows (such as creating a listing or approving a request) shall require no more than three simple interaction steps.
-- **Status**: Foundation Shell: **VERIFIED**; Future Forms: **PLANNED**.
+- **Status**: Foundation Shell & Module 03 Listing Form/Lifecycle: **VERIFIED**; Future Borrowing Workflows: **PLANNED**.
 
 ### NFR-002: Accessibility (a11y)
 - **NFR-002.1**: Target compliance is **WCAG 2.2 Level AA**.
 - **NFR-002.2**: All interactive components must be navigable and operable using standard keyboard navigation (`Tab`, `Enter`, `Space`, `Escape`).
 - **NFR-002.3**: High contrast ratios (minimum 4.5:1 for normal text, 3:1 for large text and UI components) must be maintained across all color tokens.
 - **NFR-002.4**: Semantic HTML landmarks (`banner`, `main`, `contentinfo`, `section`, `nav`) and ARIA labels must be properly structured.
-- **Status**: Foundation Shell: **VERIFIED**; Architecture Specified: **DECIDED (DR-01, DR-06)**; Full Application: **PLANNED**.
+- **Status**: Shell & Module 03 Components: **VERIFIED**; Architecture Specified: **DECIDED (DR-01, DR-06)**; Full Application: **PLANNED**.
 
 ### NFR-003: Responsiveness & Mobile Ergonomics
 - **NFR-003.1**: The application layout shall seamlessly adapt across mobile devices (320px+), tablets (768px+), and desktop screens (1024px+).
 - **NFR-003.2**: Touch target sizes for primary buttons and mobile navigation items shall meet or exceed **44 × 44 CSS pixels**. (Note: While WCAG 2.2 Success Criterion 2.5.8 defines 24 × 24 CSS pixels as the Level AA minimum, BorrowNest adopts 44 × 44 CSS pixels—aligning with Level AAA SC 2.5.5—as an intentional, stricter ergonomic project standard).
-- **Status**: Foundation Shell: **VERIFIED**; Architecture Specified: **DECIDED (DR-06)**; Full Application: **PLANNED**.
+- **Status**: Shell & Module 03 Navigation: **VERIFIED** (48px primary mobile touch targets implemented); Architecture Specified: **DECIDED (DR-06)**.
 
 ### NFR-004: Data Privacy & Security
 - **NFR-004.1**: The local prototype shall collect and display only coarse neighborhood or public landmark areas; exact residential street addresses, unit numbers, and private lockbox codes shall **not** be collected or stored (DR-05).
 - **NFR-004.2**: No user data, telemetry, or listing details shall be sent to external servers or third-party tracking services.
 - **NFR-004.3**: All storage operations must occur strictly client-side using browser-managed secure storage APIs.
-- **Status**: Architecture Policy: **VERIFIED**; Architecture Specified: **DECIDED (DR-04, DR-05)**; Implementation: **PLANNED**.
+- **Status**: Native IndexedDB Engine, Canvas EXIF Removal & Address Pattern Safeguard: **VERIFIED**.
 
 ### NFR-005: Reliability & Data Integrity
 - **NFR-005.1**: The system must never auto-generate fake listings, synthetic accounts, or fictitious transactions.
 - **NFR-005.2**: State changes (such as approval, cancellation, and return) must be deterministic and prevent invalid state transitions.
-- **Status**: Policy & Shell: **VERIFIED**; Storage Engine: **PLANNED**.
+- **Status**: Zero-Fake-Data Enforcement, Transactional Storage Adapter & Backup Verification: **VERIFIED**.
 
 ### NFR-006: Performance
 - **NFR-006.1**: Initial client bundle load time must be under 1.5 seconds on a standard 3G/4G network.
 - **NFR-006.2**: User interactions (filtering, tab switching, and dialog toggles) shall render within 100 milliseconds without UI freezing.
-- **Status**: Production Build: **VERIFIED** (Built in < 200ms, client bundle ~230 kB uncompressed / 73 kB gzip); Runtime: **PLANNED**.
+- **Status**: Production Build: **VERIFIED** (Built in < 1.6s, client bundle ~288 kB uncompressed / 87 kB gzip); Image Canvas Pipeline: **VERIFIED**.
 
 ### NFR-007: Maintainability & Code Quality
 - **NFR-007.1**: The codebase must adhere to strict ESLint configurations with zero lint warnings or errors.
 - **NFR-007.2**: Every release must pass an automated CI test suite executing in GitHub Actions prior to branch integration.
 - **NFR-007.3**: Styling must be structured using CSS Custom Properties (tokens) and scoped CSS Modules to prevent style pollution.
-- **Status**: Module 01 Foundation: **VERIFIED**.
+- **Status**: Module 03 Verification: **VERIFIED** (ESLint 0 errors/warnings, Vitest 46/46 tests passing).
