@@ -286,6 +286,47 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
       };
     });
   }
+
+  async replaceAllItems(items = []) {
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_ITEMS, 'readwrite');
+      const store = tx.objectStore(STORE_ITEMS);
+
+      // 1. Clear store within this atomic transaction
+      const clearReq = store.clear();
+      clearReq.onerror = (e) => {
+        reject(this._handleError(e.target.error, 'Failed to clear store during replacement'));
+      };
+
+      // 2. Insert items within the exact same atomic transaction
+      let insertedCount = 0;
+      for (const item of items) {
+        if (!item || !item.id) {
+          tx.abort();
+          return reject(new StorageError('Atomic replace rejected: item record is missing valid id'));
+        }
+        const putReq = store.put(item);
+        putReq.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Atomic replace failed inserting item "${item.id}"`));
+        };
+        insertedCount++;
+      }
+
+      tx.oncomplete = () => {
+        resolve({ replacedCount: insertedCount });
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target?.error || e, 'Atomic replace transaction failed'));
+      };
+
+      tx.onabort = () => {
+        reject(new StorageError('Atomic replace transaction was aborted; prior database contents preserved'));
+      };
+    });
+  }
 }
 
 // Default singleton instance for browser application runtime

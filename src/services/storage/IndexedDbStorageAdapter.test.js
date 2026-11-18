@@ -120,4 +120,62 @@ describe('Storage Layer: IndexedDbStorageAdapter', () => {
     await adapter.clearAllItems();
     expect(await adapter.countItems()).toBe(0);
   });
+
+  describe('Atomic replaceAllItems', () => {
+    it('atomically clears existing items and inserts replacement records in one transaction', async () => {
+      // Seed two original items
+      await adapter.bulkCreateItems([
+        { ...sampleItem, id: 'orig-1', title: 'Original 1' },
+        { ...sampleItem, id: 'orig-2', title: 'Original 2' },
+      ]);
+      expect(await adapter.countItems()).toBe(2);
+
+      // Replace with new items
+      const replacement = [
+        { ...sampleItem, id: 'rep-1', title: 'Replacement 1' },
+        { ...sampleItem, id: 'rep-2', title: 'Replacement 2' },
+        { ...sampleItem, id: 'rep-3', title: 'Replacement 3' },
+      ];
+
+      const result = await adapter.replaceAllItems(replacement);
+      expect(result.replacedCount).toBe(3);
+
+      const currentItems = await adapter.listItems();
+      expect(currentItems.length).toBe(3);
+      expect(currentItems.map((i) => i.id).sort()).toEqual(['rep-1', 'rep-2', 'rep-3']);
+      await expect(adapter.getItemById('orig-1')).rejects.toThrow(RecordNotFoundError);
+    });
+
+    it('atomically clears all items when given an empty replacement array', async () => {
+      await adapter.createItem(sampleItem);
+      expect(await adapter.countItems()).toBe(1);
+
+      const result = await adapter.replaceAllItems([]);
+      expect(result.replacedCount).toBe(0);
+      expect(await adapter.countItems()).toBe(0);
+    });
+
+    it('aborts transaction and preserves original records if an invalid item is encountered', async () => {
+      // Seed original records
+      await adapter.bulkCreateItems([
+        { ...sampleItem, id: 'safe-1', title: 'Preserved Item 1' },
+        { ...sampleItem, id: 'safe-2', title: 'Preserved Item 2' },
+      ]);
+      expect(await adapter.countItems()).toBe(2);
+
+      // Attempt replace with invalid item missing id
+      const malformedBatch = [
+        { ...sampleItem, id: 'valid-new-1' },
+        { title: 'Invalid item missing id' }, // Missing id!
+      ];
+
+      await expect(adapter.replaceAllItems(malformedBatch)).rejects.toThrow();
+
+      // Verify original records remain completely intact after abort
+      const itemsAfterAbort = await adapter.listItems();
+      expect(itemsAfterAbort.length).toBe(2);
+      expect(itemsAfterAbort.map((i) => i.id).sort()).toEqual(['safe-1', 'safe-2']);
+      expect((await adapter.getItemById('safe-1')).title).toBe('Preserved Item 1');
+    });
+  });
 });

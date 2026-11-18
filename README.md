@@ -38,14 +38,16 @@ BorrowNest is architected as a **local-first client-side application**. It store
 
 ## Prototype Boundaries and Current Status
 
-BorrowNest has completed **Module 03 (Genuine Item Listing Management & Local Persistence)**:
-- **Responsive 4-Section Application Shell**: Top desktop navbar and bottom mobile navbar with 48px touch targets (exceeding WCAG 44×44px minimum) navigating across `#discover`, `#borrowing`, `#lending`, and `#account`.
-- **Genuine Item Management**: Complete creation, editing, availability toggling, archiving, restoring, and deletion confirmation workflows.
-- **Native IndexedDB Persistence**: Structured transactional persistence store (`BorrowNest` v1) indexed by status, category, and timestamps.
-- **Privacy-Preserving Photo Pipeline**: Bounded proportional downscaling (max 1600px), complete EXIF and GPS metadata stripping via Canvas re-encoding, WebP/JPEG compression, and mandatory accessibility descriptions (`altText`).
-- **Data Portability**: Full JSON backup export (`borrownest-backup` v1) and schema-validated restore supporting both non-destructive merge and clean replace modes.
-- **No Mock Data**: Per our mandatory data-integrity policy, the application does not ship with pre-populated fake items, synthetic users, or artificial activity feeds.
-- **Future Module Roadmap**: Full catalog discovery and search are scheduled for Module 04; structured borrowing requests and calendar scheduling for Module 05; and handover condition inspection protocols for Module 06.
+BorrowNest has completed **Module 04 (Unified Item Discovery, Search & Filtering)**:
+- **Unified Discovery Experience (DR-01)**: Fully integrated local catalog discovery combining persistent multi-token keyword search, category exploration pills (*All*, *Tools*, *Gardening*, *Household*, *Outdoor*, *Electronics*), and a progressive availability facet (*Available now only*).
+- **Reactive Matching Engine**: Normalized Unicode NFKC token matching across listing title, description, category, and approximate area, updating results and live regions instantly.
+- **Accessible Live Feedback**: `aria-live="polite"` result counter with active filter indicators and single-click filter reset recovery (Nielsen Heuristics #6 and #9).
+- **Read-Only Discovery Cards**: Accessible item presentation cards featuring genuine photo rendering, availability badges, condition grade chips, and coarse location badges, strictly excluding owner-only management actions.
+- **Accessible Item Details Dialog**: Modal dialog (`role="dialog"`, `aria-modal="true"`) with photo carousel/gallery, complete condition notes, approximate area reminder (DR-05), and keyboard escape dismissibility.
+- **Honest Empty & Zero-Results States**: Zero synthetic or mock marketplace data; honest empty state linking to the Lending workspace when no items are listed, and dedicated recovery guidance when active filters return zero matches.
+- **Cross-Module Persistence & Lifecycle Integrity**: Immediate synchronization with local IndexedDB storage; active items appear in catalog discovery, availability toggles update instantly, and archived items are strictly excluded from borrower discovery.
+- **Module 03 Quality & Stabilization Upgrades**: ACID-compliant single-transaction backup replacement (`replaceAllItems`), robust merge error handling, client-side imported photo validation and re-processing pipeline, and request sequencing preventing out-of-order stale state overwrite.
+- **Future Module Roadmap**: Interactive borrowing requests, reservation scheduling, and loan duration coordination for Module 05; and handover condition inspection protocols for Module 06.
 
 ---
 
@@ -66,7 +68,7 @@ BorrowNest has completed **Module 03 (Genuine Item Listing Management & Local Pe
 | **Module 01** | Project foundation, identity, architectural principles, repository setup, and CI automation | **Implemented** |
 | **Module 02** | Formal Question-Option-Criteria (QOC) design rationale across 6 key architectural decision areas ([docs/design-rationale/](docs/design-rationale/)) | **Implemented** |
 | **Module 03** | Genuine item listing management, native IndexedDB persistence, photo processing, and backup/restore | **Implemented & Verified** |
-| **Module 04** | Discovery, category browsing, and search filtering | Planned |
+| **Module 04** | Discovery, category browsing, and search filtering | **Implemented & Verified** |
 | **Module 05** | Request submission, owner approval flow, and loan period scheduling | Planned |
 | **Module 06** | Handover inspection, condition documentation, and return completion | Planned |
 

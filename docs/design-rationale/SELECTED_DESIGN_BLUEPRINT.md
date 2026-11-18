@@ -184,7 +184,7 @@ stateDiagram-v2
 | **Item Management (DR-04, DR-05)** | Lending workspace, item creation/edit forms, availability toggle, archive/restore, delete confirmation, native IndexedDB persistence | **Implemented & Verified (Module 03)** |
 | **Media Pipeline (DR-04)** | Canvas EXIF/GPS metadata stripping, 1600px scaling, WebP/JPEG compression, mandatory alt text | **Implemented & Verified (Module 03)** |
 | **Account & Data Portability** | JSON backup export (`borrownest-backup` v1), schema-validated merge and replace restore, storage diagnostics | **Implemented & Verified (Module 03)** |
-| **Item Discovery & Catalog (DR-01)** | Keyword search, categorical exploration pills, availability toggling, catalog grid | Planned (Module 04 Roadmap) |
+| **Item Discovery & Catalog (DR-01)** | Keyword search, categorical exploration pills, availability toggling, catalog grid, read-only item cards, detail modal, honest zero states | **Implemented & Verified (Module 04)** |
 | **Borrowing Requests & Approval (DR-02)** | Unbundled request submission, owner review workflow, cancellation handling | Planned (Module 05 Roadmap) |
 | **Availability Scheduling (DR-03)** | Date range picker, real-time overlap prevention, scheduling calendar | Planned (Module 05 Roadmap) |
 | **Condition Handover (DR-04)** | Dual-inspection checklist, side-by-side comparison, return completion logging | Planned (Module 06 Roadmap) |

@@ -23,13 +23,35 @@ export function blobToBase64(blob) {
 
 /**
  * Converts a base64 Data URL string back into a Blob.
+ * Validates data URL structure and decoding integrity.
  * @param {string} dataUrl
  * @returns {Promise<Blob>}
  */
 export async function base64ToBlob(dataUrl) {
   if (!dataUrl || typeof dataUrl !== 'string') {
-    throw new Error('Invalid dataUrl for Blob conversion');
+    throw new Error('Invalid dataUrl for Blob conversion: Expected a non-empty string.');
   }
-  const response = await fetch(dataUrl);
-  return response.blob();
+
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) {
+    throw new Error('Invalid dataUrl format: Must be a base64 encoded data URI (data:<mime>;base64,<data>).');
+  }
+
+  const mimeType = match[1].toLowerCase();
+  const base64Data = match[2].trim();
+
+  let binaryString;
+  try {
+    binaryString = atob(base64Data);
+  } catch (err) {
+    throw new Error(`Malformed base64 data payload: ${err.message}`, { cause: err });
+  }
+
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  return new Blob([bytes], { type: mimeType });
 }

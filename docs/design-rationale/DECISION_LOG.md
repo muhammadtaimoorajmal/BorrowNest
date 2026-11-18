@@ -8,12 +8,12 @@ This log maintains the authoritative registry of all formal architectural and HC
 
 | ID | Title & Question | Selected Option | Score | Status | Module |
 | :---: | :--- | :--- | :---: | :---: | :---: |
-| **[DR-01](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-01_ITEM_DISCOVERY.md)** | Item Discovery & Search Structure | **Option C: Unified Discovery** | **90.0** | **DECIDED** | Module 04 |
-| **[DR-02](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-02_BORROWING_APPROVAL.md)** | Borrowing Request & Approval Workflow | **Option C: Structured Borrowing Request** | **90.0** | **DECIDED** | Module 05 |
-| **[DR-03](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-03_AVAILABILITY_SCHEDULING.md)** | Availability & Date-Range Scheduling | **Option B: Explicit Date-Range Scheduling** | **86.0** | **DECIDED** | Module 05 |
-| **[DR-04](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-04_CONDITION_HANDOVER.md)** | Item Condition & Handover Documentation | **Option C: Structured Condition Checkpoints** | **84.0** | **DECIDED** | Module 06 |
-| **[DR-05](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-05_LOCATION_PRIVACY.md)** | Location Privacy & Disclosure | **Option C: Coarse Area Only (Local-First)** | **92.0** | **DECIDED** | Module 03 |
-| **[DR-06](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-06_RESPONSIVE_NAVIGATION.md)** | Responsive Navigation & Perspective Structure | **Option C: Task-Oriented Sections** | **89.0** | **DECIDED** | Module 03 |
+| **[DR-01](./DR-01_ITEM_DISCOVERY.md)** | Item Discovery & Search Structure | **Option C: Unified Discovery** | **90.0** | **DECIDED** | Module 04 |
+| **[DR-02](./DR-02_BORROWING_APPROVAL.md)** | Borrowing Request & Approval Workflow | **Option C: Structured Borrowing Request** | **90.0** | **DECIDED** | Module 05 |
+| **[DR-03](./DR-03_AVAILABILITY_SCHEDULING.md)** | Availability & Date-Range Scheduling | **Option B: Explicit Date-Range Scheduling** | **86.0** | **DECIDED** | Module 05 |
+| **[DR-04](./DR-04_CONDITION_HANDOVER.md)** | Item Condition & Handover Documentation | **Option C: Structured Condition Checkpoints** | **84.0** | **DECIDED** | Module 06 |
+| **[DR-05](./DR-05_LOCATION_PRIVACY.md)** | Location Privacy & Disclosure | **Option C: Coarse Area Only (Local-First)** | **92.0** | **DECIDED** | Module 03 |
+| **[DR-06](./DR-06_RESPONSIVE_NAVIGATION.md)** | Responsive Navigation & Perspective Structure | **Option C: Task-Oriented Sections** | **89.0** | **DECIDED** | Module 03 |
 
 ---
 

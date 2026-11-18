@@ -78,8 +78,8 @@ BorrowNest is engineered to achieve seven core product objectives:
 | Milestone | Deliverables | Current Status |
 | :--- | :--- | :--- |
 | **Module 01: Project Foundation** | React 19 + Vite 8 workspace, design tokens, responsive empty-state shell, unit tests, GitHub Actions CI workflow, and architectural documentation | **COMPLETED & VERIFIED** |
-| **Module 02: Architectural Decision Records** | Formal Question-Option-Criteria (QOC) analysis for six core design areas ([docs/design-rationale/](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/)) | **COMPLETED & VERIFIED** |
+| **Module 02: Architectural Decision Records** | Formal Question-Option-Criteria (QOC) analysis for six core design areas ([docs/design-rationale/](design-rationale/)) | **COMPLETED & VERIFIED** |
 | **Module 03: Item Management & Local Persistence** | Genuine item CRUD, responsive 4-section navigation, native IndexedDB persistence, client-side EXIF/GPS-stripped photo pipeline, and JSON backup export/restore | **COMPLETED & VERIFIED** |
-| **Module 04: Discovery & Search** | Keyword filtering, category exploration, and availability toggles | Planned |
+| **Module 04: Discovery & Search** | Unified discovery (DR-01), keyword token search, category pills, availability toggle, active filter feedback, read-only item presentation, and detail modal | **COMPLETED & VERIFIED** |
 | **Module 05: Borrowing Flow** | Request submissions, owner approval states, and scheduling calendar | Planned |
 | **Module 06: Inspection & Returns** | Handover condition comparison and loan lifecycle closure | Planned |

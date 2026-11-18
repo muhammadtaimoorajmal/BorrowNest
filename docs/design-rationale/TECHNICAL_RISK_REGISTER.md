@@ -14,6 +14,7 @@ This register documents genuine technical, security, and methodological limitati
 | **RISK-04** | Transitive Dependency Security Advisories | Medium | Verified (6 High Advisories) | No | Future Audit |
 | **RISK-05** | GitHub Actions Runner Node Runtime Deprecation | Low | Verified (Action Deprecation Warning) | No | CI Maintenance |
 | **RISK-06** | Absence of Empirical Participant Validation | Medium | Certain (100% — Analytical Scope) | No | Post-Prototype |
+| **RISK-07** | Storage Transaction Atomicity & Concurrency Integrity | High | Resolved (Module 04 Part A Repairs) | No | Module 04+ |
 
 ---
 
@@ -98,3 +99,20 @@ This register documents genuine technical, security, and methodological limitati
   3. Plan future usability validation sessions with real participants once a functional interactive prototype exists.
 - **Blocks Current Prototype?**: **No**. Analytical QOC is the prescribed methodology.
 - **Relevant Future Module**: Future empirical usability testing.
+
+---
+
+### RISK-07: Storage Transaction Atomicity & Concurrency Integrity
+- **Description**: Several genuine defects identified during the Module 03 to Module 04 transition compromised data consistency under concurrent actions or faulty backup payloads:
+  1. *Archive Lifecycle Race Condition*: Rapid consecutive operations (e.g. toggling availability followed by immediate archiving) fired multiple `refresh()` calls whose out-of-order resolution allowed an older active snapshot to overwrite the newer archived status in React state.
+  2. *Non-Atomic Backup Replacement*: `executeReplace` previously executed `clearAllItems()` followed by separate `createItem()` calls in distinct transactions, risking partial data loss if an imported item failed validation mid-way.
+  3. *Swallowed Storage Errors*: In `executeMerge`, a generic try-catch block caught all storage errors rather than specifically handling missing records (`RecordNotFoundError`).
+  4. *Unvalidated Imported Photos*: Imported backup files could bypass image constraints or inject unstripped EXIF metadata.
+- **Impact**: High — Data inconsistency, state desynchronization, and potential local database corruption during import.
+- **Remediation Implemented & Verified in Module 04 (Part A)**:
+  1. *Request Sequencing*: Added monotonic `requestId` tracking (`refreshCounter.current`) in both `useListings` and `useDiscovery` to discard stale in-flight query responses.
+  2. *Single-Transaction Atomic Replace*: Introduced `replaceAllItems(items)` on `StorageAdapter` and `IndexedDbStorageAdapter`, executing `store.clear()` and all `store.put()` calls inside a single `readwrite` IndexedDB transaction with automatic rollback on abort.
+  3. *Explicit Merge Error Handling*: Restructured `executeMerge` to only handle `RecordNotFoundError`, re-throwing all fatal storage/quota errors.
+  4. *Client-Side Photo Validation & Re-processing*: Added MIME type validation, mandatory `altText` verification, and re-processing of accepted image Blobs through `processItemImage` to strip EXIF and downscale to 1600px.
+- **Blocks Current Prototype?**: **No**. Fully resolved and verified with dedicated test suites (`backup.test.js`, `IndexedDbStorageAdapter.test.js`, `LendingPage.test.jsx`).
+- **Implementation Status**: **VERIFIED** in Module 04 test suite.

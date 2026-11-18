@@ -1,5 +1,10 @@
 import { BACKUP_FORMAT, BACKUP_SCHEMA_VERSION, base64ToBlob, MAX_BACKUP_FILE_BYTES } from './backupSchema';
 import { validateItemRecord } from '../../features/listings/validation/itemValidation';
+import { RecordNotFoundError, StorageError } from '../storage/storageErrors';
+import {
+  processItemImage,
+  ALLOWED_INPUT_MIME_TYPES,
+} from '../../features/listings/services/processItemImage';
 
 export class BackupValidationError extends Error {
   constructor(message) {
@@ -10,6 +15,7 @@ export class BackupValidationError extends Error {
 
 /**
  * Validates, parses, and prepares an imported JSON backup file.
+ * Reprocesses accepted photos through the client-side pipeline to strip EXIF and enforce constraints.
  * @param {string | File} input - JSON string or File object
  * @returns {Promise<{
  *   preview: {
@@ -76,30 +82,70 @@ export async function parseAndValidateBackup(input) {
         throw new BackupValidationError(`Item at index ${index} is missing a valid string ID.`);
       }
 
-      // Rehydrate photos: convert base64 dataUrl back to Blobs
+      // Rehydrate photos: validate and reprocess through established image pipeline
       const photos = Array.isArray(item.photos) ? item.photos : [];
+      if (photos.length > 5) {
+        throw new BackupValidationError(`Item at index ${index} exceeds maximum allowed photos (5).`);
+      }
       totalPhotos += photos.length;
 
       const rehydratedPhotos = await Promise.all(
         photos.map(async (photo, pIdx) => {
-          let blob = photo.blob;
-          if (!blob && photo.dataUrl) {
+          if (!photo || typeof photo !== 'object') {
+            throw new BackupValidationError(
+              `Photo #${pIdx + 1} for item "${item.title || item.id}" is not a valid object.`,
+            );
+          }
+
+          const altText = (photo.altText || '').trim();
+          if (!altText) {
+            throw new BackupValidationError(
+              `Photo #${pIdx + 1} for item "${item.title || item.id}" is missing required accessible description (altText).`,
+            );
+          }
+
+          let rawBlob = photo.blob;
+          if (!rawBlob && photo.dataUrl) {
             try {
-              blob = await base64ToBlob(photo.dataUrl);
+              rawBlob = await base64ToBlob(photo.dataUrl);
             } catch (err) {
               throw new BackupValidationError(
                 `Failed to decode photo #${pIdx + 1} for item "${item.title || item.id}": ${err.message}`,
               );
             }
           }
+
+          if (!rawBlob || !(rawBlob instanceof Blob)) {
+            throw new BackupValidationError(
+              `Photo #${pIdx + 1} for item "${item.title || item.id}" has no valid Blob or dataUrl.`,
+            );
+          }
+
+          const rawMime = (rawBlob.type || '').toLowerCase();
+          if (!ALLOWED_INPUT_MIME_TYPES.includes(rawMime)) {
+            throw new BackupValidationError(
+              `Photo #${pIdx + 1} for item "${item.title || item.id}" has unsupported MIME type "${rawMime || 'unknown'}". Only JPEG, PNG, and WebP are permitted.`,
+            );
+          }
+
+          // Reprocess accepted image Blob through the established pipeline to enforce dimensions, strip EXIF, and re-compress
+          let processed;
+          try {
+            processed = await processItemImage(rawBlob);
+          } catch (err) {
+            throw new BackupValidationError(
+              `Failed to process photo #${pIdx + 1} for item "${item.title || item.id}": ${err.message}`,
+            );
+          }
+
           return {
-            id: photo.id || `photo-${index}-${pIdx}`,
-            altText: photo.altText || 'Item photograph',
-            mimeType: photo.mimeType || 'image/webp',
-            width: photo.width || 800,
-            height: photo.height || 600,
-            sizeBytes: blob?.size || photo.sizeBytes || 0,
-            blob,
+            id: photo.id && typeof photo.id === 'string' ? photo.id : `photo-${index}-${pIdx}`,
+            altText,
+            mimeType: processed.mimeType,
+            width: processed.width,
+            height: processed.height,
+            sizeBytes: processed.sizeBytes,
+            blob: processed.blob,
           };
         }),
       );
@@ -143,6 +189,7 @@ export async function parseAndValidateBackup(input) {
 
 /**
  * Restores records by merging: Adds items with novel IDs; preserves existing local records.
+ * Propagates unexpected database errors without silently swallowing them.
  * @param {Array<object>} importedItems
  * @param {import('../storage/StorageAdapter').StorageAdapter} storageAdapter
  * @returns {Promise<{ addedCount: number, skippedCount: number }>}
@@ -152,14 +199,23 @@ export async function executeMerge(importedItems, storageAdapter) {
   let skippedCount = 0;
 
   for (const item of importedItems) {
+    if (!item?.id) {
+      throw new StorageError('Cannot merge item record missing id');
+    }
+
+    let exists = false;
     try {
-      const existing = await storageAdapter.getItemById(item.id);
-      if (existing) {
-        skippedCount++;
-        continue;
+      await storageAdapter.getItemById(item.id);
+      exists = true;
+    } catch (err) {
+      if (!(err instanceof RecordNotFoundError || err.name === 'RecordNotFoundError')) {
+        throw err;
       }
-    } catch {
-      // RecordNotFoundError -> proceed to create
+    }
+
+    if (exists) {
+      skippedCount++;
+      continue;
     }
 
     await storageAdapter.createItem(item);
@@ -170,12 +226,18 @@ export async function executeMerge(importedItems, storageAdapter) {
 }
 
 /**
- * Restores records by replacing: Clears all local items and replaces them with backup contents.
+ * Restores records atomically: Clears all local items and replaces them with backup contents in a single transaction.
  * @param {Array<object>} importedItems
  * @param {import('../storage/StorageAdapter').StorageAdapter} storageAdapter
  * @returns {Promise<{ replacedCount: number }>}
  */
 export async function executeReplace(importedItems, storageAdapter) {
+  if (typeof storageAdapter.replaceAllItems === 'function') {
+    const { replacedCount } = await storageAdapter.replaceAllItems(importedItems);
+    return { replacedCount };
+  }
+
+  // Fallback for storage adapters that do not support atomic replacement
   await storageAdapter.clearAllItems();
   const { insertedCount } = await storageAdapter.bulkCreateItems(importedItems);
   return { replacedCount: insertedCount };

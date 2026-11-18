@@ -153,4 +153,105 @@ describe('Backup and Restore Subsystem', () => {
     const retrieved = await adapter.getItemById('backup-item-1');
     expect(retrieved.title).toBe('Pressure Washer 2000 PSI');
   });
+
+  describe('Robust Merge Error Handling', () => {
+    it('propagates unexpected storage errors without silently swallowing them', async () => {
+      const failingAdapter = {
+        getItemById: () => {
+          throw new Error('Unexpected fatal database corruption');
+        },
+        createItem: () => {},
+      };
+
+      const items = [{ id: 'test-item-x', title: 'Sample' }];
+      await expect(executeMerge(items, failingAdapter)).rejects.toThrow(
+        /Unexpected fatal database corruption/i,
+      );
+    });
+
+    it('rejects merging items with missing or invalid IDs', async () => {
+      const invalidItems = [{ title: 'No ID item' }];
+      await expect(executeMerge(invalidItems, adapter)).rejects.toThrow(/missing id/i);
+    });
+  });
+
+  describe('Photo Validation in Backup Import', () => {
+    it('rejects backup with unsupported image MIME type (e.g. SVG or GIF)', async () => {
+      const unsupportedPhotoBackup = {
+        ...validBackupFixture,
+        items: [
+          {
+            ...validBackupFixture.items[0],
+            photos: [
+              {
+                id: 'p-svg',
+                altText: 'Vector illustration',
+                dataUrl: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+              },
+            ],
+          },
+        ],
+      };
+
+      await expect(parseAndValidateBackup(JSON.stringify(unsupportedPhotoBackup))).rejects.toThrow(
+        /unsupported MIME type/i,
+      );
+    });
+
+    it('rejects backup with malformed base64 image payload', async () => {
+      const malformedPhotoBackup = {
+        ...validBackupFixture,
+        items: [
+          {
+            ...validBackupFixture.items[0],
+            photos: [
+              {
+                id: 'p-corrupt',
+                altText: 'Corrupted image',
+                dataUrl: 'data:image/webp;base64,!!!NotBase64Data!!!',
+              },
+            ],
+          },
+        ],
+      };
+
+      await expect(parseAndValidateBackup(JSON.stringify(malformedPhotoBackup))).rejects.toThrow(
+        /Failed to decode photo/i,
+      );
+    });
+
+    it('rejects photo missing required accessible altText description', async () => {
+      const noAltBackup = {
+        ...validBackupFixture,
+        items: [
+          {
+            ...validBackupFixture.items[0],
+            photos: [
+              {
+                id: 'p-no-alt',
+                altText: '   ', // whitespace only
+                dataUrl: 'data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAADwAQCdASoBAAEAAkA4JaQAA3AA/vuUAAA=',
+              },
+            ],
+          },
+        ],
+      };
+
+      await expect(parseAndValidateBackup(JSON.stringify(noAltBackup))).rejects.toThrow(
+        /missing required accessible description/i,
+      );
+    });
+
+    it('reprocesses accepted photo into a clean WebP/JPEG Blob stripping original metadata', async () => {
+      const { items } = await parseAndValidateBackup(JSON.stringify(validBackupFixture));
+      expect(items[0].photos.length).toBe(1);
+      const processedPhoto = items[0].photos[0];
+
+      expect(processedPhoto.blob).toBeInstanceOf(Blob);
+      expect(['image/webp', 'image/jpeg']).toContain(processedPhoto.mimeType);
+      expect(processedPhoto.altText).toBe('Front angle of yellow electric pressure washer');
+      expect(processedPhoto.width).toBeLessThanOrEqual(1600);
+      expect(processedPhoto.height).toBeLessThanOrEqual(1600);
+    });
+  });
 });

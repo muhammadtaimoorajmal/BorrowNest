@@ -54,7 +54,7 @@ describe('LendingPage UI and Item Lifecycle', () => {
   });
 
   it('successfully creates, edits, archives, and deletes an item', async () => {
-    // Seed one valid item directly in adapter to test full lifecycle interactions
+    // 1. Create an isolated valid item fixture inside the test suite only
     await adapter.createItem({
       id: 'item-lifecycle-test',
       title: 'Camping Tent 4-Person',
@@ -83,43 +83,63 @@ describe('LendingPage UI and Item Lifecycle', () => {
 
     render(<LendingPage adapter={adapter} />);
 
-    // Item card should render
+    // 2. Verify it is initially ACTIVE
     expect(await screen.findByText('Camping Tent 4-Person')).toBeInTheDocument();
     expect(screen.getByText('Condition: Like New')).toBeInTheDocument();
+    const initialItem = await adapter.getItemById('item-lifecycle-test');
+    expect(initialItem.status).toBe('ACTIVE');
 
-    // Toggle Availability
+    // 3. Change its availability to UNAVAILABLE
     const toggleBtn = screen.getByRole('button', { name: /Mark Camping Tent 4-Person unavailable/i });
     fireEvent.click(toggleBtn);
 
+    // 4. Wait for that update to complete
     await waitFor(() => {
-      expect(screen.getByText('Unavailable')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Mark Camping Tent 4-Person available/i })).toBeInTheDocument();
     }, { timeout: 3000 });
 
-    // Archive Listing
+    const toggledItem = await adapter.getItemById('item-lifecycle-test');
+    expect(toggledItem.availability).toBe('UNAVAILABLE');
+
+    // 5. Click Archive
     const archiveBtn = screen.getByRole('button', { name: /Archive Camping Tent 4-Person/i });
     fireEvent.click(archiveBtn);
 
-    // Active tab is now empty
-    await waitFor(() => {
-      expect(screen.getByText(/No items listed yet/i)).toBeInTheDocument();
+    // 6, 7, 8. Wait for storage mutation to complete; retrieve directly from IndexedDB; verify status is ARCHIVED
+    await waitFor(async () => {
+      const archivedInDb = await adapter.getItemById('item-lifecycle-test');
+      expect(archivedInDb.status).toBe('ARCHIVED');
     }, { timeout: 3000 });
 
-    // Switch to Archived Tab
+    // 9. Verify it is absent from Active Listings
+    await waitFor(() => {
+      expect(screen.getByText(/No items listed yet/i)).toBeInTheDocument();
+      expect(screen.queryByText('Camping Tent 4-Person')).not.toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // 10. Navigate to Archived
     const archivedTab = screen.getByRole('tab', { name: /Archived/i });
     fireEvent.click(archivedTab);
 
+    // 11. Verify it appears in Archived Listings
     expect(await screen.findByText('Camping Tent 4-Person', {}, { timeout: 3000 })).toBeInTheDocument();
 
-    // Restore Listing
+    // 12. Restore it
     const restoreBtn = screen.getByRole('button', { name: /Restore Camping Tent 4-Person/i });
     fireEvent.click(restoreBtn);
 
-    // Switch back to Active Tab
+    // 13. Verify its status returns to ACTIVE in IndexedDB
+    await waitFor(async () => {
+      const restoredInDb = await adapter.getItemById('item-lifecycle-test');
+      expect(restoredInDb.status).toBe('ACTIVE');
+    }, { timeout: 3000 });
+
+    // 14. Switch back to Active Tab and verify it appears in Active Listings again
     const activeTab = screen.getByRole('tab', { name: /Active Listings/i });
     fireEvent.click(activeTab);
     expect(await screen.findByText('Camping Tent 4-Person', {}, { timeout: 3000 })).toBeInTheDocument();
 
-    // Delete with Confirmation
+    // Final Lifecycle Verification: Delete with Confirmation
     const deleteBtn = screen.getByRole('button', { name: /Delete Camping Tent 4-Person/i });
     fireEvent.click(deleteBtn);
 

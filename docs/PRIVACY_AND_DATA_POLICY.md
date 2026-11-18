@@ -19,7 +19,7 @@ BorrowNest strictly practices **data minimization**:
 
 One of the primary safety concerns in peer item sharing is protecting residential addresses. In a local-first client application with no authenticated remote server, client-side conditional rendering (e.g., hiding text behind a React state flag) does **not** constitute an authorization security boundary. Storing exact home addresses in local browser storage creates an unacceptable risk of exposure.
 
-In accordance with formal design decision [DR-05](file:///D:/ALL%20DATA/PROJECTS/HCI_Week-13_Lab-11/docs/design-rationale/DR-05_LOCATION_PRIVACY.md):
+In accordance with formal design decision [DR-05](design-rationale/DR-05_LOCATION_PRIVACY.md):
 - **Coarse Area Only in Current Prototype**: Item listings gather and display only a coarse, user-defined neighborhood, district, or nearby public landmark area (e.g., "Oakwood District", "Near North Library").
 - **Zero Address Harvesting**: Exact residential street addresses, apartment unit numbers, and private access codes are **strictly NOT collected or stored** in the local-first prototype.
 - **Client-Side Real-Time Pattern Guard**: The listing creation and editing forms incorporate a real-time heuristic analysis function (`checkPrivacyPatterns`) that flags street addresses, unit numbers, and lockbox PIN combinations, guiding users to enter only general neighborhood descriptions.

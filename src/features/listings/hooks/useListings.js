@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { storageAdapter } from '../../../services/storage/IndexedDbStorageAdapter';
 import { validateItemRecord, SCHEMA_VERSION } from '../validation/itemValidation';
 
@@ -10,18 +10,26 @@ export function useListings(adapter = storageAdapter) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const refreshCounter = useRef(0);
 
   const refresh = useCallback(async () => {
+    const requestId = ++refreshCounter.current;
     setLoading(true);
     try {
       await adapter.initialize();
       const allItems = await adapter.listItems();
-      setItems(allItems);
-      setError(null);
+      if (requestId === refreshCounter.current) {
+        setItems(allItems);
+        setError(null);
+      }
     } catch (err) {
-      setError(err);
+      if (requestId === refreshCounter.current) {
+        setError(err);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === refreshCounter.current) {
+        setLoading(false);
+      }
     }
   }, [adapter]);
 

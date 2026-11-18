@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './navigation/Navbar';
 import LendingPage from './features/listings/pages/LendingPage';
 import AccountPage from './features/account/pages/AccountPage';
-import DiscoverPlaceholder from './features/discover/DiscoverPlaceholder';
+import DiscoverPage from './features/discover/pages/DiscoverPage';
 import BorrowingPlaceholder from './features/borrowing/BorrowingPlaceholder';
 import Footer from './components/Footer';
 import { storageAdapter } from './services/storage/IndexedDbStorageAdapter';
@@ -55,7 +55,7 @@ export function App({ adapter = storageAdapter }) {
 
       <main id="main-content" className={styles.mainContent} tabIndex="-1">
         {currentSection === 'discover' && (
-          <DiscoverPlaceholder onNavigateToLending={() => navigateTo('lending')} />
+          <DiscoverPage adapter={adapter} onNavigateToLending={() => navigateTo('lending')} />
         )}
         {currentSection === 'borrowing' && (
           <BorrowingPlaceholder onNavigateToLending={() => navigateTo('lending')} />

@@ -76,14 +76,17 @@ To preserve data privacy, operational simplicity, and architectural focus, the f
 
 ---
 
-## 4. Current Local-First Limitations & Module 03 Status
+## 4. Current Local-First Boundaries & Module 04 Status
 
-The Module 03 implementation delivers functional item listing management and local IndexedDB persistence. Users and evaluators should recognize the following real constraints and implemented capabilities:
+The Module 04 implementation delivers complete unified item discovery, search, and filtering alongside genuine item listing management and local IndexedDB persistence. Users and evaluators should recognize the following real constraints and implemented capabilities:
 
+- **Unified Item Discovery (DR-01)**: Fully functional local catalog exploration featuring multi-token keyword search, category exploration pills (*All*, *Tools*, *Gardening*, *Household*, *Outdoor*, *Electronics*), progressive availability toggle (*Available now only*), and reactive results feedback with a one-click filter reset action.
+- **Read-Only Borrower Perspective**: Clean item cards and an accessible detail dialog (`ItemDetailModal`) presenting photos, condition descriptions, and coarse pickup areas without owner-only management buttons.
 - **Local Storage Scope**: Data stored in native `IndexedDB` is confined to the specific browser profile and device where it was entered.
 - **No Automatic Cross-Device Sync**: Creating a listing on a smartphone will not automatically mirror onto a desktop browser without manual export/import or future peer-to-peer sync mechanisms.
-- **Cache Clearance Impact & Mitigation**: Clearing browser site data will remove locally stored listings. To directly address this risk, Module 03 implements client-side JSON backup export and validated restore (both merge and replace modes) via the Account & Local Data Management view.
+- **Cache Clearance Impact & Mitigation**: Clearing browser site data will remove locally stored listings. To directly address this risk, client-side JSON backup export and validated restore (both merge and single-transaction atomic replace modes) are available via the Account & Local Data Management view.
 - **Real-Time Address Safeguard**: In accordance with DR-05, listings require coarse neighborhood tags and feature real-time heuristic pattern detection warning users against entering specific street addresses or gate codes.
+- **Future Module Boundaries**: Structured borrowing requests and reservation scheduling arrive in Module 05; physical handover condition checklists and return completion arrive in Module 06.
 
 ---
 

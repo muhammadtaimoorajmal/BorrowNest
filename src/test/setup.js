@@ -12,19 +12,55 @@ if (typeof window !== 'undefined') {
 
   // Provide basic canvas mocking for JSDOM
   if (typeof HTMLCanvasElement !== 'undefined') {
-    if (!HTMLCanvasElement.prototype.getContext) {
-      HTMLCanvasElement.prototype.getContext = () => ({
-        drawImage: () => {},
-        getImageData: () => ({ data: new Uint8ClampedArray(4) }),
-        putImageData: () => {},
-        clearRect: () => {},
-      });
-    }
-    if (!HTMLCanvasElement.prototype.toBlob) {
-      HTMLCanvasElement.prototype.toBlob = function (callback, mime = 'image/webp') {
-        const dummyBlob = new Blob(['mock-image-binary-data'], { type: mime });
-        setTimeout(() => callback(dummyBlob), 0);
-      };
-    }
+    HTMLCanvasElement.prototype.getContext = () => ({
+      drawImage: () => {},
+      getImageData: () => ({ data: new Uint8ClampedArray(4) }),
+      putImageData: () => {},
+      clearRect: () => {},
+    });
+    HTMLCanvasElement.prototype.toBlob = function (callback, mime = 'image/webp') {
+      const dummyBlob = new Blob(['mock-image-binary-data'], { type: mime });
+      setTimeout(() => callback(dummyBlob), 0);
+    };
+  }
+
+  // Provide basic Image loading mock for JSDOM
+  if (typeof Image !== 'undefined') {
+    Object.defineProperty(Image.prototype, 'naturalWidth', {
+      get() {
+        return this._naturalWidth || 800;
+      },
+      set(val) {
+        this._naturalWidth = val;
+      },
+      configurable: true,
+    });
+    Object.defineProperty(Image.prototype, 'naturalHeight', {
+      get() {
+        return this._naturalHeight || 600;
+      },
+      set(val) {
+        this._naturalHeight = val;
+      },
+      configurable: true,
+    });
+    Object.defineProperty(Image.prototype, 'src', {
+      set(src) {
+        this._src = src;
+        setTimeout(() => {
+          this._naturalWidth = 800;
+          this._naturalHeight = 600;
+          this.width = 800;
+          this.height = 600;
+          if (typeof this.onload === 'function') {
+            this.onload();
+          }
+        }, 0);
+      },
+      get() {
+        return this._src;
+      },
+      configurable: true,
+    });
   }
 }

@@ -46,4 +46,8 @@ export class StorageAdapter {
   async bulkCreateItems(_items) {
     throw new Error('Method not implemented: bulkCreateItems');
   }
+
+  async replaceAllItems(_items) {
+    throw new Error('Method not implemented: replaceAllItems');
+  }
 }

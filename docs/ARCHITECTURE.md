@@ -72,7 +72,34 @@ BorrowNest/
 │   │   │       └── AccountPage.module.css
 │   │   ├── borrowing/           # Borrowing Requests (Module 05 Roadmap)
 │   │   │   └── BorrowingPlaceholder.jsx
-│   │   ├── discover/            # Item Catalog & Discovery (Module 04 Roadmap)
+│   │   ├── discover/            # Item Catalog & Discovery (Module 04 Implemented)
+│   │   │   ├── components/
+│   │   │   │   ├── AvailabilityFilter.jsx
+│   │   │   │   ├── AvailabilityFilter.module.css
+│   │   │   │   ├── CategoryFilters.jsx
+│   │   │   │   ├── CategoryFilters.module.css
+│   │   │   │   ├── DiscoveryCard.jsx
+│   │   │   │   ├── DiscoveryCard.module.css
+│   │   │   │   ├── DiscoveryEmptyState.jsx
+│   │   │   │   ├── DiscoveryEmptyState.module.css
+│   │   │   │   ├── DiscoveryNoResults.jsx
+│   │   │   │   ├── DiscoveryNoResults.module.css
+│   │   │   │   ├── DiscoverySearch.jsx
+│   │   │   │   ├── DiscoverySearch.module.css
+│   │   │   │   ├── ItemDetailModal.jsx
+│   │   │   │   └── ItemDetailModal.module.css
+│   │   │   ├── hooks/
+│   │   │   │   └── useDiscovery.js
+│   │   │   ├── pages/
+│   │   │   │   ├── DiscoverPage.jsx
+│   │   │   │   ├── DiscoverPage.module.css
+│   │   │   │   └── DiscoverPage.test.jsx
+│   │   │   ├── services/
+│   │   │   │   ├── filterListings.js
+│   │   │   │   ├── filterListings.test.js
+│   │   │   │   ├── normalizeSearch.js
+│   │   │   │   └── normalizeSearch.test.js
+│   │   │   ├── DiscoverIntegration.test.jsx
 │   │   │   ├── DiscoverPlaceholder.jsx
 │   │   │   └── Placeholder.module.css
 │   │   └── listings/            # Genuine Item Management (Module 03 Implemented)
@@ -191,6 +218,17 @@ erDiagram
   - **Custom Reactive Hook**: `useListings` encapsulates reactive item state, lifecycle mutations, loading and error states, and live stats computation without component-level storage coupling.
   - **Privacy-Preserving Media Pipeline**: `processItemImage` sanitizes owner-uploaded photographs client-side. Using an in-memory HTML5 Canvas, raw image pixels are re-encoded into clean WebP/JPEG Blobs (bounded to 1600px and 2.5MB), completely stripping EXIF metadata, camera serial numbers, and embedded GPS coordinates before persistence.
   - **Data Portability & Backup Subsystem**: `exportBackup` and `importBackup` enable client-side JSON serialization (`borrownest-backup` format v1) with base64 photo rehydration, schema validation, and both non-destructive merge and clean replace restore strategies.
+- **Module 04 Discovery & Search Architecture (DR-01)**:
+  - **Unified Discovery Engine**: `filterListings` executes client-side filtering over active, non-archived items from IndexedDB. It combines tokenized keyword search across title, description, category, and approximate area with categorical pills (`ALL`, `TOOLS`, `GARDENING`, `HOUSEHOLD`, `OUTDOOR`, `ELECTRONICS`) and an availability facet toggle (`availableOnly`).
+  - **Token Normalization Service**: `normalizeSearchText` and `tokenizeQuery` perform Unicode NFKC normalization, lowercase conversion, and whitespace collapsing, ensuring resilient search without external dependencies.
+  - **Reactive Discovery Hook**: `useDiscovery` encapsulates catalog retrieval, active item derivation, memoized filter execution, active filter detection, and filter reset handlers.
+  - **Accessible Presentation & Modals**: `DiscoveryCard` provides a strictly read-only presentation for public catalog exploration (excluding owner actions). `ItemDetailModal` provides an accessible dialog (`role="dialog"`, `aria-modal="true"`) for comprehensive inspection with keyboard navigation, image gallery viewing, and condition notes review.
+  - **Honest States**: Honest empty state when 0 active items exist in the library (directing users to the Lending workspace) and dedicated zero-results recovery state when active filters match 0 items.
+- **Module 03 Quality & Stabilization Upgrades**:
+  - **Atomic Backup Replacement**: `replaceAllItems` executes `clear()` and all item inserts within a single atomic `readwrite` IndexedDB transaction, guaranteeing all-or-nothing rollback on any failure.
+  - **Merge Error Propagation**: Explicit error filtering ensures unexpected storage errors surface visibly during backup restore rather than being swallowed silently.
+  - **Imported Photo Validation & Re-processing**: Backup import validates MIME types, enforces accessible `altText`, and re-processes image blobs through the client-side Canvas pipeline to guarantee EXIF stripping and size boundaries.
+  - **Request Sequencing**: Monotonic counter sequencing in `useListings` prevents race conditions from overlapping asynchronous fetches from overwriting newer state updates.
 
 ---
 
