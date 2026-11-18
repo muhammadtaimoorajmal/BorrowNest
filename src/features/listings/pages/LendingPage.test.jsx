@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import LendingPage from './LendingPage';
 import { IndexedDbStorageAdapter } from '../../../services/storage/IndexedDbStorageAdapter';
+import { formatDateRange } from '../../borrowing/services/dateRange';
 
 describe('LendingPage UI and Item Lifecycle', () => {
   let adapter;
@@ -188,7 +189,7 @@ describe('LendingPage UI and Item Lifecycle', () => {
 
     // Verify request details are shown
     expect(await screen.findByText('Casey Stone')).toBeInTheDocument();
-    expect(screen.getByText(/10 Dec 2026 – 14 Dec 2026/i)).toBeInTheDocument();
+    expect(screen.getByText(formatDateRange('2026-12-10', '2026-12-14'))).toBeInTheDocument();
 
     // Click Approve
     const approveBtn = screen.getByRole('button', { name: /Approve Request/i });
