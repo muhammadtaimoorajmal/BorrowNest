@@ -294,3 +294,55 @@
   border-radius: var(--bn-radius-md);
   cursor: not-allowed;
 }
+
+.demoNoticeBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bn-spacing-3);
+  padding: var(--bn-spacing-4);
+  background-color: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: var(--bn-radius-lg);
+  color: #3730a3;
+  font-size: var(--bn-font-size-sm);
+  line-height: var(--bn-line-height-normal);
+}
+
+.demoNoticeBanner strong {
+  display: block;
+  font-weight: var(--bn-font-weight-bold);
+  margin-bottom: var(--bn-spacing-1);
+  color: #1e1b4b;
+}
+
+.demoNoticeBanner p {
+  margin: 0;
+  color: #312e81;
+}
+
+.specList {
+  margin: 0;
+  padding-left: var(--bn-spacing-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-spacing-1);
+  color: var(--bn-text-secondary);
+  font-size: var(--bn-font-size-sm);
+}
+
+.addOwnItemBtn {
+  padding: var(--bn-spacing-2) var(--bn-spacing-5);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-semibold);
+  color: #ffffff;
+  background-color: var(--bn-color-primary-600);
+  border: none;
+  border-radius: var(--bn-radius-md);
+  cursor: pointer;
+  transition: background-color var(--bn-transition-fast);
+}
+
+.addOwnItemBtn:hover {
+  background-color: var(--bn-color-primary-700);
+}

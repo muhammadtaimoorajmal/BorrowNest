@@ -22,6 +22,7 @@ describe('BorrowNest Application Shell and Core Navigation', () => {
   });
 
   it('honestly displays the empty initial state without synthetic items', async () => {
+    window.location.hash = '#lending';
     render(<App />);
 
     // Must show genuine empty state title after local storage check

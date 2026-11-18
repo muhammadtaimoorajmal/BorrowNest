@@ -41,8 +41,11 @@ export function filterListings(items, { searchQuery = '', category = 'ALL', avai
     if (tokens.length > 0) {
       const categoryLabel = CATEGORIES[item.category]?.label || '';
       const conditionLabel = CONDITION_TIERS[item.conditionGrade]?.label || '';
+      const specsText = Array.isArray(item.specifications)
+        ? item.specifications.join(' ')
+        : item.specifications || '';
       const combinedSearchable = normalizeSearchText(
-        `${item.title || ''} ${item.description || ''} ${item.approximateArea || ''} ${item.category || ''} ${categoryLabel} ${conditionLabel}`,
+        `${item.title || ''} ${item.description || ''} ${item.approximateArea || ''} ${item.category || ''} ${categoryLabel} ${conditionLabel} ${specsText}`,
       );
 
       const matchesAllTokens = tokens.every((token) => combinedSearchable.includes(token));

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { CATEGORIES, CONDITION_TIERS } from '../../listings/validation/itemValidation';
+import { getDemoImageUrl } from '../data/exampleCatalogue';
 import styles from './ItemDetailModal.module.css';
 
 /**
@@ -9,8 +10,10 @@ import styles from './ItemDetailModal.module.css';
  * @param {object} props
  * @param {object} props.item - The selected item listing
  * @param {function} props.onClose - Modal close handler
+ * @param {function} [props.onRequestBorrow] - Handler for initiating borrow request (for genuine local items)
+ * @param {function} [props.onNavigateToLending] - Handler to navigate to lending workspace (for demo items)
  */
-export function ItemDetailModal({ item, onClose, onRequestBorrow }) {
+export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLending }) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const modalRef = useRef(null);
   const closeBtnRef = useRef(null);
@@ -32,8 +35,11 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  // Convert photos to object URLs and manage cleanup
+  // Convert photos to object URLs and manage cleanup (for real user uploads)
   const photoUrls = useMemo(() => {
+    if (item.imagePath) {
+      return [getDemoImageUrl(item.imagePath)];
+    }
     if (!item.photos || !Array.isArray(item.photos)) return [];
     return item.photos.map((p) => {
       if (p.dataUrl) return p.dataUrl;
@@ -42,7 +48,7 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow }) {
       }
       return null;
     });
-  }, [item.photos]);
+  }, [item.imagePath, item.photos]);
 
   useEffect(() => {
     return () => {
@@ -100,6 +106,20 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow }) {
         </header>
 
         <div className={styles.body}>
+          {/* Demonstration Notice Banner (DR-01 / Module 06) */}
+          {item.isDemo && (
+            <div className={styles.demoNoticeBanner} role="note">
+              <span aria-hidden="true">💡</span>
+              <div>
+                <strong>Curated Demonstration Item</strong>
+                <p>
+                  This item is part of BorrowNest&rsquo;s example catalogue to illustrate how community equipment is shared.
+                  It is a read-only showcase item and does not belong to a live user.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Photo Gallery */}
           {photoUrls.length > 0 && (
             <div className={styles.gallerySection}>
@@ -107,7 +127,7 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow }) {
                 {currentPhotoUrl ? (
                   <img
                     src={currentPhotoUrl}
-                    alt={currentPhoto?.altText || `${item.title} photo ${activePhotoIndex + 1}`}
+                    alt={item.imageAlt || currentPhoto?.altText || `${item.title} photo`}
                     className={styles.mainImage}
                   />
                 ) : (
@@ -131,7 +151,7 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow }) {
                     >
                       <img
                         src={url}
-                        alt={item.photos[idx]?.altText || `Thumbnail ${idx + 1}`}
+                        alt={item.photos?.[idx]?.altText || `Thumbnail ${idx + 1}`}
                         className={styles.thumbnailImg}
                       />
                     </button>
@@ -147,12 +167,32 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow }) {
             <p className={styles.descriptionText}>{item.description}</p>
           </div>
 
+          {/* Key Specifications (Example Items) */}
+          {item.specifications && Array.isArray(item.specifications) && (
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>Key Specifications</h3>
+              <ul className={styles.specList}>
+                {item.specifications.map((spec, idx) => (
+                  <li key={idx}>{spec}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Suggested Use Case */}
+          {item.suggestedUseCase && (
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>Potential Use Case</h3>
+              <p className={styles.descriptionText}>{item.suggestedUseCase}</p>
+            </div>
+          )}
+
           {/* Specifications and Location */}
           <div className={styles.gridSpecs}>
             <div className={styles.specItem}>
-              <span className={styles.specLabel}>Availability Status</span>
+              <span className={styles.specLabel}>Classification</span>
               <span className={styles.specValue}>
-                {isAvailable ? '✅ Available for borrowing' : '⏳ Currently unavailable'}
+                {item.isDemo ? '✨ Curated Example Item' : isAvailable ? '✅ Available for borrowing' : '⏳ Currently unavailable'}
               </span>
             </div>
 
@@ -171,20 +211,34 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow }) {
             )}
           </div>
 
-          {/* Condition Notes */}
-          {item.conditionNotes && (
+          {/* Condition Notes / Description */}
+          {(item.conditionDescription || item.conditionNotes) && (
             <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Condition & Handling Notes</h3>
-              <div className={styles.notesBox}>{item.conditionNotes}</div>
+              <h3 className={styles.sectionTitle}>Condition & Handling Observations</h3>
+              <div className={styles.notesBox}>{item.conditionDescription || item.conditionNotes}</div>
             </div>
           )}
         </div>
 
         <footer className={styles.footer}>
           <button type="button" onClick={onClose} className={styles.dismissBtn}>
-            Close
+            {item.isDemo ? 'Back to Catalogue' : 'Close'}
           </button>
-          {isAvailable ? (
+
+          {item.isDemo ? (
+            onNavigateToLending && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onNavigateToLending();
+                }}
+                className={styles.addOwnItemBtn}
+              >
+                Add Your Own Item in Lending
+              </button>
+            )
+          ) : isAvailable ? (
             <button
               type="button"
               onClick={() => onRequestBorrow && onRequestBorrow(item)}

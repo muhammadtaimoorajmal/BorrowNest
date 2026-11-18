@@ -87,6 +87,19 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+.demoBadge {
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-semibold);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--bn-radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: rgba(79, 70, 229, 0.9);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
 .categoryBadge {
   font-size: var(--bn-font-size-xs);
   font-weight: var(--bn-font-weight-medium);

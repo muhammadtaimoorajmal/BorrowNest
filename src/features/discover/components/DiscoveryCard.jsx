@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect } from 'react';
 import { CATEGORIES, CONDITION_TIERS } from '../../listings/validation/itemValidation';
+import { getDemoImageUrl } from '../data/exampleCatalogue';
 import styles from './DiscoveryCard.module.css';
 
 /**
@@ -15,13 +16,16 @@ export function DiscoveryCard({ item, onView }) {
   const primaryPhoto = item.photos && item.photos.length > 0 ? item.photos[0] : null;
 
   const imageUrl = useMemo(() => {
+    if (item.imagePath) {
+      return getDemoImageUrl(item.imagePath);
+    }
     if (!primaryPhoto) return null;
     if (primaryPhoto.dataUrl) return primaryPhoto.dataUrl;
     if (primaryPhoto.blob instanceof Blob) {
       return URL.createObjectURL(primaryPhoto.blob);
     }
     return null;
-  }, [primaryPhoto]);
+  }, [item.imagePath, primaryPhoto]);
 
   useEffect(() => {
     return () => {
@@ -44,7 +48,7 @@ export function DiscoveryCard({ item, onView }) {
         {imageUrl ? (
           <img
             src={imageUrl}
-            alt={primaryPhoto?.altText || item.title}
+            alt={item.imageAlt || primaryPhoto?.altText || item.title}
             className={styles.image}
             loading="lazy"
           />
@@ -58,13 +62,17 @@ export function DiscoveryCard({ item, onView }) {
         )}
 
         <div className={styles.badgeRow}>
-          <span
-            className={`${styles.availabilityBadge} ${
-              isAvailable ? styles.availableBadge : styles.unavailableBadge
-            }`}
-          >
-            {isAvailable ? 'Available' : 'Unavailable'}
-          </span>
+          {item.isDemo ? (
+            <span className={styles.demoBadge}>Example Item</span>
+          ) : (
+            <span
+              className={`${styles.availabilityBadge} ${
+                isAvailable ? styles.availableBadge : styles.unavailableBadge
+              }`}
+            >
+              {isAvailable ? 'Available' : 'Unavailable'}
+            </span>
+          )}
           <span className={styles.categoryBadge}>{categoryInfo.label}</span>
         </div>
       </div>

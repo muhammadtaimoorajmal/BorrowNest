@@ -155,6 +155,11 @@ Option C achieves a commanding score of **90.0 / 100**, outperforming Option A (
   4. A dynamic result counter (`aria-live="polite"`).
   5. An active filter summary chip row with an inline "Reset All Filters" button.
   6. Dedicated zero-match empty state with tips to broaden criteria.
+- **Module 06 (Curated Demonstration Catalogue & First-Time Visitor Experience)**:
+  To eliminate the empty-state barrier for first-time visitors without inserting synthetic records into users' private IndexedDB stores:
+  1. A static, read-only curated demonstration catalogue of 10 genuine items across all 5 categories is rendered on Discover with locally hosted real photography and explicit `Example Item` classification badges.
+  2. The visitor's private IndexedDB local inventory remains cleanly separated: genuine listings created in Lending are displayed under *My Local Listings*, while zero-item local stores honestly report `0 items in local catalog` and provide an instant link to Lending.
+  3. Safe interaction handshakes prevent demonstration items from spawning fictitious borrowing requests.
 
 ---
 

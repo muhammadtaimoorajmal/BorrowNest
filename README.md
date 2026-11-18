@@ -80,7 +80,7 @@ BorrowNest has completed all six planned functional application modules (Modules
 - **Data Minimization**: BorrowNest requests only information strictly necessary for lending coordination.
 - **Collection Privacy (DR-05)**: Only coarse neighborhood or landmark areas are collected and displayed (e.g. "Greenwood / Pine St area"). Exact residential street addresses and lockbox codes are strictly prevented via heuristic warning safeguards.
 - **EXIF & Metadata Stripping**: Uploaded photos are stripped of all camera metadata, embedded GPS coordinates, and device identifiers client-side before storage.
-- **Genuine Imagery**: BorrowNest strictly prohibits generic stock photographs, clip art, or synthetic renders. All listings rely exclusively on genuine photographs captured directly by item owners.
+- **Genuine Imagery & Curated Example Catalogue**: BorrowNest strictly prohibits synthetic AI renders. All user listings rely exclusively on genuine photographs captured directly by item owners. For first-time visitors, BorrowNest provides a curated 10-item read-only demonstration catalogue featuring genuine photography across five equipment categories (Tools, Gardening, Household, Outdoor, Electronics) with local asset storage and documented attributions ([docs/assets/DEMO_IMAGE_ATTRIBUTIONS.md](docs/assets/DEMO_IMAGE_ATTRIBUTIONS.md)).
 - **Accessibility Baseline**: Built with semantic HTML, ARIA landmarks, and keyboard navigation targeting WCAG 2.2 Level AA, with mobile touch targets meeting or exceeding 44 × 44 CSS pixels.
 
 ---
@@ -92,7 +92,7 @@ The codebase has undergone verification across all engineering dimensions:
 | Gate | Tooling | Status | Details |
 | :--- | :--- | :--- | :--- |
 | **Linting** | ESLint 10 | **Passing** | 0 errors, 0 warnings across all JavaScript and JSX source files |
-| **Automated Tests** | Vitest 5 + Testing Library | **Passing** | 207 automated tests passing across 24 test suites |
+| **Automated Tests** | Vitest 5 + Testing Library | **Passing** | 219 automated tests passing across 26 test suites |
 | **Production Build** | Vite 8 | **Passing** | Clean, optimized production bundle built in ~250ms |
 | **Production Audit** | `npm audit --omit=dev` | **Passing** | 0 vulnerabilities in production runtime dependencies |
 | **Pages Deployment** | GitHub Actions | **Automated** | Build and deploy pipeline targeting GitHub Pages |

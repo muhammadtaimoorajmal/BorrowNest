@@ -9,7 +9,7 @@ import { storageAdapter } from './services/storage/IndexedDbStorageAdapter';
 import styles from './App.module.css';
 
 const VALID_SECTIONS = ['discover', 'borrowing', 'lending', 'account'];
-const DEFAULT_SECTION = 'lending';
+const DEFAULT_SECTION = 'discover';
 
 function getSectionFromHash() {
   if (typeof window === 'undefined') return DEFAULT_SECTION;

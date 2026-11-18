@@ -18,8 +18,8 @@ export function Navbar({ currentSection = 'lending', onNavigate }) {
         <div className={styles.headerContainer}>
           <div className={styles.brandGroup}>
             <a
-              href="#lending"
-              onClick={(e) => handleNavClick(e, 'lending')}
+              href="#discover"
+              onClick={(e) => handleNavClick(e, 'discover')}
               className={styles.brandLink}
               aria-label="BorrowNest Home"
             >
@@ -40,11 +40,6 @@ export function Navbar({ currentSection = 'lending', onNavigate }) {
                       aria-current={isActive ? 'page' : undefined}
                     >
                       <span className={styles.navText}>{sec.label}</span>
-                      {sec.id === 'lending' && (
-                        <span className={styles.badgeActive} title="Functional Workspace">
-                          Active
-                        </span>
-                      )}
                     </a>
                   </li>
                 );
