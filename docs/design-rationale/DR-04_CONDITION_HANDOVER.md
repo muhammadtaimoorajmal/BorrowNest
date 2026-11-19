@@ -133,7 +133,7 @@ $$\text{Score} = \sum_{i=1}^{5} \left( W_i \times \frac{R_i}{5} \right)$$
 - **C2 (Ease & Speed)**: Option B scores 5/5 (a single dropdown at listing). Option A scores 3/5. Option C scores 3/5 because completing quick checkpoints at handoff and return requires 1–2 minutes of user effort.
 - **C3 (Evidence Quality)**: Option C scores 5/5 by pairing standardized tiers with specific notes and optional photos. Options A and B score 2/5.
 - **C4 (Privacy & a11y)**: All options score 4/5. Option C requires client-side EXIF stripping when users upload optional photos, which is standard practice in privacy-first web applications.
-- **C5 (Local Feasibility)**: Options A and B score 5/5. Option C scores 4/5 because image files must be resized and compressed on the client before being stored in `localStorage` or `IndexedDB`.
+- **C5 (Local Feasibility)**: Options A and B score 5/5. Option C scores 4/5 because image files must be resized and compressed on the client before being stored in `IndexedDB`.
 
 ---
 

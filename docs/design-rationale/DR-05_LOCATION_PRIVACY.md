@@ -165,7 +165,8 @@ flowchart TD
 ---
 
 ## 18. Consequences for Future Implementation
-- **Module 03 (Item Listing Creation)**: Form will contain an optional field: `Approximate Area` (e.g., `<input type="text" placeholder="e.g. Westside / Near Park">`) with instructional helper text explaining: *"For your privacy, do not enter your exact home street address or apartment number."*
+- **Module 03 (Item Listing Creation)**: Form contains an optional field: `Approximate Area` (e.g., `<input type="text" placeholder="e.g. Westside / Near Park">`) with instructional helper text and client-side heuristic validation warning against exact street numbers or apartment strings (*"For your privacy, do not enter your exact home street address or apartment number."*).
+- **Security Boundary Clarification**: In this local-first architecture, this client-side heuristic validation is a UX behavioral nudge for error prevention (Nielsen Heuristic #5), not a cryptographic access control or tamper-proof security barrier. True confidentiality is achieved purely through **data minimization**: because exact addresses are never collected, stored, or transmitted, there is no sensitive residential data in IndexedDB or memory that can be exfiltrated.
 - **Module 04 (Discovery)**: Display the coarse area badge on item cards.
 
 ---

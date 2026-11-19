@@ -26,8 +26,7 @@ This log maintains the authoritative registry of all formal architectural and HC
 - **Main Rationale**: Simultaneously satisfies specific keyword searches and exploratory browsing, maximizes recognition over recall, and provides robust zero-state recovery.
 - **Requirements Affected**: FR-002, FR-003, FR-004, NFR-001, NFR-002.
 - **Evidence References**: E-01 (QOC), E-02 (NN/g Heuristics #6, #7, #9), E-03 (WCAG 2.2 SC 3.3.2), E-04 (Form Labels).
-- **Decision Status**: **DECIDED**.
-- **Target Implementation Module**: Module 04 (Discovery and Search).
+- **Decision Status**: **IMPLEMENTED & VERIFIED** (Modules 04, 06, 08).
 - **Known Limitation**: Text filtering relies on exact substring matching rather than fuzzy phonetic search.
 
 ---
@@ -78,8 +77,7 @@ This log maintains the authoritative registry of all formal architectural and HC
 - **Main Rationale**: Eliminates pseudo-security claims; data that is never collected cannot be leaked. Provides sufficient proximity context for borrowers while keeping homeowner locations private.
 - **Requirements Affected**: FR-004, FR-008, NFR-004, NFR-005.
 - **Evidence References**: E-01 (QOC), E-02 (NN/g Heuristics #2, #8), Privacy by Design Principles.
-- **Decision Status**: **DECIDED** (Corrects Module 01 preliminary notes).
-- **Target Implementation Module**: Module 03 (Item Listing Creation) and Module 04 (Discovery).
+- **Decision Status**: **IMPLEMENTED & VERIFIED** (Modules 03, 04, 09).
 - **Known Limitation**: Parties in a future real deployment must coordinate precise final pickup spots externally or via future authenticated backend modules.
 
 ---
@@ -91,6 +89,5 @@ This log maintains the authoritative registry of all formal architectural and HC
 - **Main Rationale**: Eliminates mode confusion, reflects the real-world fluidity of peer lending, and delivers superior mobile touch ergonomics with 44×44px targets.
 - **Requirements Affected**: FR-001 through FR-010, NFR-001, NFR-002, NFR-003.
 - **Evidence References**: E-01 (QOC), E-02 (NN/g Heuristics #4, #6, #7), E-03 (WCAG 2.2 SC 2.5.8, SC 2.5.5).
-- **Decision Status**: **DECIDED**.
-- **Target Implementation Module**: Module 03 (App Shell & UI Foundations).
+- **Decision Status**: **IMPLEMENTED & VERIFIED** (Modules 03, 07, 09).
 - **Known Limitation**: Borrower and Owner are task perspectives, not authenticated multi-user roles.

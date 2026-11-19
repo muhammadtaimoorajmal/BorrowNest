@@ -75,6 +75,7 @@ BorrowNest is engineered to achieve seven core product objectives:
 
 ## 8. Current Implementation Status
 
+### Core Functional Implementation (Modules 01–06)
 | Milestone | Deliverables | Current Status |
 | :--- | :--- | :--- |
 | **Module 01: Project Foundation** | React 19 + Vite 8 workspace, design tokens, responsive empty-state shell, unit tests, GitHub Actions CI workflow, and architectural documentation | **COMPLETED & VERIFIED** |
@@ -83,3 +84,12 @@ BorrowNest is engineered to achieve seven core product objectives:
 | **Module 04: Discovery & Search** | Unified discovery (DR-01), keyword token search, category pills, availability toggle, active filter feedback, read-only item presentation, and detail modal | **COMPLETED & VERIFIED** |
 | **Module 05: Borrowing Flow** | Structured request submissions, owner consent decisions (DR-02), date-range scheduling with inclusive conflict prevention (DR-03), dual-perspective workspace, and DB v2 | **COMPLETED & VERIFIED** |
 | **Module 06: Inspection & Returns** | Physical handover logging, return verification, structured condition checkpoints (DR-04), side-by-side comparison, uncollected reservation release, and DB v3 | **COMPLETED & VERIFIED** |
+
+### Project Finalization & Delivery Packages (Modules 06–10)
+| Finalization Stage | Scope & Enhancements Delivered | Current Status |
+| :--- | :--- | :--- |
+| **Module 06 (Catalogue)** | Curated demonstration catalogue, locally stored photographs, attribution records, and first-time visitor experience | **COMPLETED & VERIFIED** |
+| **Module 07 (Design System)** | Complete visual design system, tokenized CSS architecture (146 tokens), responsive layout redesign across mobile and desktop | **COMPLETED & VERIFIED** |
+| **Module 08 (Catalogue Expansion)**| Expansion to exactly 20 curated catalogue products across 5 balanced categories with genuine photography and attribution | **COMPLETED & VERIFIED** |
+| **Module 09 (Integration & Audit)** | End-to-end integration audit, local-first disclosure notices, schema v3 historical conflict resolution in backup restore, 230 automated tests | **COMPLETED & VERIFIED** |
+| **Module 10 (HCI Lab 11 Closeout)**| Comprehensive formal HCI Lab 11 submission report ([Markdown](lab-reports/Lab11_63461_BSCS5-1.md) and [DOCX](lab-reports/Lab11_63461_BSCS5-1.docx)), complete project closeout | **COMPLETED & VERIFIED** |

@@ -93,7 +93,7 @@ The codebase has undergone verification across all engineering dimensions:
 | Gate | Tooling | Status | Details |
 | :--- | :--- | :--- | :--- |
 | **Linting** | ESLint 10 | **Passing** | 0 errors, 0 warnings across all JavaScript and JSX source files |
-| **Automated Tests** | Vitest 5 + Testing Library | **Passing** | 220 automated tests passing across 27 test suites |
+| **Automated Tests** | Vitest 5 + Testing Library | **Passing** | 230 automated tests passing across 28 test suites |
 | **Design Tokens** | `npm run check:tokens` | **Passing** | 146 global custom properties verified across 31 CSS files |
 | **Catalogue Integrity** | `npm run check:catalogue` | **Passing** | Exactly 20 products, 5/4/4/4/3 category balance, 20 verified local images |
 | **Production Build** | Vite 8 | **Passing** | Clean, optimized production bundle built in ~450ms |
@@ -131,6 +131,17 @@ npm ci
 - `npm run check:catalogue`: Validate the 20-item catalogue data, categories, and local image assets.
 - `npm run test`: Run the full automated test suite with Vitest.
 - `npm run preview`: Preview the compiled production build locally.
+
+---
+
+## Academic Context & HCI Lab 11 Deliverables
+
+BorrowNest serves as the primary case study for **Course SE2613 (Human-Computer Interaction)**, Department of Computer Science, Faculty of Computing, **Riphah International University** (Fall 2026, Class BSCS 5-1, Student: Muhammad Taimoor Ajmal, SAP ID: 63461, Instructor: Mr. Muhammad Shabbir Hassan).
+
+- **Formal Lab 11 Report (Markdown)**: [docs/lab-reports/Lab11_63461_BSCS5-1.md](docs/lab-reports/Lab11_63461_BSCS5-1.md)
+- **Formal Lab 11 Report (Word .docx)**: [docs/lab-reports/Lab11_63461_BSCS5-1.docx](docs/lab-reports/Lab11_63461_BSCS5-1.docx)
+- **Design Rationale Register**: [docs/design-rationale/DECISION_LOG.md](docs/design-rationale/DECISION_LOG.md)
+- **Final Project Completion Report**: [docs/PROJECT_COMPLETION_REPORT.md](docs/PROJECT_COMPLETION_REPORT.md)
 
 ---
 
