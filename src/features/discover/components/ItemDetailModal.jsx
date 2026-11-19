@@ -196,14 +196,23 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLe
               </span>
             </div>
 
-            <div className={styles.specItem}>
-              <span className={styles.specLabel}>Condition Grade</span>
-              <span className={styles.specValue}>
-                {conditionInfo.label} (Tier {item.conditionGrade}/5)
-              </span>
-            </div>
+            {item.isDemo ? (
+              <div className={styles.specItem}>
+                <span className={styles.specLabel}>Status Notice</span>
+                <span className={styles.specValue}>
+                  Illustrative example only. No real owner, live availability or physical condition inspection is represented.
+                </span>
+              </div>
+            ) : (
+              <div className={styles.specItem}>
+                <span className={styles.specLabel}>Condition Grade</span>
+                <span className={styles.specValue}>
+                  {conditionInfo.label} (Tier {item.conditionGrade}/5)
+                </span>
+              </div>
+            )}
 
-            {item.approximateArea && (
+            {!item.isDemo && item.approximateArea && (
               <div className={styles.specItem}>
                 <span className={styles.specLabel}>Approximate Area (DR-05)</span>
                 <span className={styles.specValue}>📍 {item.approximateArea}</span>
@@ -211,17 +220,10 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLe
             )}
           </div>
 
-          {/* Condition Notes / Description */}
-          {(item.conditionDescription || item.conditionNotes) && (
+          {/* Condition Notes / Description for genuine listings */}
+          {!item.isDemo && (item.conditionDescription || item.conditionNotes) && (
             <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>
-                {item.isDemo ? 'Illustrative Condition Record (Sample Only)' : 'Condition & Handling Observations'}
-              </h3>
-              {item.isDemo && (
-                <p className={styles.conditionDisclaimer}>
-                  <em>Illustrative sample note: Demonstrates how condition tiers and observations are documented across physical handovers. No real physical item has been inspected.</em>
-                </p>
-              )}
+              <h3 className={styles.sectionTitle}>Condition & Handling Observations</h3>
               <div className={styles.notesBox}>{item.conditionDescription || item.conditionNotes}</div>
             </div>
           )}

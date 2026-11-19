@@ -102,7 +102,7 @@ describe('DiscoverPage: Unified Item Discovery Subsystem (DR-01)', () => {
     ).toBeInTheDocument();
 
     // Verify empty live status
-    expect(screen.getByRole('status')).toHaveTextContent(/0 items in local catalog/i);
+    expect(screen.getByRole('status')).toHaveTextContent(/Your local listings: 0/i);
 
     // Click "Go to Lending Workspace"
     const actionBtn = screen.getByRole('button', { name: /Go to Lending Workspace/i });

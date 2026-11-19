@@ -80,7 +80,7 @@ BorrowNest has completed all six planned functional application modules (Modules
 - **Data Minimization**: BorrowNest requests only information strictly necessary for lending coordination.
 - **Collection Privacy (DR-05)**: Only coarse neighborhood or landmark areas are collected and displayed (e.g. "Greenwood / Pine St area"). Exact residential street addresses and lockbox codes are strictly prevented via heuristic warning safeguards.
 - **EXIF & Metadata Stripping**: Uploaded photos are stripped of all camera metadata, embedded GPS coordinates, and device identifiers client-side before storage.
-- **Genuine Imagery & Curated Example Catalogue**: BorrowNest strictly prohibits synthetic AI renders. All user listings rely exclusively on genuine photographs captured directly by item owners. For first-time visitors, BorrowNest provides a curated 10-item read-only demonstration catalogue featuring genuine photography across five equipment categories (Tools, Gardening, Household, Outdoor, Electronics) with local asset storage and documented attributions ([docs/assets/DEMO_IMAGE_ATTRIBUTIONS.md](docs/assets/DEMO_IMAGE_ATTRIBUTIONS.md)).
+- **Genuine Imagery & Curated Example Catalogue**: BorrowNest strictly prohibits synthetic AI renders. All user listings rely exclusively on genuine photographs captured directly by item owners. For first-time visitors, BorrowNest provides a curated 20-item read-only demonstration catalogue featuring genuine physical photography across five equipment categories (Tools: 5, Gardening: 4, Household: 4, Outdoor: 4, Electronics: 3) with local asset storage, a compiled visual contact sheet ([docs/assets/DEMO_CATALOGUE_CONTACT_SHEET.webp](docs/assets/DEMO_CATALOGUE_CONTACT_SHEET.webp)), and documented attributions ([docs/assets/DEMO_IMAGE_ATTRIBUTIONS.md](docs/assets/DEMO_IMAGE_ATTRIBUTIONS.md)).
 - **Accessibility Baseline**: Built with semantic HTML, ARIA landmarks, and keyboard navigation targeting WCAG 2.2 Level AA, with mobile touch targets meeting or exceeding 44 × 44 CSS pixels.
 
 ---
@@ -92,8 +92,10 @@ The codebase has undergone verification across all engineering dimensions:
 | Gate | Tooling | Status | Details |
 | :--- | :--- | :--- | :--- |
 | **Linting** | ESLint 10 | **Passing** | 0 errors, 0 warnings across all JavaScript and JSX source files |
-| **Automated Tests** | Vitest 5 + Testing Library | **Passing** | 219 automated tests passing across 26 test suites |
-| **Production Build** | Vite 8 | **Passing** | Clean, optimized production bundle built in ~250ms |
+| **Automated Tests** | Vitest 5 + Testing Library | **Passing** | 220 automated tests passing across 27 test suites |
+| **Design Tokens** | `npm run check:tokens` | **Passing** | 146 global custom properties verified across 31 CSS files |
+| **Catalogue Integrity** | `npm run check:catalogue` | **Passing** | Exactly 20 products, 5/4/4/4/3 category balance, 20 verified local images |
+| **Production Build** | Vite 8 | **Passing** | Clean, optimized production bundle built in ~450ms |
 | **Production Audit** | `npm audit --omit=dev` | **Passing** | 0 vulnerabilities in production runtime dependencies |
 | **Pages Deployment** | GitHub Actions | **Automated** | Build and deploy pipeline targeting GitHub Pages |
 
@@ -124,6 +126,8 @@ npm ci
 - `npm run dev`: Launch the local development server with hot module reloading.
 - `npm run build`: Compile the production application bundle into `dist/`.
 - `npm run lint`: Verify code style and syntax rules using ESLint.
+- `npm run check:tokens`: Verify design token integrity across all CSS modules.
+- `npm run check:catalogue`: Validate the 20-item catalogue data, categories, and local image assets.
 - `npm run test`: Run the full automated test suite with Vitest.
 - `npm run preview`: Preview the compiled production build locally.
 

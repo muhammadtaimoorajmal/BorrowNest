@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 import { EXAMPLE_CATALOGUE, getDemoImageUrl } from './exampleCatalogue';
-import { CATEGORIES, CONDITION_TIERS } from '../../listings/validation/itemValidation';
+import { CATEGORIES } from '../../listings/validation/itemValidation';
 
-describe('Curated Example Catalogue Data (Module 06)', () => {
-  it('contains exactly 10 high-quality curated items', () => {
-    expect(EXAMPLE_CATALOGUE.length).toBe(10);
+describe('Curated Example Catalogue Data (Module 08)', () => {
+  it('contains exactly 20 high-quality curated items', () => {
+    expect(EXAMPLE_CATALOGUE.length).toBe(20);
   });
 
   it('guarantees unique IDs across all items with "demo-" prefix', () => {
@@ -26,23 +28,24 @@ describe('Curated Example Catalogue Data (Module 06)', () => {
     }
   });
 
-  it('covers all five supported BorrowNest categories', () => {
-    const representedCategories = new Set(EXAMPLE_CATALOGUE.map((item) => item.category));
-    expect(representedCategories.has('TOOLS')).toBe(true);
-    expect(representedCategories.has('GARDENING')).toBe(true);
-    expect(representedCategories.has('HOUSEHOLD')).toBe(true);
-    expect(representedCategories.has('OUTDOOR')).toBe(true);
-    expect(representedCategories.has('ELECTRONICS')).toBe(true);
-  });
+  it('enforces exact category distribution: Tools (5), Gardening (4), Household (4), Outdoor (4), Electronics (3)', () => {
+    const counts = {
+      TOOLS: 0,
+      GARDENING: 0,
+      HOUSEHOLD: 0,
+      OUTDOOR: 0,
+      ELECTRONICS: 0,
+    };
 
-  it('defines valid condition grades (1–5) and matching labels', () => {
     for (const item of EXAMPLE_CATALOGUE) {
-      expect(item.conditionGrade).toBeGreaterThanOrEqual(1);
-      expect(item.conditionGrade).toBeLessThanOrEqual(5);
-      expect(item.conditionLabel).toBe(CONDITION_TIERS[item.conditionGrade].label);
-      expect(typeof item.conditionDescription).toBe('string');
-      expect(item.conditionDescription.trim().length).toBeGreaterThan(10);
+      counts[item.category]++;
     }
+
+    expect(counts.TOOLS).toBe(5);
+    expect(counts.GARDENING).toBe(4);
+    expect(counts.HOUSEHOLD).toBe(4);
+    expect(counts.OUTDOOR).toBe(4);
+    expect(counts.ELECTRONICS).toBe(3);
   });
 
   it('provides complete and rich metadata for every example item', () => {
@@ -67,8 +70,24 @@ describe('Curated Example Catalogue Data (Module 06)', () => {
 
       expect(item.isDemo).toBe(true);
 
-      // Section 8.1 Content Integrity: Zero fabricated neighbourhood names
+      // Section 9 Content Integrity: Zero fabricated neighbourhood or condition inspection claims
       expect(item.approximateArea).toBeUndefined();
+      expect(item.owner).toBeUndefined();
+      expect(item.conditionGrade).toBeUndefined();
+      expect(item.conditionDescription).toBeUndefined();
+    }
+  });
+
+  it('guarantees unique local image paths and all 20 image files physically exist', () => {
+    const imagePaths = EXAMPLE_CATALOGUE.map((item) => item.imagePath);
+    const uniquePaths = new Set(imagePaths);
+    expect(uniquePaths.size).toBe(20);
+
+    for (const imgRelPath of imagePaths) {
+      const fullPath = path.resolve(process.cwd(), 'public', imgRelPath);
+      expect(fs.existsSync(fullPath)).toBe(true);
+      const stat = fs.statSync(fullPath);
+      expect(stat.size).toBeGreaterThan(1000);
     }
   });
 

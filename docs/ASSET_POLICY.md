@@ -39,3 +39,14 @@ In Module 03, user-uploaded listing photos strictly adhere to the implemented cl
 - **Genuine Attestation Safeguard**: Owners must check a mandatory attestation confirming that the uploaded image depicts the actual, physical item they own rather than a stock photo or online render.
 - **Mandatory Accessible Alt Text**: Every uploaded photograph requires an owner-provided descriptive text (`altText`) before form submission, ensuring full accessibility for screen-reader users (WCAG 2.2 SC 1.1.1).
 - **Safe Object URL Rendering**: Rendered safely via `URL.createObjectURL` and revoked deterministically upon unmount or change to prevent browser memory leaks.
+
+---
+
+## 5. Curated Demonstration Catalogue Imagery (Module 08)
+
+For first-time visitors encountering an empty browser state, BorrowNest provides a curated, read-only demonstration catalogue of exactly 20 items:
+- **Verified Physical Photography**: Every demonstration product has been visually verified to depict the actual physical equipment described in the title and description (Tools: 5, Gardening: 4, Household: 4, Outdoor: 4, Electronics: 3). Fictional condition inspection ratings, synthetic AI renders, and misleading stock placeholders are strictly banned.
+- **Local Storage & Zero Hotlinking**: All 20 photographs are stored directly in `public/demo/items/` at standardized 4:3 catalogue dimensions (600 × 450 px), ensuring zero external network dependencies and zero third-party tracking.
+- **Attribution Registry**: Comprehensive provenance, photographer credits, and reusable license records (Unsplash and Pexels licenses) are maintained in [`docs/assets/DEMO_IMAGE_ATTRIBUTIONS.md`](assets/DEMO_IMAGE_ATTRIBUTIONS.md).
+- **Contact Sheet**: Visual verification reference compiled in [`docs/assets/DEMO_CATALOGUE_CONTACT_SHEET.webp`](assets/DEMO_CATALOGUE_CONTACT_SHEET.webp).
+- **IndexedDB Isolation**: Demonstration items exist only as static application data and are never inserted into the browser's IndexedDB storage. Local personal inventory remains strictly private and isolated.

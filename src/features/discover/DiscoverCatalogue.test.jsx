@@ -5,7 +5,7 @@ import DiscoverPage from './pages/DiscoverPage';
 import { IndexedDbStorageAdapter } from '../../services/storage/IndexedDbStorageAdapter';
 import { EXAMPLE_CATALOGUE } from './data/exampleCatalogue';
 
-describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)', () => {
+describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)', () => {
   let adapter;
 
   beforeEach(async () => {
@@ -17,7 +17,7 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
     await adapter.clearAllItems();
   });
 
-  it('renders introductory hero, honest local empty state, and 10 curated example items on first visit', async () => {
+  it('renders introductory hero, honest local empty state, and 20 curated example items on first visit', async () => {
     render(<DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />);
 
     // Product introduction hero
@@ -27,67 +27,128 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
 
     // Honest empty state for 0 local listings
     expect(await screen.findByRole('heading', { name: /No items listed yet/i })).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(/0 items in local catalog/i);
+    expect(screen.getByRole('status')).toHaveTextContent(/Your local listings: 0/i);
+    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 20 items/i);
 
     // Curated example catalogue section
     expect(
-      screen.getByRole('heading', { name: /Explore Community Equipment \(10 Example Items\)/i }),
+      screen.getByRole('heading', { name: /Explore 20 Example Items/i }),
     ).toBeInTheDocument();
 
-    // All 10 example items are rendered in the DOM
+    // All 20 example items are rendered in the DOM
+    expect(EXAMPLE_CATALOGUE.length).toBe(20);
     for (const item of EXAMPLE_CATALOGUE) {
       expect(screen.getByText(item.title)).toBeInTheDocument();
     }
 
     // Example badges are displayed on cards
     const demoBadges = screen.getAllByText('Example Item');
-    expect(demoBadges.length).toBe(10);
+    expect(demoBadges.length).toBe(20);
   });
 
-  it('filters curated example items reactively by keyword search including specifications', async () => {
+  it('filters curated example items reactively by keyword search across all categories', async () => {
     render(<DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />);
     await screen.findByRole('heading', { name: /No items listed yet/i });
 
     const searchInput = screen.getByRole('searchbox', { name: /Search local catalog/i });
 
-    // 1. Search by title
+    // 1. Search by title keyword (Tools: drill)
     fireEvent.change(searchInput, { target: { value: 'drill' } });
-    expect(screen.getByText(/20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
-    expect(screen.queryByText(/6-Person Family Cabin Camping Tent/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Cordless Compact Drill/Driver')).toBeInTheDocument();
+    expect(screen.queryByText('Family Cabin Camping Tent')).not.toBeInTheDocument();
 
-    // 2. Search by specification (USB-C)
-    fireEvent.change(searchInput, { target: { value: 'USB-C' } });
-    expect(screen.getByText(/Rechargeable Precision Electric Screwdriver/i)).toBeInTheDocument();
-    expect(screen.queryByText(/20V MAX Cordless Compact Drill/i)).not.toBeInTheDocument();
+    // 2. Search new item: Impact Driver
+    fireEvent.change(searchInput, { target: { value: 'impact driver' } });
+    expect(screen.getByText('Cordless Impact Driver')).toBeInTheDocument();
+    expect(screen.queryByText('Cordless Compact Drill/Driver')).not.toBeInTheDocument();
 
-    // 3. Clear search restores all 10 items
+    // 3. Search new item: Lawn Mower
+    fireEvent.change(searchInput, { target: { value: 'mower' } });
+    expect(screen.getByText('Push Lawn Mower')).toBeInTheDocument();
+
+    // 4. Search new item: Leaf Blower
+    fireEvent.change(searchInput, { target: { value: 'blower' } });
+    expect(screen.getByText('Cordless Leaf Blower')).toBeInTheDocument();
+
+    // 5. Search new item: Steamer
+    fireEvent.change(searchInput, { target: { value: 'steamer' } });
+    expect(screen.getByText('Handheld Garment Steamer')).toBeInTheDocument();
+
+    // 6. Search new item: Air Purifier
+    fireEvent.change(searchInput, { target: { value: 'purifier' } });
+    expect(screen.getByText('Portable Tower Air Purifier')).toBeInTheDocument();
+
+    // 7. Search new item: Projector
+    fireEvent.change(searchInput, { target: { value: 'projector' } });
+    expect(screen.getByText('Portable HD Movie Projector')).toBeInTheDocument();
+
+    // 8. Search new item: Power Station
+    fireEvent.change(searchInput, { target: { value: 'power station' } });
+    expect(screen.getByText('Portable Battery Power Station')).toBeInTheDocument();
+
+    // 9. Clear search restores all 20 items
     fireEvent.change(searchInput, { target: { value: '' } });
-    expect(screen.getByText(/20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
-    expect(screen.getByText(/6-Person Family Cabin Camping Tent/i)).toBeInTheDocument();
+    expect(screen.getByText('Cordless Compact Drill/Driver')).toBeInTheDocument();
+    expect(screen.getByText('Family Cabin Camping Tent')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 20 items/i);
   });
 
-  it('filters curated example items by category pills and resets cleanly', async () => {
+  it('filters curated example items by category pills with accurate 5/4/4/4/3 distribution', async () => {
     render(<DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />);
     await screen.findByRole('heading', { name: /No items listed yet/i });
 
-    // Filter by Gardening
+    // 1. Filter by Tools (5 items)
+    const toolsPill = screen.getByRole('button', { name: /^Tools$/i });
+    fireEvent.click(toolsPill);
+    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 5 of 20 items/i);
+    expect(screen.getByText('Cordless Compact Drill/Driver')).toBeInTheDocument();
+    expect(screen.getByText('Rechargeable Precision Electric Screwdriver Kit')).toBeInTheDocument();
+    expect(screen.getByText('Household Hand Tool & Socket Set')).toBeInTheDocument();
+    expect(screen.getByText('Cordless Impact Driver')).toBeInTheDocument();
+    expect(screen.getByText('Wet and Dry Workshop Vacuum')).toBeInTheDocument();
+
+    // 2. Filter by Gardening (4 items)
     const gardeningPill = screen.getByRole('button', { name: /^Gardening$/i });
     fireEvent.click(gardeningPill);
+    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 4 of 20 items/i);
+    expect(screen.getByText('Bypass Pruning Shears & Branch Trimmer')).toBeInTheDocument();
+    expect(screen.getByText('Cordless Garden Hedge Trimmer')).toBeInTheDocument();
+    expect(screen.getByText('Push Lawn Mower')).toBeInTheDocument();
+    expect(screen.getByText('Cordless Leaf Blower')).toBeInTheDocument();
 
-    expect(screen.getByText(/Bypass Pruning Shears/i)).toBeInTheDocument();
-    expect(screen.getByText(/18V Cordless Garden Hedge Trimmer/i)).toBeInTheDocument();
-    expect(screen.queryByText(/20V MAX Cordless Compact Drill/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/6-Person Family Cabin Camping Tent/i)).not.toBeInTheDocument();
+    // 3. Filter by Household (4 items)
+    const householdPill = screen.getByRole('button', { name: /^Household$/i });
+    fireEvent.click(householdPill);
+    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 4 of 20 items/i);
+    expect(screen.getByText('Household Sewing & Mending Machine')).toBeInTheDocument();
+    expect(screen.getByText('Portable Carpet & Upholstery Spot Cleaner')).toBeInTheDocument();
+    expect(screen.getByText('Handheld Garment Steamer')).toBeInTheDocument();
+    expect(screen.getByText('Portable Tower Air Purifier')).toBeInTheDocument();
 
-    // Reset with "All Categories"
+    // 4. Filter by Outdoor (4 items)
+    const outdoorPill = screen.getByRole('button', { name: /^Outdoor$/i });
+    fireEvent.click(outdoorPill);
+    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 4 of 20 items/i);
+    expect(screen.getByText('Family Cabin Camping Tent')).toBeInTheDocument();
+    expect(screen.getByText('Portable Camping Gas Stove')).toBeInTheDocument();
+    expect(screen.getByText('Folding Portable Camping Chairs (Set)')).toBeInTheDocument();
+    expect(screen.getByText('Portable Folding Camping Table')).toBeInTheDocument();
+
+    // 5. Filter by Electronics (3 items)
+    const electronicsPill = screen.getByRole('button', { name: /^Electronics$/i });
+    fireEvent.click(electronicsPill);
+    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 3 of 20 items/i);
+    expect(screen.getByText('Portable HD Movie Projector')).toBeInTheDocument();
+    expect(screen.getByText('Portable Wireless Bluetooth Speaker')).toBeInTheDocument();
+    expect(screen.getByText('Portable Battery Power Station')).toBeInTheDocument();
+
+    // 6. Reset with "All Categories" restores 20
     const allPill = screen.getByRole('button', { name: /All Categories/i });
     fireEvent.click(allPill);
-
-    expect(screen.getByText(/20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
-    expect(screen.getByText(/6-Person Family Cabin Camping Tent/i)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 20 items/i);
   });
 
-  it('opens example ItemDetailModal with curated specifications, photo, and demo disclaimer', async () => {
+  it('opens example ItemDetailModal with curated specifications, photo, and demo disclaimer without condition tiers', async () => {
     let navigatedToLending = false;
     render(
       <DiscoverPage
@@ -100,12 +161,12 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
     await screen.findByRole('heading', { name: /No items listed yet/i });
 
     const viewBtn = screen.getByRole('button', {
-      name: /View details for 20V MAX Cordless Compact Drill\/Driver/i,
+      name: /View details for Cordless Compact Drill\/Driver/i,
     });
     fireEvent.click(viewBtn);
 
     const dialog = screen.getByRole('dialog', {
-      name: /20V MAX Cordless Compact Drill\/Driver/i,
+      name: /Cordless Compact Drill\/Driver/i,
     });
     expect(dialog).toBeInTheDocument();
 
@@ -121,12 +182,14 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
 
     // Displays specifications and suggested use case
     expect(modalContent.getByText(/Key Specifications/i)).toBeInTheDocument();
-    expect(modalContent.getByText(/Voltage: 20V MAX/i)).toBeInTheDocument();
+    expect(modalContent.getAllByText(/Keyless ratcheting chuck/i).length).toBeGreaterThanOrEqual(1);
     expect(modalContent.getByText(/Potential Use Case/i)).toBeInTheDocument();
 
-    // Section 8.1: Confirms zero fabricated neighbourhood areas are displayed
-    expect(modalContent.queryByText(/Greenwood/i)).not.toBeInTheDocument();
-    expect(modalContent.queryByText(/Maple Ridge/i)).not.toBeInTheDocument();
+    // Section 9: Confirms zero fabricated condition inspection tiers or condition notes are displayed
+    expect(modalContent.getByText(/Status Notice/i)).toBeInTheDocument();
+    expect(modalContent.getByText(/Illustrative example only\. No real owner, live availability or physical condition inspection is represented\./i)).toBeInTheDocument();
+    expect(modalContent.queryByText(/Tier 4\/5/i)).not.toBeInTheDocument();
+    expect(modalContent.queryByText(/Sample observation/i)).not.toBeInTheDocument();
 
     // Safe interaction handshake: does NOT render "Request to Borrow"
     expect(modalContent.queryByRole('button', { name: /Request to Borrow/i })).not.toBeInTheDocument();
@@ -176,7 +239,7 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 06)'
     expect(within(realCard).getByText('Available')).toBeInTheDocument();
 
     // Example catalogue items are still accessible below
-    expect(screen.getByText(/20V MAX Cordless Compact Drill/i)).toBeInTheDocument();
+    expect(screen.getByText('Cordless Compact Drill/Driver')).toBeInTheDocument();
 
     unmountSecond();
   });

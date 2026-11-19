@@ -71,16 +71,15 @@ export function DiscoverPage({
         <h2 className={styles.introHeroTagline}>Share what you own. Borrow what you need.</h2>
         <p className={styles.introHeroText}>
           BorrowNest helps neighbors and local community members organize everyday tools,
-          gardening implements, and household equipment. Browse our curated example catalogue
-          below to see what equipment people share, or add your own listings in Lending.
+          gardening implements, and household equipment. Explore 20 example items
+          below to see the types of equipment BorrowNest helps people organize, or add your own genuine listings in Lending.
         </p>
       </section>
 
       <div className={styles.header}>
         <h1 className={styles.pageTitle}>Item Discovery & Catalog</h1>
         <p className={styles.pageSubtitle}>
-          Explore equipment shared across your local community. Search by keyword, browse by
-          category, and inspect detailed condition records.
+          Explore 20 example items to see the types of equipment BorrowNest helps people organize. Search by keyword and browse by category.
         </p>
       </div>
 
@@ -114,14 +113,16 @@ export function DiscoverPage({
         <div className={styles.resultCount}>
           <span className={styles.localCount}>
             {localLoading
-              ? 'Loading community catalog...'
+              ? 'Loading local listings...'
               : localTotalCount === 0
-              ? 'Your local listings: 0 items in local catalog'
-              : `Showing ${localResultCount} of ${localTotalCount} items (local)`}
+              ? 'Your local listings: 0'
+              : `Your local listings: Showing ${localResultCount} of ${localTotalCount} items`}
           </span>
           <span className={styles.countSeparator} aria-hidden="true"> • </span>
           <span className={styles.exampleCount}>
-            {`Example catalogue: ${filteredExampleItems.length} of ${EXAMPLE_CATALOGUE.length} illustrative items`}
+            {filteredExampleItems.length === EXAMPLE_CATALOGUE.length
+              ? `Example catalogue: ${EXAMPLE_CATALOGUE.length} items`
+              : `Example catalogue: ${filteredExampleItems.length} of ${EXAMPLE_CATALOGUE.length} items`}
           </span>
         </div>
 
@@ -197,12 +198,10 @@ export function DiscoverPage({
                   <span aria-hidden="true">✨</span> Illustrative Demonstration Catalogue
                 </div>
                 <h2 className={styles.exampleTitle}>
-                  Explore Community Equipment ({EXAMPLE_CATALOGUE.length} Example Items)
+                  Explore 20 Example Items
                 </h2>
                 <p className={styles.exampleSubtitle}>
-                  Illustrative examples, not live community listings. Browse genuine equipment photography to explore what neighbors
-                  share on BorrowNest. These illustrative items showcase specifications, condition
-                  grades, and use cases without geographic restrictions.
+                  Illustrative catalogue — not live community listings. Browse 20 curated example items with genuine photography to see the types of tools, gardening gear, household equipment, outdoor items, and electronics BorrowNest helps people organize. Create your own genuine listings in Lending.
                 </p>
               </div>
 

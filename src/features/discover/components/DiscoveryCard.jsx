@@ -82,10 +82,14 @@ export function DiscoveryCard({ item, onView }) {
         <p className={styles.description}>{item.description}</p>
 
         <div className={styles.metaRow}>
-          <span className={styles.conditionChip} title={conditionInfo.description}>
-            Condition: {conditionInfo.label}
-          </span>
-          {item.approximateArea && (
+          {item.isDemo ? (
+            <span className={styles.conditionChip}>Illustrative Example</span>
+          ) : (
+            <span className={styles.conditionChip} title={conditionInfo.description}>
+              Condition: {conditionInfo.label}
+            </span>
+          )}
+          {!item.isDemo && item.approximateArea && (
             <span className={styles.areaChip}>
               <span aria-hidden="true">📍</span>
               {item.approximateArea}
