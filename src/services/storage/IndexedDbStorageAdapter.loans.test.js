@@ -448,4 +448,73 @@ describe('Storage Adapter: Loan Lifecycle Operations (DR-04)', () => {
     // Deletion blocked even when request is only PENDING
     await expect(adapter.deleteItem(testItem.id)).rejects.toThrow(ItemHasRequestHistoryError);
   });
+
+  it('rejects borrower receipt confirmation before owner handover is recorded (DR-04 Section 10)', async () => {
+    await adapter.createItem(testItem);
+
+    const req = await adapter.createBorrowRequest({
+      itemId: testItem.id,
+      borrowerAlias: 'Early Borrower',
+      startDate: today,
+      endDate: addDays(today, 2),
+    });
+    await adapter.approveBorrowRequest(req.id);
+
+    // Borrower attempts to confirm receipt BEFORE owner has recorded handover checkpoint
+    await expect(adapter.confirmCollectionReceipt(req.id)).rejects.toThrow(
+      BorrowerReceiptRequiredError,
+    );
+
+    // Verify loan remains in RESERVED state without collectedAt stamp
+    const loan = await adapter.getLoanByRequestId(req.id);
+    expect(loan.status).toBe(LOAN_STATUS.RESERVED);
+    expect(loan.collectedAt).toBeNull();
+  });
+
+  it('rejects uncollected release when loan is in ACTIVE or COMPLETED status (DR-04 Section 10)', async () => {
+    await adapter.createItem(testItem);
+
+    const req = await adapter.createBorrowRequest({
+      itemId: testItem.id,
+      borrowerAlias: 'Active Borrower',
+      startDate: today,
+      endDate: addDays(today, 2),
+    });
+    await adapter.approveBorrowRequest(req.id);
+    await adapter.recordCollectionHandover(req.id, { conditionGrade: 4 });
+    await adapter.confirmCollectionReceipt(req.id);
+
+    // Attempting uncollected release on ACTIVE loan must reject
+    await expect(
+      adapter.releaseUncollectedReservation(req.id, { releaseNote: 'Cannot release active loan' }),
+    ).rejects.toThrow(UncollectedReleaseNotAllowedError);
+
+    // Complete loan
+    await adapter.markLoanReturned(req.id);
+    await adapter.completeReturnInspection(req.id, { conditionGrade: 4 });
+
+    // Attempting uncollected release on COMPLETED loan must reject
+    await expect(
+      adapter.releaseUncollectedReservation(req.id, { releaseNote: 'Cannot release completed loan' }),
+    ).rejects.toThrow(UncollectedReleaseNotAllowedError);
+  });
+
+  it('rejects redundant collection receipt confirmation once loan is already ACTIVE (DR-04 Section 10)', async () => {
+    await adapter.createItem(testItem);
+
+    const req = await adapter.createBorrowRequest({
+      itemId: testItem.id,
+      borrowerAlias: 'Active Borrower',
+      startDate: today,
+      endDate: addDays(today, 2),
+    });
+    await adapter.approveBorrowRequest(req.id);
+    await adapter.recordCollectionHandover(req.id, { conditionGrade: 4 });
+    await adapter.confirmCollectionReceipt(req.id);
+
+    // Redundant second receipt confirmation throws LoanStateTransitionError
+    await expect(adapter.confirmCollectionReceipt(req.id)).rejects.toThrow(
+      LoanStateTransitionError,
+    );
+  });
 });

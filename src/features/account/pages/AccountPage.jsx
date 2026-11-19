@@ -177,7 +177,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
       <header className={styles.header}>
         <h1 className={styles.title}>Account & Local Data Management</h1>
         <p className={styles.subtitle}>
-          Manage your local application storage, export private backup archives, and inspect data boundaries.
+          BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser. Manage local storage, export portable backup archives, and inspect data boundaries.
         </p>
       </header>
 
@@ -196,7 +196,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
           <div className={styles.advisoryBox}>
             <span aria-hidden="true">🔒</span>
             <span>
-              Advisory: Your backup archive contains your item descriptions and photos. Store your backup file securely and do not share it publicly.
+              Advisory: Exported backups are validated, unencrypted JSON files containing your item descriptions and photos. Store your backup file securely and do not share it publicly.
             </span>
           </div>
 
@@ -338,7 +338,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
           </div>
           <ul className={styles.principlesList}>
             <li>
-              <strong>Local-First Boundary:</strong> Records and photographs are stored in this browser session only. No central cloud server or third-party tracking is used.
+              <strong>Local-First Boundary:</strong> BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser&apos;s local storage (IndexedDB) and persist across sessions. It does not publish items to a shared online marketplace or synchronize data between users.
             </li>
             <li>
               <strong>Coarse Location Privacy (DR-05):</strong> Exact residential street addresses and lockbox codes are strictly not collected or stored.

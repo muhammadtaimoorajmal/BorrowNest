@@ -171,6 +171,27 @@ describe('Date-Range & Scheduling Engine (DR-03)', () => {
       );
       expect(conflicts.length).toBe(0);
     });
+
+    it('identifies RESERVED and ACTIVE loans as blocking, but ignores COMPLETED and RELEASED_NOT_COLLECTED (Module 09 Section 8)', () => {
+      const loanRecords = [
+        { requestId: 'loan-res', status: 'RESERVED', collectionDate: '2026-12-01', returnDeadline: '2026-12-04' },
+        { requestId: 'loan-act', status: 'ACTIVE', collectionDate: '2026-12-06', returnDeadline: '2026-12-08' },
+        { requestId: 'loan-comp', status: 'COMPLETED', collectionDate: '2026-12-10', returnDeadline: '2026-12-12' },
+        { requestId: 'loan-rel', status: 'RELEASED_NOT_COLLECTED', collectionDate: '2026-12-14', returnDeadline: '2026-12-16' },
+      ];
+
+      // Overlaps RESERVED loan -> blocked
+      expect(findConflictingReservations({ startDate: '2026-12-02', endDate: '2026-12-03' }, loanRecords).length).toBe(1);
+
+      // Overlaps ACTIVE loan -> blocked
+      expect(findConflictingReservations({ startDate: '2026-12-07', endDate: '2026-12-09' }, loanRecords).length).toBe(1);
+
+      // Overlaps COMPLETED loan -> UNBLOCKED (can borrow again)
+      expect(findConflictingReservations({ startDate: '2026-12-10', endDate: '2026-12-12' }, loanRecords).length).toBe(0);
+
+      // Overlaps RELEASED_NOT_COLLECTED loan -> UNBLOCKED (can borrow again)
+      expect(findConflictingReservations({ startDate: '2026-12-14', endDate: '2026-12-16' }, loanRecords).length).toBe(0);
+    });
   });
 
   describe('isOverdueReservation', () => {

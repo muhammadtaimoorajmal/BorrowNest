@@ -55,6 +55,26 @@
   outline-offset: 2px;
 }
 
+.disclosureBanner {
+  background-color: var(--bn-color-primary-50);
+  border: 1px solid var(--bn-color-primary-200);
+  border-radius: var(--bn-radius-lg);
+  padding: var(--bn-space-3) var(--bn-space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bn-space-3);
+  font-size: var(--bn-font-size-xs);
+  color: var(--bn-color-primary-800);
+  line-height: var(--bn-line-height-relaxed);
+  margin-bottom: var(--bn-space-5);
+}
+
+.disclosureIcon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 .errorAlert {
   background-color: var(--bn-color-danger-50);
   border: 1px solid var(--bn-color-danger-200);

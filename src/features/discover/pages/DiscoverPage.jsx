@@ -66,13 +66,11 @@ export function DiscoverPage({
 
   return (
     <div className={styles.pageWrapper}>
-      {/* Product Introduction Hero (Module 06) */}
+      {/* Product Introduction Hero (Module 06 & 09) */}
       <section className={styles.introHero} aria-label="BorrowNest Introduction">
         <h2 className={styles.introHeroTagline}>Share what you own. Borrow what you need.</h2>
         <p className={styles.introHeroText}>
-          BorrowNest helps neighbors and local community members organize everyday tools,
-          gardening implements, and household equipment. Explore 20 example items
-          below to see the types of equipment BorrowNest helps people organize, or add your own genuine listings in Lending.
+          BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser. It does not yet publish items to a shared online marketplace or synchronize data between users. Explore 20 example items below to see the types of equipment BorrowNest helps people organize, or add your own genuine listings in Lending.
         </p>
       </section>
 

@@ -42,12 +42,13 @@ BorrowNest provides a focused coordination workspace to:
 - **Deployment & Automation**: GitHub Actions CI Workflow and GitHub Pages automated deployment
 
 ### Local-First Architectural Boundary
-BorrowNest is architected as a **purely client-side, local-first application**:
-- **Browser-Local Storage**: All data is stored directly in the visitor's individual browser environment using native IndexedDB across three dedicated stores: `items`, `borrowingRequests`, and `loans`. Photographs are preserved as native Blobs within item records and loan condition checkpoints.
+BorrowNest is architected as a **purely client-side, local-first prototype**:
+- **Local-First Prototype Limitation**: BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser. It does not yet publish items to a shared online marketplace or synchronize data between users.
+- **Browser-Local Storage**: All data is stored directly in the visitor's individual browser environment using native IndexedDB across three dedicated stores: `items`, `borrowingRequests`, and `loans`. Photographs are preserved as native Blobs within item records and loan condition checkpoints. Records persist across browser sessions until explicitly cleared.
 - **No Cloud Backend**: BorrowNest does **not** connect to a remote cloud database, central API server, or external telemetry service.
-- **No Remote Identity Verification**: Borrower and owner perspectives are local task views, not authenticated multi-tenant user accounts.
-- **No Cross-Device Synchronization**: Data created in one browser or device does not automatically sync to another visitor's browser.
-- **Backup & Portability**: Users can export and restore their complete local dataset at any time as an encrypted/validated JSON backup (`#account` tab) to migrate between devices or guard against browser cache eviction.
+- **Local Perspectives**: Borrower and owner perspectives are local task views within the visitor's browser environment, not authenticated multi-tenant user accounts or remote network actors.
+- **No Cross-Device Synchronization**: Data created in one browser or device does not automatically sync to another visitor's browser or device.
+- **Backup & Portability**: Users can export and restore their complete local dataset at any time as a validated, portable JSON backup (`#account` tab) to migrate between devices or guard against browser storage eviction. Backups are exported as unencrypted JSON archives with base64 image Blobs; users are advised to store backup files securely.
 
 ---
 

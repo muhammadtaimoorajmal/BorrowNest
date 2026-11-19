@@ -149,5 +149,17 @@ This register documents genuine technical, security, and methodological limitati
   4. *Atomic Three-Store Transactions*: Approvals, replacements, and merges execute in single `readwrite` transactions across `[items, borrowingRequests, loans]`. Fallback non-atomic paths are completely removed.
   5. *Informational Transparency Disclaimers*: Clear notices throughout dialogs, cards, and comparison views state that condition checkpoints and confirmations are informational peer records stored locally, not verified digital signatures or legal appraisals.
   6. *DevDependency Advisory Isolation*: Verified with `npm audit --omit=dev` that zero vulnerabilities exist in production runtime code. Documented that `picomatch` is restricted strictly to local build/test tooling and is never bundled into client production assets.
-- **Blocks Current Prototype?**: **No**. Fully resolved, protected by relational safeguards, and verified across 205 automated tests and production builds.
-- **Implementation Status**: **VERIFIED** in Module 06 test suite (`IndexedDbStorageAdapter.loans.test.js`, `IndexedDbStorageAdapter.migration.test.js`, `backup.test.js`, `LifecycleIntegration.test.jsx`).
+- **Blocks Current Prototype?**: **No**. Fully resolved, protected by relational safeguards, and verified across 230 automated tests and production builds.
+- **Implementation Status**: **VERIFIED** in Module 06, 08 & 09 test suites (`IndexedDbStorageAdapter.loans.test.js`, `IndexedDbStorageAdapter.migration.test.js`, `backup.test.js`, `LifecycleIntegration.test.jsx`, `EndToEndWorkflowAudit.test.jsx`).
+
+---
+
+### RISK-10: Completed Loan Schedule Collision during Backup Re-hydration
+- **Description**: In Schema Version 3, items may legitimately be borrowed multiple times across distinct periods or re-borrowed after previous loans are marked `COMPLETED` or `RELEASED_NOT_COLLECTED`. However, during backup restoration in `importBackup.js`, request records were checked for schedule overlaps without factoring in whether earlier approved requests belonged to loans that were already completed or released.
+- **Impact**: High — Valid backup files containing historical loans alongside subsequent reservations would be falsely rejected by `parseAndValidateBackup` with a `BackupValidationError` ("Backup contains internally conflicting approved reservations").
+- **Remediation Implemented & Verified in Module 09**:
+  1. *Pre-indexing Loan Lifecycle Statuses*: In `parseAndValidateBackup`, loan lifecycle statuses are pre-indexed before validating approved requests.
+  2. *Status-Aware Conflict Evaluation*: If an approved request corresponds to a loan with status `COMPLETED` or `RELEASED_NOT_COLLECTED`, it is recognized as historical and non-blocking, permitting subsequent reservations for those dates to be restored without collision.
+  3. *Backward Compatibility Preservation*: For Schema Version 2 backups without loan records, requests default to blocking `APPROVED` status, preserving strict legacy overlap prevention.
+- **Blocks Current Prototype?**: **No**. Resolved and verified with dedicated test coverage in `backup.test.js` and `EndToEndWorkflowAudit.test.jsx`.
+- **Implementation Status**: **VERIFIED** in Module 09.

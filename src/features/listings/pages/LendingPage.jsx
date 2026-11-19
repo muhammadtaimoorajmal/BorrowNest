@@ -161,6 +161,16 @@ export function LendingPage({ adapter }) {
         </button>
       </div>
 
+      {/* Local-First Disclosure Banner (Module 09 Section 4) */}
+      <div className={styles.disclosureBanner} role="note" aria-label="Local-first prototype notice">
+        <span className={styles.disclosureIcon} aria-hidden="true">
+          ℹ️
+        </span>
+        <div>
+          <strong>Local-First Prototype:</strong> BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser. It does not yet publish items to a shared online marketplace or synchronize data between users.
+        </div>
+      </div>
+
       {/* Global Error Banner */}
       {(error || actionError) && (
         <div className={styles.errorAlert} role="alert">

@@ -62,9 +62,10 @@ BorrowNest enforces an explicit project-wide data-integrity rule: **No Fabricate
 ## 6. Honest Local-Storage Limitations & Implemented Safeguards
 
 Users are informed transparently regarding the nature of local-first storage:
+- **Local-First Prototype Limitation**: BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser. It does not yet publish items to a shared online marketplace or synchronize data between users.
 - **Device-Bound**: Data stored in browser `IndexedDB` does not automatically sync across separate browsers, incognito windows, or devices.
 - **Browser Clearing Risks**: If a user clears their browser cache or site data, locally saved records may be erased.
-- **Implemented Backup Safeguard**: In Modules 03, 05, and 06, BorrowNest implements a single-click local JSON backup export (`exportBackup.js`) and schema-validated restore (`importBackup.js`) via the Account & Local Data Management view. Users can export their entire library including photos (encoded to base64), structured borrowing requests, and physical loan lifecycles with handover/return checkpoint photographs (Schema Version 3), and restore it via Merge (preserving existing items, requests, and loans with collision prevention) or Replace (atomic 3-store replacement across `items`, `borrowingRequests`, and `loans`).
+- **Implemented Backup Safeguard**: In Modules 03, 05, and 06, BorrowNest implements a single-click local JSON backup export (`exportBackup.js`) and schema-validated restore (`importBackup.js`) via the Account & Local Data Management view. Users can export their entire library including photos (encoded to base64), structured borrowing requests, and physical loan lifecycles with handover/return checkpoint photographs (Schema Version 3), and restore it via Merge (preserving existing items, requests, and loans with collision prevention) or Replace (atomic 3-store replacement across `items`, `borrowingRequests`, and `loans`). Exported backups are validated, unencrypted JSON files, and users are advised to store them securely.
 
 ---
 

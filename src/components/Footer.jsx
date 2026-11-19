@@ -27,7 +27,7 @@ export function Footer() {
             <span className={styles.licenseName}>MIT License</span>.
           </p>
           <p className={styles.disclaimer}>
-            Local-first client prototype. No remote server or external telemetry configured.
+            BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser. It does not yet publish items to a shared online marketplace or synchronize data between users.
           </p>
         </div>
       </div>

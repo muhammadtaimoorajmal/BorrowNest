@@ -261,6 +261,16 @@ export async function parseAndValidateBackup(input) {
   let pendingRequestCount = 0;
   let approvedRequestCount = 0;
 
+  // In Schema Version 3, pre-index loan statuses to distinguish active/reserved from completed/released loans
+  const loanStatusByRequestId = new Map();
+  if (Array.isArray(data.loans)) {
+    for (const l of data.loans) {
+      if (l && typeof l === 'object' && l.requestId && l.status) {
+        loanStatusByRequestId.set(l.requestId, l.status);
+      }
+    }
+  }
+
   for (let rIdx = 0; rIdx < rawRequests.length; rIdx++) {
     const rawReq = rawRequests[rIdx];
     // Reject records with missing ID
@@ -289,14 +299,22 @@ export async function parseAndValidateBackup(input) {
 
     // Schedule integrity check for APPROVED reservations
     if (normalizedReq.status === REQUEST_STATUS.APPROVED) {
+      const effectiveStatus = loanStatusByRequestId.get(normalizedReq.id) || REQUEST_STATUS.APPROVED;
+      const isBlocking = effectiveStatus !== LOAN_STATUS.COMPLETED && effectiveStatus !== LOAN_STATUS.RELEASED_NOT_COLLECTED;
+
       const existingApproved = approvedByItem.get(normalizedReq.itemId) || [];
-      const conflicts = findConflictingReservations(normalizedReq, existingApproved);
-      if (conflicts.length > 0) {
-        throw new BackupValidationError(
-          `Backup contains internally conflicting approved reservations for item "${normalizedReq.itemId}" (${normalizedReq.startDate} to ${normalizedReq.endDate}).`,
-        );
+      if (isBlocking) {
+        const conflicts = findConflictingReservations(normalizedReq, existingApproved);
+        if (conflicts.length > 0) {
+          throw new BackupValidationError(
+            `Backup contains internally conflicting approved reservations for item "${normalizedReq.itemId}" (${normalizedReq.startDate} to ${normalizedReq.endDate}).`,
+          );
+        }
       }
-      existingApproved.push(normalizedReq);
+      existingApproved.push({
+        ...normalizedReq,
+        status: effectiveStatus,
+      });
       approvedByItem.set(normalizedReq.itemId, existingApproved);
       approvedRequestCount++;
       approvedRequestMap.set(normalizedReq.id, normalizedReq);

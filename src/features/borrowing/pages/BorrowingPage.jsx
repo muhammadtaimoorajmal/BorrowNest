@@ -110,13 +110,13 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
           Manage structured borrowing requests, review owner decisions, and track reserved date schedules.
         </p>
 
-        {/* Local-First Disclosure Banner */}
+        {/* Local-First Disclosure Banner (Module 09 Section 4) */}
         <div className={styles.disclosureBanner} role="note">
           <span className={styles.disclosureIcon} aria-hidden="true">
             ℹ️
           </span>
           <div>
-            <strong>Local-First Architecture:</strong> BorrowNest operates entirely on your device’s local browser storage without remote user accounts or servers. &ldquo;Borrower View&rdquo; and &ldquo;Owner View&rdquo; let you manage both sides of the local borrowing workflow with full transparency.
+            <strong>Local-First Prototype:</strong> BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser. It does not yet publish items to a shared online marketplace or synchronize data between users. &ldquo;Borrower View&rdquo; and &ldquo;Owner View&rdquo; are local task perspectives within this browser environment; requests are not sent to remote devices.
           </div>
         </div>
       </header>

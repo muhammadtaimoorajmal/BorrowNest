@@ -122,6 +122,77 @@ describe('Backup and Restore Subsystem (Schema V1 & V2)', () => {
     );
   });
 
+  it('rejects empty JSON strings or empty root objects (Module 09 Data Integrity)', async () => {
+    await expect(parseAndValidateBackup('')).rejects.toThrow(BackupValidationError);
+    await expect(parseAndValidateBackup('{}')).rejects.toThrow(/Unrecognized backup format/i);
+    await expect(parseAndValidateBackup('null')).rejects.toThrow(/root element must be a JSON object/i);
+  });
+
+  it('rejects backup with invalid items property type (Module 09 Data Integrity)', async () => {
+    const invalidItemsBackup = { ...validBackupFixtureV2, items: 'not-an-array' };
+    await expect(parseAndValidateBackup(JSON.stringify(invalidItemsBackup))).rejects.toThrow(
+      /items.*must be an array/i,
+    );
+  });
+
+  it('rejects backup with duplicate item IDs (Module 09 Data Integrity)', async () => {
+    const duplicateItemsBackup = {
+      ...validBackupFixtureV2,
+      items: [
+        validItemFixture,
+        {
+          ...validItemFixture,
+          title: 'Second Item With Same ID',
+        },
+      ],
+    };
+    await expect(parseAndValidateBackup(JSON.stringify(duplicateItemsBackup))).rejects.toThrow(
+      /Duplicate item ID.*detected in backup payload/i,
+    );
+  });
+
+  it('rejects backup with corrupted photo base64 dataUrl (Module 09 Data Integrity)', async () => {
+    const corruptedPhotoBackup = {
+      ...validBackupFixtureV2,
+      items: [
+        {
+          ...validItemFixture,
+          photos: [
+            {
+              id: 'photo-corrupt',
+              altText: 'Corrupted image test',
+              dataUrl: 'data:image/jpeg;base64,!!!NOT_VALID_BASE64@@@',
+            },
+          ],
+        },
+      ],
+    };
+    await expect(parseAndValidateBackup(JSON.stringify(corruptedPhotoBackup))).rejects.toThrow(
+      /Failed to decode photo/i,
+    );
+  });
+
+  it('preserves existing database records untouched when backup parsing fails (Module 09 Reliability)', async () => {
+    // Seed existing item in database
+    await adapter.createItem({
+      ...validItemFixture,
+      id: 'pre-existing-item',
+      photos: [],
+    });
+    expect(await adapter.countItems()).toBe(1);
+
+    // Attempt to parse/restore invalid backup
+    await expect(parseAndValidateBackup('corrupt json string')).rejects.toThrow(
+      BackupValidationError,
+    );
+
+    // Pre-existing item remains completely untouched and valid
+    expect(await adapter.countItems()).toBe(1);
+    const item = await adapter.getItemById('pre-existing-item');
+    expect(item).toBeDefined();
+    expect(item.id).toBe('pre-existing-item');
+  });
+
   it('rejects backup with invalid format identifier', async () => {
     const invalidFormat = { ...validBackupFixtureV2, format: 'unknown-format' };
     await expect(parseAndValidateBackup(JSON.stringify(invalidFormat))).rejects.toThrow(

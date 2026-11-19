@@ -279,7 +279,7 @@ erDiagram
 
 ## 6. Technical Constraints & Trade-offs
 
-1. **Client-Side Storage Volatility**: Local browser storage can be cleared by user action. Mitigation: Module 03 implements single-click JSON export/backup and validated restore via the Account page.
-2. **Absence of Remote Multi-User Network**: In the current local-first prototype, all actions happen on the local machine. We do not simulate fake remote networks; instead, the UI clearly delineates between the Lender perspective and the Borrower perspective.
+1. **Client-Side Storage Volatility**: Local browser storage can be cleared by user action or browser cache management. Mitigation: Module 03 implements single-click JSON export/backup and validated restore via the Account page. Backups are exported as unencrypted JSON archives and users are advised to store them securely.
+2. **Local-First Prototype Limitation**: BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser. It does not yet publish items to a shared online marketplace or synchronize data between users. Borrower and Owner views represent local task perspectives within this browser environment; requests are not sent to remote devices.
 3. **Asset Storage Size**: Local storage has memory quotas (typically several GB for `IndexedDB`). Mitigation: user-uploaded photographs are resized to a maximum dimension of 1600px and re-compressed to WebP/JPEG Blobs under 2.5MB client-side.
 4. **Coarse Location Boundary**: In accordance with DR-05, listings require broad neighborhood tags and feature real-time heuristic pattern detection warning users against entering specific street addresses or gate codes.
