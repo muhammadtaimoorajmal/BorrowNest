@@ -88,8 +88,12 @@ export function checkPrivacyPatterns(text = '') {
       message: 'Apartment or unit number detected. For your safety, do not include specific residential units.',
     },
     {
-      regex: /\b(gate|door|lock|box|pin|key)\s*(code|pass|number|combo|combination)?\s*[:#-]?\s*\d{3,6}\b/i,
+      regex: /\b(gate|door|lock|box|lockbox|keybox|pin|key|passcode)\s*(code|pass|number|combo|combination)?\s*[:#-]?\s*\d{3,6}\b/i,
       message: 'Potential gate, key, or lockbox code detected. Never store private access credentials in item listings.',
+    },
+    {
+      regex: /\b(private access|private entry|key under|leave in porch|back door key)\b/i,
+      message: 'Private residential access instructions detected. Coordinate pickup details privately after approval.',
     },
     {
       regex: /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b|\b\d{5}(-\d{4})?\b/i,
@@ -164,10 +168,11 @@ export function validateItemRecord(record) {
   } else if (area.length > CONSTRAINTS.AREA_MAX_LEN) {
     errors.approximateArea = `General area must not exceed ${CONSTRAINTS.AREA_MAX_LEN} characters.`;
   } else {
-    // Check privacy warnings
+    // Check privacy warnings and reject prohibited address/credential patterns (DR-05)
     const warning = checkPrivacyPatterns(area);
     if (warning) {
       privacyWarning = warning;
+      errors.approximateArea = warning;
     }
   }
 

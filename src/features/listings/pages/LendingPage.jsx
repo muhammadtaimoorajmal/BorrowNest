@@ -94,7 +94,10 @@ export function LendingPage({ adapter }) {
       setIsFormOpen(false);
       setEditingItem(null);
     } catch (err) {
-      setActionError(err.message || 'Failed to save listing record.');
+      const errorMsg = err.message || 'Failed to save listing record.';
+      setActionError(errorMsg);
+      // Re-throw so ListingForm catches and renders error prominently inside the open modal
+      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -393,6 +396,7 @@ export function LendingPage({ adapter }) {
               onSave={handleSaveListing}
               onCancel={handleCloseForm}
               isProcessing={isSubmitting}
+              externalError={actionError}
             />
           </div>
         </div>

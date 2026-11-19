@@ -37,4 +37,4 @@ This matrix establishes bidirectional traceability between architectural decisio
 | **NFR-004** | Data Privacy & Security | **DECIDED (DR-04, DR-05)** | Implemented & Verified | VERIFIED (Canvas EXIF & Address Guard) |
 | **NFR-005** | Reliability & Data Integrity | **DECIDED (DR-02, 03, 04, 05)** | Implemented & Verified | VERIFIED (Zero-Fake-Data & DB v3) |
 | **NFR-006** | Performance | **DECIDED (DR-01, 03)** | Implemented & Verified | VERIFIED (Build ~1.2s, Bundle ~116 kB gzip) |
-| **NFR-007** | Maintainability & Quality | **DECIDED (DR-01 through 06)** | CI Automated | VERIFIED (0 lint, 230 tests passing across 28 test suites) |
+| **NFR-007** | Maintainability & Quality | **DECIDED (DR-01 through 06)** | CI Automated | VERIFIED (0 lint, 234 tests passing across 29 test suites) |

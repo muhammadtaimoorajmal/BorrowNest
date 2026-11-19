@@ -217,6 +217,70 @@
   background-color: #dc2626;
 }
 
+.submitErrorAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bn-space-3);
+  margin-bottom: var(--bn-space-5);
+  padding: var(--bn-space-4);
+  background-color: var(--bn-color-danger-50);
+  border: 1px solid var(--bn-color-danger-600);
+  border-radius: var(--bn-radius-md);
+  color: var(--bn-color-danger-800);
+}
+
+.submitErrorAlert:focus {
+  outline: 2px solid var(--bn-color-danger-600);
+  outline-offset: 2px;
+}
+
+.validationErrorAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bn-space-3);
+  margin-bottom: var(--bn-space-5);
+  padding: var(--bn-space-4);
+  background-color: var(--bn-color-danger-50);
+  border: 1px solid var(--bn-color-danger-600);
+  border-radius: var(--bn-radius-md);
+  color: var(--bn-color-danger-800);
+}
+
+.validationErrorAlert:focus {
+  outline: 2px solid var(--bn-color-danger-600);
+  outline-offset: 2px;
+}
+
+.alertIcon {
+  font-size: var(--bn-font-size-lg);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.alertBody {
+  flex: 1;
+}
+
+.alertTitle {
+  display: block;
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-semibold);
+  margin-bottom: var(--bn-space-1);
+}
+
+.alertText {
+  font-size: var(--bn-font-size-xs);
+  margin: 0;
+  line-height: var(--bn-line-height-normal);
+}
+
+.errorList {
+  margin: var(--bn-space-2) 0 0 0;
+  padding-left: var(--bn-space-4);
+  font-size: var(--bn-font-size-xs);
+  line-height: var(--bn-line-height-normal);
+}
+
 .photoMetaInputs {
   flex: 1;
   display: flex;
@@ -225,29 +289,58 @@
 
 .checkboxFieldGroup {
   display: flex;
-  align-items: flex-start;
-  gap: var(--bn-space-3);
+  flex-direction: column;
+  gap: var(--bn-space-2);
   margin-bottom: var(--bn-space-6);
-  padding: var(--bn-space-3);
+  padding: var(--bn-space-4);
   background-color: var(--bn-color-primary-50);
   border: 1px solid var(--bn-color-primary-100);
   border-radius: var(--bn-radius-md);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.checkboxFieldGroupError {
+  border-color: var(--bn-color-danger-600) !important;
+  background-color: var(--bn-color-danger-50) !important;
+}
+
+.checkboxTopLine {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--bn-space-3);
 }
 
 .checkbox {
-  margin-top: 3px;
-  width: 18px;
-  height: 18px;
+  margin-top: 2px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
   accent-color: var(--bn-color-primary-700);
   cursor: pointer;
 }
 
 .checkboxLabel {
-  font-size: var(--bn-font-size-xs);
+  font-size: var(--bn-font-size-sm);
   color: var(--bn-color-primary-900);
   font-weight: var(--bn-font-weight-medium);
   line-height: var(--bn-line-height-normal);
   cursor: pointer;
+}
+
+.attestationBadgeRow {
+  display: flex;
+  align-items: center;
+  padding-left: 32px;
+}
+
+.attestationBadge {
+  display: inline-block;
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-semibold);
+  color: var(--bn-color-primary-800);
+  background-color: var(--bn-color-primary-100);
+  padding: 2px var(--bn-space-2);
+  border-radius: var(--bn-radius-sm);
 }
 
 .buttonRow {

@@ -122,7 +122,39 @@ describe('Domain Validation: itemValidation', () => {
     const warningGate = checkPrivacyPatterns('Gate code: 5432');
     expect(warningGate).toMatch(/Potential gate, key, or lockbox code detected/i);
 
+    const warningLockbox = checkPrivacyPatterns('lockbox 4321');
+    expect(warningLockbox).toMatch(/Potential gate, key, or lockbox code detected/i);
+
+    const warningPrivateAccess = checkPrivacyPatterns('private access: key under mat');
+    expect(warningPrivateAccess).toMatch(/Private residential access instructions detected/i);
+
     const safeNeighborhood = checkPrivacyPatterns('East Riverside / Near Community Center');
     expect(safeNeighborhood).toBeNull();
+
+    const safeIslamabad = checkPrivacyPatterns('Islamabad');
+    expect(safeIslamabad).toBeNull();
+
+    const safeMarkaz = checkPrivacyPatterns('F-10 Markaz');
+    expect(safeMarkaz).toBeNull();
+  });
+
+  it('rejects listings with prohibited private address or credential patterns', () => {
+    const resStreet = validateItemRecord({ ...validRecordFixture, approximateArea: '142 Elm Street' });
+    expect(resStreet.isValid).toBe(false);
+    expect(resStreet.errors.approximateArea).toMatch(/Possible street address detected/i);
+
+    const resApt = validateItemRecord({ ...validRecordFixture, approximateArea: 'Apt 4B, Westside' });
+    expect(resApt.isValid).toBe(false);
+    expect(resApt.errors.approximateArea).toMatch(/Apartment or unit number detected/i);
+
+    const resLockbox = validateItemRecord({ ...validRecordFixture, approximateArea: 'Lockbox code: 9876' });
+    expect(resLockbox.isValid).toBe(false);
+    expect(resLockbox.errors.approximateArea).toMatch(/Potential gate, key, or lockbox code detected/i);
+
+    const resIslamabad = validateItemRecord({ ...validRecordFixture, approximateArea: 'Islamabad' });
+    expect(resIslamabad.isValid).toBe(true);
+
+    const resF10 = validateItemRecord({ ...validRecordFixture, approximateArea: 'F-10 Markaz' });
+    expect(resF10.isValid).toBe(true);
   });
 });

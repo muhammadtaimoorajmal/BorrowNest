@@ -93,7 +93,7 @@ The codebase has undergone verification across all engineering dimensions:
 | Gate | Tooling | Status | Details |
 | :--- | :--- | :--- | :--- |
 | **Linting** | ESLint 10 | **Passing** | 0 errors, 0 warnings across all JavaScript and JSX source files |
-| **Automated Tests** | Vitest 5 + Testing Library | **Passing** | 230 automated tests passing across 28 test suites |
+| **Automated Tests** | Vitest 5 + Testing Library | **Passing** | 234 automated tests passing across 29 test suites |
 | **Design Tokens** | `npm run check:tokens` | **Passing** | 146 global custom properties verified across 31 CSS files |
 | **Catalogue Integrity** | `npm run check:catalogue` | **Passing** | Exactly 20 products, 5/4/4/4/3 category balance, 20 verified local images |
 | **Production Build** | Vite 8 | **Passing** | Clean, optimized production bundle built in ~450ms |

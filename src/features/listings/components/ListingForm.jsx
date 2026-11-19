@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   CATEGORIES,
   CONDITION_TIERS,
@@ -10,7 +10,40 @@ import {
 import { processItemImage } from '../services/processItemImage';
 import styles from './ListingForm.module.css';
 
-export function ListingForm({ initialData = null, onSave, onCancel, isProcessing = false }) {
+/**
+ * Maps storage and database errors to actionable, user-friendly messages.
+ * Does not expose raw internal stack traces.
+ */
+function mapStorageErrorToMessage(err) {
+  if (!err) return 'Failed to save listing record.';
+  const msg = err.message || String(err);
+  const lower = msg.toLowerCase();
+
+  if (err.name === 'QuotaExceededError' || lower.includes('quota')) {
+    return 'Browser storage quota exceeded. Your browser storage is full and cannot save this photograph. Please clear older data in Account & Data Management or use a smaller photo.';
+  }
+  if (err.name === 'DuplicateKeyError') {
+    return 'A listing with this ID already exists. Please try saving again.';
+  }
+  if (err.name === 'RecordNotFoundError') {
+    return 'The listing record could not be found to update.';
+  }
+  if (lower.includes('validation failed') || err.validationErrors) {
+    return 'Please correct the validation errors in the form before saving.';
+  }
+  if (lower.includes('database') || lower.includes('indexeddb') || lower.includes('transaction')) {
+    return `Local database transaction failed: ${msg}. Please ensure your browser supports IndexedDB and is not running in restricted private mode.`;
+  }
+  return msg || 'An unexpected error occurred while saving the listing. Please try again.';
+}
+
+export function ListingForm({
+  initialData = null,
+  onSave,
+  onCancel,
+  isProcessing = false,
+  externalError = null,
+}) {
   const isEdit = Boolean(initialData?.id);
 
   const [formData, setFormData] = useState({
@@ -21,6 +54,7 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
     conditionNotes: '',
     approximateArea: '',
     availability: 'AVAILABLE',
+    status: 'ACTIVE',
     photoAttestation: false,
     ...initialData,
   });
@@ -30,6 +64,12 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
   const [privacyWarning, setPrivacyWarning] = useState(null);
   const [imageError, setImageError] = useState(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [isSubmittingInternal, setIsSubmittingInternal] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const displayedSubmitError = submitError || (externalError ? mapStorageErrorToMessage({ message: externalError }) : null);
+
+  const submitErrorRef = useRef(null);
+  const validationSummaryRef = useRef(null);
 
   // Synchronize photo previews from Blobs or dataUrls
   const photoPreviews = useMemo(() => {
@@ -57,6 +97,7 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
     const val = type === 'checkbox' ? checked : value;
 
     setFormData((prev) => ({ ...prev, [name]: val }));
+    setSubmitError(null);
 
     // Clear specific field error
     if (fieldErrors[name]) {
@@ -84,6 +125,7 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
     }
 
     setImageError(null);
+    setSubmitError(null);
     setIsProcessingImage(true);
 
     try {
@@ -106,6 +148,15 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
       }
 
       setPhotos((prev) => [...prev, ...processedResults]);
+
+      // Clear photos field error if now present
+      if (fieldErrors.photos) {
+        setFieldErrors((prev) => {
+          const next = { ...prev };
+          delete next.photos;
+          return next;
+        });
+      }
     } catch (err) {
       setImageError(err.message || 'Failed to process selected photograph.');
     } finally {
@@ -134,10 +185,54 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const focusFirstInvalidElement = (errors) => {
+    const errorKeys = Object.keys(errors);
+    if (!errorKeys.length) return;
+
+    const firstKey = errorKeys[0];
+    let targetId = null;
+
+    if (firstKey === 'title') targetId = 'listing-title';
+    else if (firstKey === 'category') targetId = 'listing-category';
+    else if (firstKey === 'conditionGrade') targetId = 'listing-condition';
+    else if (firstKey === 'description') targetId = 'listing-description';
+    else if (firstKey === 'approximateArea') targetId = 'listing-area';
+    else if (firstKey === 'photos') targetId = 'photo-upload-input';
+    else if (firstKey.endsWith('_alt')) {
+      const match = firstKey.match(/photo_(\d+)_alt/);
+      if (match) targetId = `photo-alt-${match[1]}`;
+    } else if (firstKey === 'photoAttestation') targetId = 'photo-attestation';
+
+    setTimeout(() => {
+      if (targetId) {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.focus?.();
+          if (typeof el.scrollIntoView === 'function') {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          return;
+        }
+      }
+      validationSummaryRef.current?.focus?.();
+      if (typeof validationSummaryRef.current?.scrollIntoView === 'function') {
+        validationSummaryRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 50);
+  };
+
+  const isSaving = isProcessing || isSubmittingInternal;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (isSaving || isProcessingImage) return;
+
+    setSubmitError(null);
+
     const candidate = {
+      status: formData.status || 'ACTIVE',
       ...formData,
       photos,
       conditionGrade: Number(formData.conditionGrade),
@@ -147,11 +242,29 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
 
     if (!isValid) {
       setFieldErrors(errors);
+      focusFirstInvalidElement(errors);
       return;
     }
 
-    onSave(candidate);
+    setIsSubmittingInternal(true);
+    try {
+      await onSave(candidate);
+      // On confirmed success, parent will close the modal and refresh
+    } catch (err) {
+      const friendly = mapStorageErrorToMessage(err);
+      setSubmitError(friendly);
+      setTimeout(() => {
+        submitErrorRef.current?.focus?.();
+        if (typeof submitErrorRef.current?.scrollIntoView === 'function') {
+          submitErrorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+    } finally {
+      setIsSubmittingInternal(false);
+    }
   };
+
+  const validationErrorCount = Object.keys(fieldErrors).length;
 
   return (
     <form className={styles.formContainer} onSubmit={handleSubmit} noValidate>
@@ -163,6 +276,41 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
           List genuine tools, appliances, or outdoor gear you own to share with your local community.
         </p>
       </div>
+
+      {/* Persistence or Storage Error Alert Banner (Inside Modal) */}
+      {displayedSubmitError && (
+        <div
+          ref={submitErrorRef}
+          className={styles.submitErrorAlert}
+          role="alert"
+          tabIndex={-1}
+          aria-live="assertive"
+        >
+          <span className={styles.alertIcon} aria-hidden="true">⚠️</span>
+          <div className={styles.alertBody}>
+            <strong className={styles.alertTitle}>Storage Error: Could not save listing</strong>
+            <p className={styles.alertText}>{displayedSubmitError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Validation Error Summary Banner (Inside Modal) */}
+      {validationErrorCount > 0 && (
+        <div
+          ref={validationSummaryRef}
+          className={styles.validationErrorAlert}
+          role="alert"
+          tabIndex={-1}
+          aria-live="polite"
+        >
+          <span className={styles.alertIcon} aria-hidden="true">⚠️</span>
+          <div className={styles.alertBody}>
+            <strong className={styles.alertTitle}>
+              Please correct the {validationErrorCount} highlighted error{validationErrorCount > 1 ? 's' : ''} below before saving.
+            </strong>
+          </div>
+        </div>
+      )}
 
       {/* Item Title */}
       <div className={styles.fieldGroup}>
@@ -307,7 +455,7 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
           type="text"
           value={formData.approximateArea}
           onChange={handleChange}
-          placeholder="e.g. West End / Near Riverfront Park"
+          placeholder="e.g. West End / Near Riverfront Park or Islamabad"
           maxLength={CONSTRAINTS.AREA_MAX_LEN}
           className={`${styles.input} ${fieldErrors.approximateArea ? styles.inputError : ''}`}
           aria-invalid={Boolean(fieldErrors.approximateArea)}
@@ -326,7 +474,7 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
         )}
 
         {fieldErrors.approximateArea && (
-          <p className={styles.errorMessage} role="alert">
+          <p id="area-error" className={styles.errorMessage} role="alert">
             {fieldErrors.approximateArea}
           </p>
         )}
@@ -375,7 +523,7 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
               type="file"
               accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
               onChange={handlePhotoUpload}
-              disabled={isProcessingImage}
+              disabled={isProcessingImage || isSaving}
               className={styles.hiddenFileInput}
               multiple
             />
@@ -389,7 +537,7 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
         )}
 
         {fieldErrors.photos && (
-          <p className={styles.errorMessage} role="alert">
+          <p id="photos-error" className={styles.errorMessage} role="alert">
             {fieldErrors.photos}
           </p>
         )}
@@ -411,6 +559,7 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
                   onClick={() => handleRemovePhoto(index)}
                   className={styles.removePhotoBtn}
                   aria-label={`Remove photograph #${index + 1}`}
+                  disabled={isSaving}
                 >
                   ✕
                 </button>
@@ -431,15 +580,16 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
                     fieldErrors[`photo_${index}_alt`] ? styles.inputError : ''
                   }`}
                   aria-invalid={Boolean(fieldErrors[`photo_${index}_alt`])}
+                  disabled={isSaving}
                   required
                 />
                 {fieldErrors[`photo_${index}_alt`] && (
-                  <p className={styles.errorMessage} role="alert">
+                  <p id={`photo-alt-${index}-error`} className={styles.errorMessage} role="alert">
                     {fieldErrors[`photo_${index}_alt`]}
                   </p>
                 )}
                 <span className={styles.charCount}>
-                  {(photo.altText || '').length}/{CONSTRAINTS.ALT_MAX_LEN}
+                  {(photo.altText || '').length}/{CONSTRAINTS.ALT_MAX_LEN} (minimum {CONSTRAINTS.ALT_MIN_LEN})
                 </span>
               </div>
             </div>
@@ -447,43 +597,60 @@ export function ListingForm({ initialData = null, onSave, onCancel, isProcessing
         </div>
       </fieldset>
 
-      {/* Photo Attestation */}
-      <div className={styles.checkboxFieldGroup}>
-        <input
-          id="photo-attestation"
-          name="photoAttestation"
-          type="checkbox"
-          checked={formData.photoAttestation}
-          onChange={handleChange}
-          className={styles.checkbox}
-          required
-        />
-        <label htmlFor="photo-attestation" className={styles.checkboxLabel}>
-          I confirm that uploaded photographs genuinely represent the actual physical item being listed and are not stock photos, marketing renders, or AI-generated pictures. <span className={styles.requiredMark}>*</span>
-        </label>
+      {/* Photo Attestation (DR-04 Authenticity Confirmation) */}
+      <div
+        className={`${styles.checkboxFieldGroup} ${
+          fieldErrors.photoAttestation ? styles.checkboxFieldGroupError : ''
+        }`}
+      >
+        <div className={styles.checkboxTopLine}>
+          <input
+            id="photo-attestation"
+            name="photoAttestation"
+            type="checkbox"
+            checked={formData.photoAttestation}
+            onChange={handleChange}
+            className={styles.checkbox}
+            disabled={isSaving}
+            aria-invalid={Boolean(fieldErrors.photoAttestation)}
+            aria-describedby={
+              fieldErrors.photoAttestation ? 'photo-attestation-error' : undefined
+            }
+            aria-required="true"
+            required
+          />
+          <label htmlFor="photo-attestation" className={styles.checkboxLabel}>
+            <strong>I confirm that uploaded photographs genuinely represent the actual physical item being listed</strong> and are not stock photos, marketing renders, or AI-generated pictures. <span className={styles.requiredMark}>*</span>
+          </label>
+        </div>
+
+        <div className={styles.attestationBadgeRow}>
+          <span className={styles.attestationBadge}>Mandatory Authenticity Confirmation</span>
+        </div>
+
+        {fieldErrors.photoAttestation && (
+          <p id="photo-attestation-error" className={styles.errorMessage} role="alert">
+            {fieldErrors.photoAttestation}
+          </p>
+        )}
       </div>
-      {fieldErrors.photoAttestation && (
-        <p className={styles.errorMessage} role="alert">
-          {fieldErrors.photoAttestation}
-        </p>
-      )}
 
       {/* Form Actions */}
       <div className={styles.buttonRow}>
         <button
           type="button"
           onClick={onCancel}
-          disabled={isProcessing}
+          disabled={isSaving}
           className={styles.cancelButton}
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={isProcessing || isProcessingImage}
+          disabled={isSaving || isProcessingImage}
           className={styles.submitButton}
         >
-          {isProcessing ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Listing'}
+          {isSaving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Listing'}
         </button>
       </div>
     </form>
