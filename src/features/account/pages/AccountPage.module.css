@@ -344,6 +344,48 @@
   outline-offset: 2px;
 }
 
+.demoResetRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bn-space-4);
+  margin-top: var(--bn-space-4);
+  padding-top: var(--bn-space-4);
+  border-top: 1px solid var(--bn-border-subtle);
+  flex-wrap: wrap;
+}
+
+.demoResetHelp {
+  margin: var(--bn-space-1) 0 0 0;
+  font-size: var(--bn-font-size-xs);
+  color: var(--bn-text-secondary);
+  line-height: var(--bn-line-height-normal);
+  max-width: 48ch;
+}
+
+.resetDemoBtn {
+  padding: var(--bn-space-2) var(--bn-space-4);
+  background-color: var(--bn-color-danger-50);
+  border: 1px solid var(--bn-color-danger-300);
+  color: var(--bn-color-danger-800);
+  border-radius: var(--bn-radius-md);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-medium);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  min-height: 40px;
+}
+
+.resetDemoBtn:hover:not(:disabled) {
+  background-color: var(--bn-color-danger-100);
+  border-color: var(--bn-color-danger-400);
+}
+
+.resetDemoBtn:focus-visible {
+  outline: 2px solid var(--bn-color-danger-600);
+  outline-offset: 2px;
+}
+
 @media (max-width: 860px) {
   .sectionsGrid {
     grid-template-columns: 1fr;

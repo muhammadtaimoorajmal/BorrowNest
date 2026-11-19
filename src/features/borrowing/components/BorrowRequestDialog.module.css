@@ -434,3 +434,76 @@
   outline: 2px solid var(--bn-color-primary-600);
   outline-offset: 2px;
 }
+
+.demoHandoffCard {
+  background-color: var(--bn-color-primary-50);
+  border: 1px solid var(--bn-color-primary-200);
+  border-radius: var(--bn-radius-lg);
+  padding: var(--bn-spacing-4);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-spacing-2);
+  text-align: left;
+}
+
+.demoHandoffHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--bn-spacing-2);
+  font-size: var(--bn-font-size-sm);
+  color: var(--bn-color-primary-900);
+  font-weight: var(--bn-font-weight-bold);
+}
+
+.demoHandoffText {
+  margin: 0;
+  font-size: var(--bn-font-size-xs);
+  color: var(--bn-color-primary-800);
+  line-height: var(--bn-line-height-normal);
+}
+
+.switchAndReviewBtn {
+  margin-top: var(--bn-spacing-1);
+  padding: var(--bn-spacing-2) var(--bn-spacing-4);
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-semibold);
+  color: #ffffff;
+  background-color: var(--bn-color-primary-700);
+  border: none;
+  border-radius: var(--bn-radius-md);
+  cursor: pointer;
+  transition: background-color var(--bn-transition-fast);
+  min-height: 40px;
+}
+
+.switchAndReviewBtn:hover {
+  background-color: var(--bn-color-primary-800);
+}
+
+.switchAndReviewBtn:focus-visible {
+  outline: 2px solid var(--bn-color-primary-600);
+  outline-offset: 2px;
+}
+
+.aliasLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.useProfileNameBtn {
+  background: none;
+  border: none;
+  color: var(--bn-color-primary-700);
+  font-size: var(--bn-font-size-xs);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--bn-font-sans);
+}
+
+.useProfileNameBtn:hover {
+  color: var(--bn-color-primary-900);
+}

@@ -530,7 +530,7 @@ def build_lab11_document():
         ["Subject System", "BorrowNest (Share what you own. Borrow what you need.)"],
         ["Live Web Deployment", "https://muhammadtaimoorajmal.github.io/BorrowNest/"],
         ["GitHub Repository", "https://github.com/muhammadtaimoorajmal/BorrowNest"],
-        ["Verification Evidence", "234 automated unit & integration tests passing across 29 test suites"]
+        ["Verification Evidence", "241 automated unit & integration tests passing across 30 test suites"]
     ]
     doc.add_table(meta_headers, meta_rows, [2800, 6560])
     doc.add_page_break()
@@ -561,9 +561,10 @@ def build_lab11_document():
     )
     doc.add_heading_2("1.3 Synthesis of Project Outcomes")
     doc.add_bullet("Six QOC Decisions", "DR-01 through DR-06 formally evaluated against 100% normalized weighted matrices.")
-    doc.add_bullet("234 Automated Tests", "100% passing across 29 unit and integration test suites in Vitest.")
-    doc.add_bullet("146 Design Tokens", "Verified across 31 CSS stylesheets ensuring 4.5:1 contrast and 44x44px touch targets.")
+    doc.add_bullet("241 Automated Tests", "100% passing across 30 unit and integration test suites in Vitest.")
+    doc.add_bullet("146 Design Tokens", "Verified across 33 CSS stylesheets ensuring 4.5:1 contrast and 44x44px touch targets.")
     doc.add_bullet("20 Curated Products", "Genuine photographs across 5 balanced categories with local attribution.")
+    doc.add_bullet("Classroom Demo Marketplace", "5 simulated identities with live role switching, catalogue seeder, and reset.")
     doc.add_bullet("Zero Production Vulnerabilities", "Verified via npm audit --omit=dev with complete runtime security.")
 
     # ================= SECTION 2 =================
@@ -774,9 +775,10 @@ def build_lab11_document():
 
     # ================= SECTION 12 =================
     doc.add_heading_1("12. Empirical Implementation Evidence & Quality Gate Verification")
-    doc.add_bullet("Vitest Automated Test Harness", "234 tests passing across 29 test files in ~2.85s with 100% green status.")
-    doc.add_bullet("Design Token Architecture", "146 tokens validated across 31 stylesheets with 0 hardcoded violations.")
+    doc.add_bullet("Vitest Automated Test Harness", "241 tests passing across 30 test files in ~2.85s with 100% green status.")
+    doc.add_bullet("Design Token Architecture", "146 tokens validated across 33 stylesheets with 0 hardcoded violations.")
     doc.add_bullet("Curated Demonstration Catalogue", "Exactly 20 products balanced across 5 categories with local authentic images.")
+    doc.add_bullet("Classroom Marketplace Simulation", "Interactive 8-step lifecycle verified across 5 demonstration profiles with full data isolation and reset.")
     doc.add_bullet("Accessibility Verification", "All interactive targets meet or exceed 44x44px; color contrast >= 4.5:1.")
     doc.add_bullet("Production Build & CI", "Vite production build in ~280ms; GitHub Pages bundle; 0 production vulnerabilities.")
 
@@ -858,8 +860,8 @@ def build_lab11_document():
     doc.add_image(contact_sheet_jpg, "Figure 1: 20-Product Curated Demonstration Catalogue Contact Sheet (BorrowNest)")
 
     doc.add_heading_2("Appendix C: Verification Checklist")
-    doc.add_bullet("Automated Tests", "234 tests passing across 29 files (Vitest 5.1.0).")
-    doc.add_bullet("Design Tokens", "146 tokens validated across 31 CSS files with 0 violations.")
+    doc.add_bullet("Automated Tests", "241 tests passing across 30 files (Vitest 5.1.0).")
+    doc.add_bullet("Design Tokens", "146 tokens validated across 33 CSS files with 0 violations.")
     doc.add_bullet("Lint & Formatting", "ESLint passing with 0 errors and 0 warnings.")
     doc.add_bullet("Production Build", "Vite production build clean; GitHub Pages deployment verified.")
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { CATEGORIES, CONDITION_TIERS } from '../../listings/validation/itemValidation';
 import { getDemoImageUrl } from '../data/exampleCatalogue';
+import { useDemoProfile } from '../../demo/context/DemoProfileContext';
+import { getDemoOwnerForCategory } from '../../demo/data/demoProfiles';
 import styles from './ItemDetailModal.module.css';
 
 /**
@@ -69,6 +71,21 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLe
   const isAvailable = item.availability === 'AVAILABLE';
   const currentPhoto = item.photos?.[activePhotoIndex];
   const currentPhotoUrl = photoUrls[activePhotoIndex];
+
+  const { activeProfile, isDemoMode } = useDemoProfile();
+  const assignedOwner = useMemo(() => {
+    if (item.ownerProfileId && item.ownerDisplayName) {
+      return { id: item.ownerProfileId, displayName: item.ownerDisplayName };
+    }
+    if (item.isDemo && item.category) {
+      return getDemoOwnerForCategory(item.category);
+    }
+    return null;
+  }, [item.ownerProfileId, item.ownerDisplayName, item.isDemo, item.category]);
+
+  const isOwner = Boolean(
+    activeProfile && assignedOwner && activeProfile.id === assignedOwner.id,
+  );
 
   return (
     <div
@@ -212,6 +229,13 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLe
               </div>
             )}
 
+            {assignedOwner && (
+              <div className={styles.specItem}>
+                <span className={styles.specLabel}>Demonstration Owner</span>
+                <span className={styles.specValue}>👤 {assignedOwner.displayName}</span>
+              </div>
+            )}
+
             {!item.isDemo && item.approximateArea && (
               <div className={styles.specItem}>
                 <span className={styles.specLabel}>Approximate Area (DR-05)</span>
@@ -235,17 +259,47 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLe
           </button>
 
           {item.isDemo ? (
-            onNavigateToLending && (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onNavigateToLending();
-                }}
-                className={styles.addOwnItemBtn}
-              >
-                Add Your Own Item in Lending
-              </button>
+            isDemoMode && activeProfile ? (
+              isOwner ? (
+                <button
+                  type="button"
+                  disabled
+                  className={styles.requestBtnDisabled}
+                  title="You own this demonstration item. Switch to Demo Borrower to request it."
+                >
+                  You Own This Item ({assignedOwner?.displayName})
+                </button>
+              ) : isAvailable ? (
+                <button
+                  type="button"
+                  onClick={() => onRequestBorrow && onRequestBorrow(item)}
+                  className={styles.requestBtn}
+                >
+                  Request to Borrow
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className={styles.requestBtnDisabled}
+                  title="Item is currently marked unavailable"
+                >
+                  Unavailable for Request
+                </button>
+              )
+            ) : (
+              onNavigateToLending && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onNavigateToLending();
+                  }}
+                  className={styles.addOwnItemBtn}
+                >
+                  Add Your Own Item in Lending
+                </button>
+              )
             )
           ) : isAvailable ? (
             <button

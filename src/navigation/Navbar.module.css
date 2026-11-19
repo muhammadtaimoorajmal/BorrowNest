@@ -88,6 +88,12 @@
   font-weight: var(--bn-font-weight-bold);
 }
 
+.headerRightGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--bn-space-3);
+}
+
 .prototypePill {
   display: inline-flex;
   align-items: center;

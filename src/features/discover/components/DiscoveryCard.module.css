@@ -168,6 +168,18 @@
   color: var(--bn-text-secondary);
 }
 
+.ownerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--bn-color-primary-800);
+  background-color: var(--bn-color-primary-50);
+  border: 1px solid var(--bn-color-primary-200);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--bn-radius-sm);
+  font-weight: var(--bn-font-weight-medium);
+}
+
 .cardFooter {
   padding: var(--bn-spacing-3) var(--bn-spacing-4);
   background-color: var(--bn-surface-subtle);

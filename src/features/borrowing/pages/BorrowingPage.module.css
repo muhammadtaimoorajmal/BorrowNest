@@ -289,3 +289,48 @@
   outline: 2px solid var(--bn-color-primary-600);
   outline-offset: 2px;
 }
+
+.demoProfileBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bn-spacing-3);
+  padding: var(--bn-spacing-3) var(--bn-spacing-4);
+  background-color: var(--bn-color-primary-50);
+  border: 1px solid var(--bn-color-primary-200);
+  border-radius: var(--bn-radius-lg);
+  font-size: var(--bn-font-size-sm);
+  color: var(--bn-color-primary-900);
+  flex-wrap: wrap;
+}
+
+.demoProfileInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--bn-spacing-2);
+}
+
+.demoProfileBadge {
+  background-color: var(--bn-color-primary-600);
+  color: #ffffff;
+  padding: 1px 8px;
+  border-radius: var(--bn-radius-full);
+  font-size: var(--bn-font-size-xs);
+  font-weight: var(--bn-font-weight-semibold);
+}
+
+.demoSwitchLink {
+  background: none;
+  border: none;
+  color: var(--bn-color-primary-700);
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: var(--bn-font-sans);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-medium);
+  padding: 0;
+}
+
+.demoSwitchLink:hover {
+  color: var(--bn-color-primary-900);
+}

@@ -6,6 +6,7 @@ import DiscoverPage from './features/discover/pages/DiscoverPage';
 import BorrowingPage from './features/borrowing/pages/BorrowingPage';
 import Footer from './components/Footer';
 import { storageAdapter } from './services/storage/IndexedDbStorageAdapter';
+import { DemoProfileProvider } from './features/demo/context/DemoProfileContext';
 import styles from './App.module.css';
 
 const VALID_SECTIONS = ['discover', 'borrowing', 'lending', 'account'];
@@ -46,36 +47,38 @@ export function App({ adapter = storageAdapter }) {
   }, []);
 
   return (
-    <div className={styles.appWrapper}>
-      <a href="#main-content" className="skip-link">
-        Skip to main content
-      </a>
+    <DemoProfileProvider>
+      <div className={styles.appWrapper}>
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
 
-      <Navbar currentSection={currentSection} onNavigate={navigateTo} />
+        <Navbar currentSection={currentSection} onNavigate={navigateTo} />
 
-      <main id="main-content" className={styles.mainContent} tabIndex="-1">
-        {currentSection === 'discover' && (
-          <DiscoverPage
-            adapter={adapter}
-            onNavigateToLending={() => navigateTo('lending')}
-            onNavigateToBorrowing={() => navigateTo('borrowing')}
-          />
-        )}
-        {currentSection === 'borrowing' && (
-          <BorrowingPage
-            adapter={adapter}
-            onNavigateToDiscover={() => navigateTo('discover')}
-            onNavigateToLending={() => navigateTo('lending')}
-          />
-        )}
-        {currentSection === 'lending' && <LendingPage adapter={adapter} />}
-        {currentSection === 'account' && (
-          <AccountPage storageAdapter={adapter} onDataRestored={() => navigateTo('lending')} />
-        )}
-      </main>
+        <main id="main-content" className={styles.mainContent} tabIndex="-1">
+          {currentSection === 'discover' && (
+            <DiscoverPage
+              adapter={adapter}
+              onNavigateToLending={() => navigateTo('lending')}
+              onNavigateToBorrowing={() => navigateTo('borrowing')}
+            />
+          )}
+          {currentSection === 'borrowing' && (
+            <BorrowingPage
+              adapter={adapter}
+              onNavigateToDiscover={() => navigateTo('discover')}
+              onNavigateToLending={() => navigateTo('lending')}
+            />
+          )}
+          {currentSection === 'lending' && <LendingPage adapter={adapter} />}
+          {currentSection === 'account' && (
+            <AccountPage storageAdapter={adapter} onDataRestored={() => navigateTo('lending')} />
+          )}
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </DemoProfileProvider>
   );
 }
 

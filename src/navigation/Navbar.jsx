@@ -1,6 +1,7 @@
 import React from 'react';
 import BrandMark from '../components/BrandMark';
 import { SECTIONS } from './navigationConstants';
+import ProfileSwitcher from '../features/demo/components/ProfileSwitcher';
 import styles from './Navbar.module.css';
 
 export function Navbar({ currentSection = 'lending', onNavigate }) {
@@ -47,9 +48,12 @@ export function Navbar({ currentSection = 'lending', onNavigate }) {
             </ul>
           </nav>
 
-          <div className={styles.prototypePill} role="status">
-            <span className={styles.pillDot} aria-hidden="true"></span>
-            <span className={styles.pillText}>Local-First Storage</span>
+          <div className={styles.headerRightGroup}>
+            <ProfileSwitcher variant="compact" />
+            <div className={styles.prototypePill} role="status">
+              <span className={styles.pillDot} aria-hidden="true"></span>
+              <span className={styles.pillText}>Local-First Storage</span>
+            </div>
           </div>
         </div>
       </header>

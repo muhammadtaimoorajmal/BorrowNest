@@ -124,5 +124,10 @@ export class StorageAdapter {
   async releaseUncollectedReservation(_requestId, _options = {}) {
     throw new Error('Method not implemented: releaseUncollectedReservation');
   }
+
+  // Demonstration Marketplace Reset (Frontend-Only Prototype)
+  async resetDemoMarketplaceData() {
+    throw new Error('Method not implemented: resetDemoMarketplaceData');
+  }
 }
 

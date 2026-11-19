@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect } from 'react';
 import { CATEGORIES, CONDITION_TIERS } from '../../listings/validation/itemValidation';
 import { getDemoImageUrl } from '../data/exampleCatalogue';
+import { getDemoOwnerForCategory } from '../../demo/data/demoProfiles';
 import styles from './DiscoveryCard.module.css';
 
 /**
@@ -41,6 +42,9 @@ export function DiscoveryCard({ item, onView }) {
   };
 
   const isAvailable = item.availability === 'AVAILABLE';
+  const ownerDisplayName =
+    item.ownerDisplayName ||
+    (item.isDemo ? getDemoOwnerForCategory(item.category)?.displayName : null);
 
   return (
     <article className={styles.card} aria-label={`Item listing: ${item.title}`}>
@@ -87,6 +91,11 @@ export function DiscoveryCard({ item, onView }) {
           ) : (
             <span className={styles.conditionChip} title={conditionInfo.description}>
               Condition: {conditionInfo.label}
+            </span>
+          )}
+          {ownerDisplayName && (
+            <span className={styles.ownerChip} title={`Assigned demonstration owner: ${ownerDisplayName}`}>
+              👤 {ownerDisplayName}
             </span>
           )}
           {!item.isDemo && item.approximateArea && (

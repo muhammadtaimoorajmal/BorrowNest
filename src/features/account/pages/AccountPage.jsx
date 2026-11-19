@@ -5,6 +5,8 @@ import {
   executeMerge,
   executeReplace,
 } from '../../../services/backup/importBackup';
+import ProfileSwitcher from '../../demo/components/ProfileSwitcher';
+import { resetDemoMarketplace } from '../../demo/services/resetDemoMarketplace';
 import styles from './AccountPage.module.css';
 
 export function AccountPage({ storageAdapter, onDataRestored }) {
@@ -20,6 +22,9 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
   const [importError, setImportError] = useState(null);
   const [importResult, setImportResult] = useState(null);
   const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
+  const [showResetDemoConfirm, setShowResetDemoConfirm] = useState(false);
+  const [isResettingDemo, setIsResettingDemo] = useState(false);
+  const [resetDemoMessage, setResetDemoMessage] = useState(null);
 
   const [storageEstimate, setStorageEstimate] = useState(null);
   const [localItemCount, setLocalItemCount] = useState(0);
@@ -75,6 +80,46 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
       isMounted = false;
     };
   }, [storageAdapter]);
+
+  const refreshDiagnostics = async () => {
+    try {
+      const count = await storageAdapter.countItems();
+      setLocalItemCount(count);
+      if (typeof storageAdapter.listBorrowRequests === 'function') {
+        const reqs = await storageAdapter.listBorrowRequests();
+        const pending = reqs.filter((r) => r.status === 'PENDING').length;
+        const approved = reqs.filter((r) => r.status === 'APPROVED').length;
+        setLocalRequestStats({ total: reqs.length, pending, approved });
+      }
+      if (typeof storageAdapter.listLoans === 'function') {
+        const loans = await storageAdapter.listLoans();
+        const reserved = loans.filter((l) => l.status === 'RESERVED').length;
+        const active = loans.filter((l) => l.status === 'ACTIVE').length;
+        const completed = loans.filter((l) => l.status === 'COMPLETED').length;
+        const released = loans.filter((l) => l.status === 'RELEASED_NOT_COLLECTED').length;
+        setLocalLoanStats({ total: loans.length, reserved, active, completed, released });
+      }
+    } catch (err) {
+      console.warn('Could not refresh diagnostics:', err);
+    }
+  };
+
+  const handleExecuteResetDemo = async () => {
+    setIsResettingDemo(true);
+    setResetDemoMessage(null);
+    try {
+      const result = await resetDemoMarketplace(storageAdapter);
+      await refreshDiagnostics();
+      setShowResetDemoConfirm(false);
+      setResetDemoMessage(
+        `Demonstration marketplace reset successfully. Restored ${result.resetItems} items to Available. All simulated demo requests and loans cleared. Your custom listings and personal library remain intact.`,
+      );
+    } catch (err) {
+      setResetDemoMessage(`Reset failed: ${err.message}`);
+    } finally {
+      setIsResettingDemo(false);
+    }
+  };
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -288,6 +333,43 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
           )}
         </section>
 
+        {/* Classroom Demonstration Profiles Card */}
+        <section className={styles.card} aria-labelledby="classroom-demo-heading">
+          <div className={styles.cardHeader}>
+            <span className={styles.cardIcon} aria-hidden="true">🎓</span>
+            <h2 id="classroom-demo-heading" className={styles.cardTitle}>Classroom Demonstration Marketplace</h2>
+          </div>
+          <p className={styles.cardDesc}>
+            BorrowNest includes 5 simulated demonstration identities to demonstrate the complete borrowing, scheduling, physical handover, and return inspection lifecycle within a single browser.
+          </p>
+
+          <ProfileSwitcher variant="cards" />
+
+          {resetDemoMessage && (
+            <div className={styles.successAlert} role="status">
+              <span aria-hidden="true">✓</span>
+              <span>{resetDemoMessage}</span>
+            </div>
+          )}
+
+          <div className={styles.demoResetRow}>
+            <div>
+              <strong>Reset Demonstration Transactions</strong>
+              <p className={styles.demoResetHelp}>
+                Purges demo requests, active demo loans, and resets the 20 catalogue items to Available. User-created listings, personal requests, and backups remain completely untouched.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowResetDemoConfirm(true)}
+              disabled={isResettingDemo}
+              className={styles.resetDemoBtn}
+            >
+              Reset Demo Data
+            </button>
+          </div>
+        </section>
+
         {/* Storage Diagnostics Card */}
         <section className={styles.card} aria-labelledby="diagnostics-heading">
           <div className={styles.cardHeader}>
@@ -380,6 +462,38 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
                 className={styles.dangerReplaceBtn}
               >
                 Yes, Replace Everything
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog for RESET DEMO */}
+      {showResetDemoConfirm && (
+        <div className={styles.modalBackdrop}>
+          <div className={styles.confirmDialog} role="alertdialog" aria-labelledby="reset-demo-title">
+            <h3 id="reset-demo-title" className={styles.confirmTitle}>
+              Reset Demonstration Data?
+            </h3>
+            <p className={styles.confirmText}>
+              This action will purge all simulated demonstration borrowing requests and active demonstration loans, and return all 20 curated catalogue items to Available. Your custom-created listings, personal requests, and exported backups will NOT be deleted.
+            </p>
+            <div className={styles.confirmBtnRow}>
+              <button
+                type="button"
+                onClick={() => setShowResetDemoConfirm(false)}
+                className={styles.cancelBtn}
+                disabled={isResettingDemo}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteResetDemo}
+                className={styles.dangerReplaceBtn}
+                disabled={isResettingDemo}
+              >
+                {isResettingDemo ? 'Resetting...' : 'Yes, Reset Demo'}
               </button>
             </div>
           </div>

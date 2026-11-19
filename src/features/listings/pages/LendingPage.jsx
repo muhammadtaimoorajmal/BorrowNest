@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useListings } from '../hooks/useListings';
 import ListingCard from '../components/ListingCard';
 import ListingForm from '../components/ListingForm';
@@ -11,6 +11,7 @@ import CollectionHandoverDialog from '../../borrowing/components/CollectionHando
 import ReturnInspectionDialog from '../../borrowing/components/ReturnInspectionDialog';
 import ReleaseUncollectedDialog from '../../borrowing/components/ReleaseUncollectedDialog';
 import ConditionComparisonView from '../../borrowing/components/ConditionComparisonView';
+import { useDemoProfile } from '../../demo/context/DemoProfileContext';
 import { REQUEST_STATUS } from '../../borrowing/constants/requestStatus';
 import { LOAN_STATUS } from '../../borrowing/constants/loanStatus';
 import styles from './LendingPage.module.css';
@@ -19,7 +20,6 @@ export function LendingPage({ adapter }) {
   const {
     activeItems,
     archivedItems,
-    stats,
     loading,
     error,
     createListing,
@@ -42,6 +42,52 @@ export function LendingPage({ adapter }) {
     releaseUncollectedReservation: releaseUncollected,
   } = useBorrowRequests(adapter);
 
+  const { activeProfile, switchProfile, isDemoMode } = useDemoProfile();
+
+  // Filter listings for the active demonstration profile
+  const profileActiveItems = useMemo(() => {
+    return activeItems.filter((item) => {
+      if (!isDemoMode || !activeProfile) return true;
+      if (item.ownerProfileId) {
+        return item.ownerProfileId === activeProfile.id;
+      }
+      return !item.isDemo;
+    });
+  }, [activeItems, activeProfile, isDemoMode]);
+
+  const profileArchivedItems = useMemo(() => {
+    return archivedItems.filter((item) => {
+      if (!isDemoMode || !activeProfile) return true;
+      if (item.ownerProfileId) {
+        return item.ownerProfileId === activeProfile.id;
+      }
+      return !item.isDemo;
+    });
+  }, [archivedItems, activeProfile, isDemoMode]);
+
+  const profileRequests = useMemo(() => {
+    return requests.filter((r) => {
+      if (!isDemoMode || !activeProfile) return true;
+      return r.ownerProfileId === activeProfile.id || !r.ownerProfileId;
+    });
+  }, [requests, activeProfile, isDemoMode]);
+
+  const profileLoans = useMemo(() => {
+    return loans.filter((l) => {
+      if (!isDemoMode || !activeProfile) return true;
+      return l.ownerProfileId === activeProfile.id || !l.ownerProfileId;
+    });
+  }, [loans, activeProfile, isDemoMode]);
+
+  const profileStats = useMemo(() => {
+    const total = profileActiveItems.length + profileArchivedItems.length;
+    const active = profileActiveItems.length;
+    const archived = profileArchivedItems.length;
+    const available = profileActiveItems.filter((i) => i.availability === 'AVAILABLE').length;
+    const unavailable = profileActiveItems.filter((i) => i.availability === 'UNAVAILABLE').length;
+    return { total, active, archived, available, unavailable };
+  }, [profileActiveItems, profileArchivedItems]);
+
   const [activeTab, setActiveTab] = useState('active'); // 'active' | 'archived' | 'requests' | 'loans'
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -55,11 +101,11 @@ export function LendingPage({ adapter }) {
   const [actionError, setActionError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const pendingIncomingCount = requests.filter(
+  const pendingIncomingCount = profileRequests.filter(
     (r) => r.status === REQUEST_STATUS.PENDING,
   ).length;
 
-  const activeLoans = loans.filter(
+  const activeLoans = profileLoans.filter(
     (l) => l.status === LOAN_STATUS.RESERVED || l.status === LOAN_STATUS.ACTIVE,
   );
   const activeLoansCount = activeLoans.length;
@@ -89,7 +135,11 @@ export function LendingPage({ adapter }) {
       if (editingItem?.id) {
         await updateListing(editingItem.id, formData);
       } else {
-        await createListing(formData);
+        await createListing({
+          ...formData,
+          ownerProfileId: activeProfile?.id || 'demo-borrower',
+          ownerDisplayName: activeProfile?.displayName || 'Demo Borrower',
+        });
       }
       setIsFormOpen(false);
       setEditingItem(null);
@@ -174,6 +224,42 @@ export function LendingPage({ adapter }) {
         </div>
       </div>
 
+      {/* Demonstration Profile Context Indicator */}
+      {isDemoMode && activeProfile && (
+        <div className={styles.demoProfileBanner}>
+          <div className={styles.demoProfileInfo}>
+            <span aria-hidden="true">{activeProfile.avatar}</span>
+            <span>
+              Managing Listings as: <strong>{activeProfile.displayName}</strong>
+            </span>
+            <span className={styles.demoProfileBadge}>{activeProfile.badge}</span>
+          </div>
+          {activeProfile.role === 'borrower' ? (
+            <div>
+              <span>Demo borrower owns 0 catalogue items. </span>
+              <button
+                type="button"
+                onClick={() => switchProfile('demo-owner-tools')}
+                className={styles.demoSwitchLink}
+              >
+                Switch to Demo Owner — Tools to view 5 tools →
+              </button>
+            </div>
+          ) : (
+            <div>
+              <span>Owner of {profileStats.active} equipment items. </span>
+              <button
+                type="button"
+                onClick={() => switchProfile('demo-borrower')}
+                className={styles.demoSwitchLink}
+              >
+                Switch to Demo Borrower →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Global Error Banner */}
       {(error || actionError) && (
         <div className={styles.errorAlert} role="alert">
@@ -186,19 +272,19 @@ export function LendingPage({ adapter }) {
       <section className={styles.statsSection} aria-label="Library Overview">
         <div className={styles.statCard}>
           <span className={styles.statLabel}>Total Owned</span>
-          <span className={styles.statValue}>{stats.total}</span>
+          <span className={styles.statValue}>{profileStats.total}</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statLabel}>Available</span>
-          <span className={`${styles.statValue} ${styles.statAvailable}`}>{stats.available}</span>
+          <span className={`${styles.statValue} ${styles.statAvailable}`}>{profileStats.available}</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statLabel}>Unavailable</span>
-          <span className={styles.statValue}>{stats.unavailable}</span>
+          <span className={styles.statValue}>{profileStats.unavailable}</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statLabel}>Archived</span>
-          <span className={styles.statValue}>{stats.archived}</span>
+          <span className={styles.statValue}>{profileStats.archived}</span>
         </div>
       </section>
 
@@ -213,7 +299,7 @@ export function LendingPage({ adapter }) {
           onClick={() => setActiveTab('active')}
           className={`${styles.tabBtn} ${activeTab === 'active' ? styles.activeTab : ''}`}
         >
-          Active Listings <span className={styles.tabBadge}>{stats.active}</span>
+          Active Listings <span className={styles.tabBadge}>{profileStats.active}</span>
         </button>
         <button
           type="button"
@@ -224,7 +310,7 @@ export function LendingPage({ adapter }) {
           onClick={() => setActiveTab('archived')}
           className={`${styles.tabBtn} ${activeTab === 'archived' ? styles.activeTab : ''}`}
         >
-          Archived <span className={styles.tabBadge}>{stats.archived}</span>
+          Archived <span className={styles.tabBadge}>{profileStats.archived}</span>
         </button>
         <button
           type="button"
@@ -258,7 +344,7 @@ export function LendingPage({ adapter }) {
         </div>
       ) : activeTab === 'active' ? (
         <section id="panel-active" role="tabpanel" aria-labelledby="tab-active">
-          {activeItems.length === 0 ? (
+          {profileActiveItems.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon} aria-hidden="true">📦</div>
               <h2 className={styles.emptyTitle}>No items listed yet</h2>
@@ -275,7 +361,7 @@ export function LendingPage({ adapter }) {
             </div>
           ) : (
             <div className={styles.cardsGrid}>
-              {activeItems.map((item) => (
+              {profileActiveItems.map((item) => (
                 <ListingCard
                   key={item.id}
                   item={item}
@@ -292,7 +378,7 @@ export function LendingPage({ adapter }) {
         </section>
       ) : activeTab === 'archived' ? (
         <section id="panel-archived" role="tabpanel" aria-labelledby="tab-archived">
-          {archivedItems.length === 0 ? (
+          {profileArchivedItems.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon} aria-hidden="true">🗄️</div>
               <h2 className={styles.emptyTitle}>No archived listings</h2>
@@ -302,7 +388,7 @@ export function LendingPage({ adapter }) {
             </div>
           ) : (
             <div className={styles.cardsGrid}>
-              {archivedItems.map((item) => (
+              {profileArchivedItems.map((item) => (
                 <ListingCard
                   key={item.id}
                   item={item}
@@ -330,7 +416,7 @@ export function LendingPage({ adapter }) {
           ) : (
             <div className={styles.requestsList}>
               {activeLoans.map((loan) => {
-                const req = requests.find((r) => r.id === loan.requestId) || {
+                const req = profileRequests.find((r) => r.id === loan.requestId) || {
                   id: loan.requestId,
                   itemId: loan.itemId,
                   borrowerAlias: loan.borrowerAlias,
@@ -357,7 +443,7 @@ export function LendingPage({ adapter }) {
         </section>
       ) : (
         <section id="panel-requests" role="tabpanel" aria-labelledby="tab-requests">
-          {requests.length === 0 ? (
+          {profileRequests.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon} aria-hidden="true">📬</div>
               <h2 className={styles.emptyTitle}>No incoming requests yet</h2>
@@ -367,7 +453,7 @@ export function LendingPage({ adapter }) {
             </div>
           ) : (
             <div className={styles.requestsList}>
-              {requests.map((req) => (
+              {profileRequests.map((req) => (
                 <RequestCard
                   key={req.id}
                   request={req}

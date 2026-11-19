@@ -8,6 +8,7 @@ import { DiscoveryEmptyState } from '../components/DiscoveryEmptyState';
 import { DiscoveryNoResults } from '../components/DiscoveryNoResults';
 import { ItemDetailModal } from '../components/ItemDetailModal';
 import { BorrowRequestDialog } from '../../borrowing/components/BorrowRequestDialog';
+import { DemonstrationGuide } from '../../demo/components/DemonstrationGuide';
 import { EXAMPLE_CATALOGUE } from '../data/exampleCatalogue';
 import { filterListings } from '../services/filterListings';
 import styles from './DiscoverPage.module.css';
@@ -80,6 +81,14 @@ export function DiscoverPage({
           Explore 20 example items to see the types of equipment BorrowNest helps people organize. Search by keyword and browse by category.
         </p>
       </div>
+
+      {/* Classroom Demonstration Guide Walkthrough */}
+      <DemonstrationGuide
+        onNavigateToSection={(s) => {
+          if (s === 'borrowing' && onNavigateToBorrowing) onNavigateToBorrowing();
+          else if (s === 'lending' && onNavigateToLending) onNavigateToLending();
+        }}
+      />
 
       {/* Discovery Filters Panel (DR-01: Unified Discovery) */}
       <section className={styles.filterCard} aria-label="Catalogue search and filters">
@@ -230,15 +239,14 @@ export function DiscoverPage({
           onClose={() => setSelectedItem(null)}
           onNavigateToLending={onNavigateToLending}
           onRequestBorrow={(item) => {
-            if (item.isDemo) return;
             setSelectedItem(null);
             setRequestingItem(item);
           }}
         />
       )}
 
-      {/* Borrow Request Submission Dialog (DR-02 / DR-03 - Real Items Only) */}
-      {requestingItem && !requestingItem.isDemo && (
+      {/* Borrow Request Submission Dialog (DR-02 / DR-03 - Both genuine & demo items) */}
+      {requestingItem && (
         <BorrowRequestDialog
           item={requestingItem}
           adapter={adapter}

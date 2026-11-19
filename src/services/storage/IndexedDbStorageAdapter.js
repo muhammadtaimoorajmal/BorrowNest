@@ -41,6 +41,7 @@ import {
   validateConditionCheckpoint,
 } from '../../features/borrowing/services/conditionValidation';
 import { CONDITION_TIERS } from '../../features/listings/validation/itemValidation';
+import { getDemoOwnerForCategory } from '../../features/demo/data/demoProfiles';
 
 export class IndexedDbStorageAdapter extends StorageAdapter {
   constructor(idbFactory = null, dbName = undefined) {
@@ -765,6 +766,9 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
                 itemId: request.itemId,
                 itemTitleSnapshot: request.itemTitleSnapshot || item.title || '',
                 borrowerAlias: request.borrowerAlias || request.requestedBy || '',
+                borrowerProfileId: request.borrowerProfileId || null,
+                ownerProfileId: request.ownerProfileId || item.ownerProfileId || null,
+                ownerDisplayName: request.ownerDisplayName || item.ownerDisplayName || null,
                 collectionDate: request.startDate || request.collectionDate,
                 returnDeadline: request.endDate || request.returnDeadline,
                 status: LOAN_STATUS.RESERVED,
@@ -1679,6 +1683,96 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
 
       tx.onabort = () => {
         reject(new StorageError('Merge all data transaction was aborted; database state preserved'));
+      };
+    });
+  }
+
+  /**
+   * Resets classroom demonstration marketplace activity.
+   * Atomically removes demo-associated borrowing requests and loans,
+   * resets the 20 seeded demo catalogue items to AVAILABLE and ACTIVE,
+   * and restores original demo owner assignments.
+   *
+   * SAFEGUARD: Never deletes or mutates user-created listings, user requests,
+   * user loans, or user-uploaded photos.
+   *
+   * @returns {Promise<{ removedRequests: number, removedLoans: number, resetItems: number }>}
+   */
+  async resetDemoMarketplaceData() {
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS, STORE_LOANS], 'readwrite');
+      const itemStore = tx.objectStore(STORE_ITEMS);
+      const reqStore = tx.objectStore(STORE_REQUESTS);
+      const loanStore = tx.objectStore(STORE_LOANS);
+
+      let removedRequests = 0;
+      let removedLoans = 0;
+      let resetItems = 0;
+
+      // 1. Gather all requests to check for demo requests
+      const allReqsReq = reqStore.getAll();
+      allReqsReq.onsuccess = () => {
+        const allReqs = allReqsReq.result || [];
+        const demoRequestIds = new Set();
+
+        for (const req of allReqs) {
+          const isDemo =
+            req.isDemoRequest ||
+            (typeof req.itemId === 'string' && req.itemId.startsWith('demo-')) ||
+            (typeof req.borrowerProfileId === 'string' && req.borrowerProfileId.startsWith('demo-'));
+
+          if (isDemo) {
+            demoRequestIds.add(req.id);
+            reqStore.delete(req.id);
+            removedRequests++;
+          }
+        }
+
+        // 2. Gather all loans and delete ones associated with demo requests
+        const allLoansReq = loanStore.getAll();
+        allLoansReq.onsuccess = () => {
+          const allLoans = allLoansReq.result || [];
+          for (const loan of allLoans) {
+            if (
+              demoRequestIds.has(loan.requestId) ||
+              (typeof loan.itemId === 'string' && loan.itemId.startsWith('demo-'))
+            ) {
+              loanStore.delete(loan.requestId);
+              removedLoans++;
+            }
+          }
+
+          // 3. Reset demo items back to AVAILABLE and ACTIVE, restoring standard demo owner
+          const allItemsReq = itemStore.getAll();
+          allItemsReq.onsuccess = () => {
+            const allItems = allItemsReq.result || [];
+            for (const item of allItems) {
+              if (item.demoSeed || (typeof item.id === 'string' && item.id.startsWith('demo-'))) {
+                const standardOwner = getDemoOwnerForCategory(item.category);
+                const updated = {
+                  ...item,
+                  availability: 'AVAILABLE',
+                  status: 'ACTIVE',
+                  ownerProfileId: standardOwner.id,
+                  ownerDisplayName: standardOwner.displayName,
+                  updatedAt: new Date().toISOString(),
+                };
+                itemStore.put(updated);
+                resetItems++;
+              }
+            }
+          };
+        };
+      };
+
+      tx.oncomplete = () => {
+        resolve({ removedRequests, removedLoans, resetItems });
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target?.error || e, 'Failed to reset demo marketplace data'));
       };
     });
   }

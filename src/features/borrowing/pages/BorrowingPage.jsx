@@ -13,6 +13,7 @@ import CollectionHandoverDialog from '../components/CollectionHandoverDialog';
 import ReturnInspectionDialog from '../components/ReturnInspectionDialog';
 import ConditionComparisonView from '../components/ConditionComparisonView';
 import ReleaseUncollectedDialog from '../components/ReleaseUncollectedDialog';
+import { useDemoProfile } from '../../demo/context/DemoProfileContext';
 import styles from './BorrowingPage.module.css';
 
 /**
@@ -43,7 +44,11 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
     releaseUncollectedReservation,
   } = useBorrowRequests(adapter);
 
-  const [perspective, setPerspective] = useState('borrower'); // 'borrower' | 'owner'
+  const { activeProfile, switchProfile, isDemoMode } = useDemoProfile();
+
+  const [perspective, setPerspective] = useState(() => {
+    return activeProfile?.role === 'lender' ? 'owner' : 'borrower';
+  });
   const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | REQUEST_STATUS.*
   const [confirmAction, setConfirmAction] = useState(null); // { action: 'approve'|'decline'|'cancel', request: object }
 
@@ -55,33 +60,49 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
 
   const today = getLocalToday();
 
+  // Perspective-aware request subset for active demonstration profile
+  const perspectiveRequests = useMemo(() => {
+    return requests.filter((r) => {
+      // Allow unassigned requests in isolated unit tests
+      if (!isDemoMode || !activeProfile || (!r.borrowerProfileId && !r.ownerProfileId)) {
+        return true;
+      }
+
+      if (perspective === 'borrower') {
+        return r.borrowerProfileId === activeProfile.id || !r.borrowerProfileId;
+      } else {
+        return r.ownerProfileId === activeProfile.id || !r.ownerProfileId;
+      }
+    });
+  }, [requests, perspective, activeProfile, isDemoMode]);
+
   // Filter requests based on status
   const filteredRequests = useMemo(() => {
-    if (statusFilter === 'ALL') return requests;
-    return requests.filter((r) => r.status === statusFilter);
-  }, [requests, statusFilter]);
+    if (statusFilter === 'ALL') return perspectiveRequests;
+    return perspectiveRequests.filter((r) => r.status === statusFilter);
+  }, [perspectiveRequests, statusFilter]);
 
   // Active Approved Reservations List
   const approvedReservations = useMemo(() => {
-    return requests.filter((r) => r.status === REQUEST_STATUS.APPROVED);
-  }, [requests]);
+    return perspectiveRequests.filter((r) => r.status === REQUEST_STATUS.APPROVED);
+  }, [perspectiveRequests]);
 
   // Counts for status filter pills
   const counts = useMemo(() => {
     const res = {
-      ALL: requests.length,
+      ALL: perspectiveRequests.length,
       [REQUEST_STATUS.PENDING]: 0,
       [REQUEST_STATUS.APPROVED]: 0,
       [REQUEST_STATUS.DECLINED]: 0,
       [REQUEST_STATUS.CANCELLED]: 0,
     };
-    for (const r of requests) {
+    for (const r of perspectiveRequests) {
       if (res[r.status] !== undefined) {
         res[r.status]++;
       }
     }
     return res;
-  }, [requests]);
+  }, [perspectiveRequests]);
 
   const handleOpenConfirm = (action, request) => {
     setConfirmAction({ action, request });
@@ -120,6 +141,43 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
           </div>
         </div>
       </header>
+
+      {/* Demonstration Profile Context Indicator */}
+      {isDemoMode && activeProfile && (
+        <div className={styles.demoProfileBanner}>
+          <div className={styles.demoProfileInfo}>
+            <span aria-hidden="true">{activeProfile.avatar}</span>
+            <span>
+              Active Demo Profile: <strong>{activeProfile.displayName}</strong>
+            </span>
+            <span className={styles.demoProfileBadge}>{activeProfile.badge}</span>
+          </div>
+          {perspective === 'owner' && activeProfile.role === 'borrower' && (
+            <div>
+              <span>Incoming equipment requests are owned by lenders: </span>
+              <button
+                type="button"
+                onClick={() => switchProfile('demo-owner-tools')}
+                className={styles.demoSwitchLink}
+              >
+                Switch to Demo Owner — Tools →
+              </button>
+            </div>
+          )}
+          {perspective === 'borrower' && activeProfile.role === 'lender' && (
+            <div>
+              <span>Viewing submitted borrower requests: </span>
+              <button
+                type="button"
+                onClick={() => switchProfile('demo-borrower')}
+                className={styles.demoSwitchLink}
+              >
+                Switch to Demo Borrower →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Perspective Switcher */}
       <div
@@ -273,7 +331,7 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
               Retry
             </button>
           </div>
-        ) : requests.length === 0 ? (
+        ) : perspectiveRequests.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyStateIcon} aria-hidden="true">
               🤝

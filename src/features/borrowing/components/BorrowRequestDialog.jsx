@@ -6,6 +6,9 @@ import {
   findConflictingReservations,
 } from '../services/dateRange';
 import { validateBorrowRequestPayload } from '../services/borrowRequestValidation';
+import { useDemoProfile } from '../../demo/context/DemoProfileContext';
+import { getDemoOwnerForCategory } from '../../demo/data/demoProfiles';
+import { buildDemoItemRecord } from '../../demo/services/seedDemoMarketplace';
 import styles from './BorrowRequestDialog.module.css';
 
 /**
@@ -18,6 +21,18 @@ import styles from './BorrowRequestDialog.module.css';
  * @param {function} [props.onNavigateToBorrowing] - Navigate to Borrowing workspace callback
  */
 export function BorrowRequestDialog({ item, adapter, onClose, onNavigateToBorrowing }) {
+  const { activeProfile, switchProfile } = useDemoProfile();
+
+  const assignedOwner = useMemo(() => {
+    if (item.ownerProfileId && item.ownerDisplayName) {
+      return { id: item.ownerProfileId, displayName: item.ownerDisplayName };
+    }
+    if (item.isDemo && item.category) {
+      return getDemoOwnerForCategory(item.category);
+    }
+    return null;
+  }, [item.ownerProfileId, item.ownerDisplayName, item.isDemo, item.category]);
+
   const [borrowerAlias, setBorrowerAlias] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -103,13 +118,25 @@ export function BorrowRequestDialog({ item, adapter, onClose, onNavigateToBorrow
 
     setErrors({});
 
-    // 1. Basic field validation
+    // 1. Check self-borrowing prevention
+    if (activeProfile && assignedOwner && activeProfile.id === assignedOwner.id) {
+      setErrors({
+        general: `You cannot submit a borrowing request as ${activeProfile.displayName} because this profile owns this item. Switch to Demo Borrower to submit a request.`,
+      });
+      return;
+    }
+
+    // 2. Basic field validation
     const payload = {
       itemId: item.id,
-      borrowerAlias,
+      borrowerAlias: borrowerAlias.trim(),
       startDate,
       endDate,
-      requestNote,
+      requestNote: requestNote?.trim() || '',
+      borrowerProfileId: activeProfile?.id || 'demo-borrower',
+      ownerProfileId: assignedOwner?.id || null,
+      ownerDisplayName: assignedOwner?.displayName || null,
+      isDemoRequest: Boolean(item.isDemo || item.demoSeed),
     };
 
     const { isValid, errors: validationErrors } = validateBorrowRequestPayload(payload);
@@ -118,7 +145,7 @@ export function BorrowRequestDialog({ item, adapter, onClose, onNavigateToBorrow
       return;
     }
 
-    // 2. Client-side overlap pre-validation against known approved reservations
+    // 3. Client-side overlap pre-validation against known approved reservations
     const conflicts = findConflictingReservations(
       { startDate, endDate },
       approvedReservations,
@@ -133,9 +160,27 @@ export function BorrowRequestDialog({ item, adapter, onClose, onNavigateToBorrow
       return;
     }
 
-    // 3. Persist request in storage adapter
+    // 4. Ensure demo item exists in IndexedDB store before saving foreign key relation
     setIsSubmitting(true);
     try {
+      if (item.isDemo || item.demoSeed) {
+        let exists = false;
+        try {
+          await adapter.getItemById(item.id);
+          exists = true;
+        } catch {
+          exists = false;
+        }
+        if (!exists) {
+          const demoRecord = buildDemoItemRecord(item);
+          try {
+            await adapter.createItem(demoRecord);
+          } catch (createErr) {
+            console.warn('Auto-seed item fallback:', createErr);
+          }
+        }
+      }
+
       const newRequest = await adapter.createBorrowRequest(payload);
       setSubmittedRequest(newRequest);
     } catch (err) {
@@ -238,6 +283,34 @@ export function BorrowRequestDialog({ item, adapter, onClose, onNavigateToBorrow
                 </div>
               </div>
 
+              {assignedOwner && (
+                <div className={styles.demoHandoffCard}>
+                  <div className={styles.demoHandoffHeader}>
+                    <span aria-hidden="true">🎓</span>
+                    <span>Demonstration Next Step:</span>
+                  </div>
+                  <p className={styles.demoHandoffText}>
+                    This request was sent to <strong>{assignedOwner.displayName}</strong>.
+                    Switch to their profile to review and approve this reservation.
+                  </p>
+                  {onNavigateToBorrowing && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof switchProfile === 'function') {
+                          switchProfile(assignedOwner.id);
+                        }
+                        onClose();
+                        onNavigateToBorrowing();
+                      }}
+                      className={styles.switchAndReviewBtn}
+                    >
+                      Switch to {assignedOwner.displayName} & Review Request →
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className={styles.disclosureBox}>
                 Notice: BorrowNest operates entirely on your local device. This request is saved in your local database. Track and manage it anytime in the Borrowing workspace.
               </div>
@@ -273,16 +346,27 @@ export function BorrowRequestDialog({ item, adapter, onClose, onNavigateToBorrow
 
               {/* Borrower Alias Input */}
               <div className={styles.formGroup}>
-                <label htmlFor="borrower-alias-input" className={styles.label}>
-                  Your Name or Alias <span aria-hidden="true">*</span>
-                </label>
+                <div className={styles.aliasLabelRow}>
+                  <label htmlFor="borrower-alias-input" className={styles.label}>
+                    Your Name or Alias <span aria-hidden="true">*</span>
+                  </label>
+                  {activeProfile?.displayName && !borrowerAlias && (
+                    <button
+                      type="button"
+                      onClick={() => setBorrowerAlias(activeProfile.displayName)}
+                      className={styles.useProfileNameBtn}
+                    >
+                      Fill &ldquo;{activeProfile.displayName}&rdquo;
+                    </button>
+                  )}
+                </div>
                 <input
                   ref={initialFocusRef}
                   id="borrower-alias-input"
                   type="text"
                   value={borrowerAlias}
                   onChange={(e) => setBorrowerAlias(e.target.value)}
-                  placeholder="e.g. Jordan River"
+                  placeholder={activeProfile?.displayName || 'e.g. Jordan River'}
                   maxLength={60}
                   className={`${styles.input} ${errors.borrowerAlias ? styles.inputError : ''}`}
                   aria-invalid={!!errors.borrowerAlias}
