@@ -243,12 +243,10 @@ describe('LendingPage UI and Item Lifecycle', () => {
     const deleteBtn = screen.getByRole('button', { name: /Delete Circular Saw 7-1\/4 inch/i });
     fireEvent.click(deleteBtn);
 
-    expect(screen.getByRole('heading', { name: /Permanently Delete Listing\?/i })).toBeInTheDocument();
-    const confirmDeleteBtn = screen.getByRole('button', { name: /Permanently Delete/i });
-    fireEvent.click(confirmDeleteBtn);
-
-    // Must display error banner blocking deletion
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Cannot delete item.*associated borrowing request/i);
+    // Defect 05: Proactively informs owner that active activity blocks deletion
+    expect(screen.getByRole('heading', { name: /Active Borrowing Activity in Progress/i })).toBeInTheDocument();
+    expect(screen.getByText(/1 pending borrowing request\(s\)/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Permanently Delete$/i })).not.toBeInTheDocument();
 
     // Item must still exist in DB
     const itemInDb = await adapter.getItemById('item-with-history');

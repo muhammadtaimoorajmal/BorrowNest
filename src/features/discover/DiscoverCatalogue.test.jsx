@@ -4,8 +4,10 @@ import React from 'react';
 import DiscoverPage from './pages/DiscoverPage';
 import { IndexedDbStorageAdapter } from '../../services/storage/IndexedDbStorageAdapter';
 import { EXAMPLE_CATALOGUE } from './data/exampleCatalogue';
+import { seedDemoMarketplace } from '../demo/services/seedDemoMarketplace';
+import { DemoProfileProvider } from '../demo/context/DemoProfileContext';
 
-describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)', () => {
+describe('Curated Example Catalogue & Live Marketplace Discovery (Module Final)', () => {
   let adapter;
 
   beforeEach(async () => {
@@ -15,25 +17,23 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
     );
     await adapter.initialize();
     await adapter.clearAllItems();
+    await seedDemoMarketplace(adapter);
   });
 
-  it('renders introductory hero, honest local empty state, and 20 curated example items on first visit', async () => {
-    render(<DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />);
+  it('renders introductory hero and 20 curated example items from IndexedDB single source of truth', async () => {
+    render(
+      <DemoProfileProvider>
+        <DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />
+      </DemoProfileProvider>,
+    );
 
     // Product introduction hero
     expect(
       screen.getByText('Share what you own. Borrow what you need.'),
     ).toBeInTheDocument();
 
-    // Honest empty state for 0 local listings
-    expect(await screen.findByRole('heading', { name: /No items listed yet/i })).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(/Your local listings: 0/i);
-    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 20 items/i);
-
-    // Curated example catalogue section
-    expect(
-      screen.getByRole('heading', { name: /Explore 20 Example Items/i }),
-    ).toBeInTheDocument();
+    // Catalogue status reports 20 items
+    expect(await screen.findByText('Showing 20 of 20 items')).toBeInTheDocument();
 
     // All 20 example items are rendered in the DOM
     expect(EXAMPLE_CATALOGUE.length).toBe(20);
@@ -41,14 +41,21 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
       expect(screen.getByText(item.title)).toBeInTheDocument();
     }
 
-    // Example badges are displayed on cards
+    // Example badges and live availability badges are displayed on cards
     const demoBadges = screen.getAllByText('Example Item');
     expect(demoBadges.length).toBe(20);
+
+    const availableBadges = screen.getAllByText('Available');
+    expect(availableBadges.length).toBe(20);
   });
 
   it('filters curated example items reactively by keyword search across all categories', async () => {
-    render(<DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />);
-    await screen.findByRole('heading', { name: /No items listed yet/i });
+    render(
+      <DemoProfileProvider>
+        <DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />
+      </DemoProfileProvider>,
+    );
+    expect(await screen.findByText('Showing 20 of 20 items')).toBeInTheDocument();
 
     const searchInput = screen.getByRole('searchbox', { name: /Search local catalog/i });
 
@@ -90,17 +97,21 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
     fireEvent.change(searchInput, { target: { value: '' } });
     expect(screen.getByText('Cordless Compact Drill/Driver')).toBeInTheDocument();
     expect(screen.getByText('Family Cabin Camping Tent')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 20 items/i);
+    expect(screen.getByText('Showing 20 of 20 items')).toBeInTheDocument();
   });
 
   it('filters curated example items by category pills with accurate 5/4/4/4/3 distribution', async () => {
-    render(<DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />);
-    await screen.findByRole('heading', { name: /No items listed yet/i });
+    render(
+      <DemoProfileProvider>
+        <DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />
+      </DemoProfileProvider>,
+    );
+    expect(await screen.findByText('Showing 20 of 20 items')).toBeInTheDocument();
 
     // 1. Filter by Tools (5 items)
     const toolsPill = screen.getByRole('button', { name: /^Tools$/i });
     fireEvent.click(toolsPill);
-    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 5 of 20 items/i);
+    expect(screen.getByText('Showing 5 of 20 items')).toBeInTheDocument();
     expect(screen.getByText('Cordless Compact Drill/Driver')).toBeInTheDocument();
     expect(screen.getByText('Rechargeable Precision Electric Screwdriver Kit')).toBeInTheDocument();
     expect(screen.getByText('Household Hand Tool & Socket Set')).toBeInTheDocument();
@@ -110,7 +121,7 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
     // 2. Filter by Gardening (4 items)
     const gardeningPill = screen.getByRole('button', { name: /^Gardening$/i });
     fireEvent.click(gardeningPill);
-    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 4 of 20 items/i);
+    expect(screen.getByText('Showing 4 of 20 items')).toBeInTheDocument();
     expect(screen.getByText('Bypass Pruning Shears & Branch Trimmer')).toBeInTheDocument();
     expect(screen.getByText('Cordless Garden Hedge Trimmer')).toBeInTheDocument();
     expect(screen.getByText('Push Lawn Mower')).toBeInTheDocument();
@@ -119,7 +130,7 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
     // 3. Filter by Household (4 items)
     const householdPill = screen.getByRole('button', { name: /^Household$/i });
     fireEvent.click(householdPill);
-    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 4 of 20 items/i);
+    expect(screen.getByText('Showing 4 of 20 items')).toBeInTheDocument();
     expect(screen.getByText('Household Sewing & Mending Machine')).toBeInTheDocument();
     expect(screen.getByText('Portable Carpet & Upholstery Spot Cleaner')).toBeInTheDocument();
     expect(screen.getByText('Handheld Garment Steamer')).toBeInTheDocument();
@@ -128,7 +139,7 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
     // 4. Filter by Outdoor (4 items)
     const outdoorPill = screen.getByRole('button', { name: /^Outdoor$/i });
     fireEvent.click(outdoorPill);
-    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 4 of 20 items/i);
+    expect(screen.getByText('Showing 4 of 20 items')).toBeInTheDocument();
     expect(screen.getByText('Family Cabin Camping Tent')).toBeInTheDocument();
     expect(screen.getByText('Portable Camping Gas Stove')).toBeInTheDocument();
     expect(screen.getByText('Folding Portable Camping Chairs (Set)')).toBeInTheDocument();
@@ -137,7 +148,7 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
     // 5. Filter by Electronics (3 items)
     const electronicsPill = screen.getByRole('button', { name: /^Electronics$/i });
     fireEvent.click(electronicsPill);
-    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 3 of 20 items/i);
+    expect(screen.getByText('Showing 3 of 20 items')).toBeInTheDocument();
     expect(screen.getByText('Portable HD Movie Projector')).toBeInTheDocument();
     expect(screen.getByText('Portable Wireless Bluetooth Speaker')).toBeInTheDocument();
     expect(screen.getByText('Portable Battery Power Station')).toBeInTheDocument();
@@ -145,20 +156,16 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
     // 6. Reset with "All Categories" restores 20
     const allPill = screen.getByRole('button', { name: /All Categories/i });
     fireEvent.click(allPill);
-    expect(screen.getByRole('status')).toHaveTextContent(/Example catalogue: 20 items/i);
+    expect(screen.getByText('Showing 20 of 20 items')).toBeInTheDocument();
   });
 
-  it('opens example ItemDetailModal with curated specifications, photo, and demo disclaimer without condition tiers', async () => {
-    let navigatedToLending = false;
+  it('opens example ItemDetailModal with curated specifications, photo, and demo disclaimer', async () => {
     render(
-      <DiscoverPage
-        adapter={adapter}
-        onNavigateToLending={() => {
-          navigatedToLending = true;
-        }}
-      />,
+      <DemoProfileProvider>
+        <DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />
+      </DemoProfileProvider>,
     );
-    await screen.findByRole('heading', { name: /No items listed yet/i });
+    expect(await screen.findByText('Showing 20 of 20 items')).toBeInTheDocument();
 
     const viewBtn = screen.getByRole('button', {
       name: /View details for Cordless Compact Drill\/Driver/i,
@@ -173,10 +180,10 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
     const modalContent = within(dialog);
 
     // Demonstrates clear demo notice banner
-    expect(modalContent.getByText(/Curated Demonstration Item/i)).toBeInTheDocument();
+    expect(modalContent.getAllByText(/Classroom Demonstration Listing/i).length).toBeGreaterThanOrEqual(1);
     expect(
       modalContent.getByText(
-        /This item is part of BorrowNest.*example catalogue/i,
+        /Availability and borrowing activity are simulated in this browser/i,
       ),
     ).toBeInTheDocument();
 
@@ -185,36 +192,22 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
     expect(modalContent.getAllByText(/Keyless ratcheting chuck/i).length).toBeGreaterThanOrEqual(1);
     expect(modalContent.getByText(/Potential Use Case/i)).toBeInTheDocument();
 
-    // Section 9: Confirms zero fabricated condition inspection tiers or condition notes are displayed
-    expect(modalContent.getByText(/Status Notice/i)).toBeInTheDocument();
-    expect(modalContent.getByText(/Illustrative example only\. No real owner, live availability or physical condition inspection is represented\./i)).toBeInTheDocument();
-    expect(modalContent.queryByText(/Tier 4\/5/i)).not.toBeInTheDocument();
-    expect(modalContent.queryByText(/Sample observation/i)).not.toBeInTheDocument();
+    // Confirms status and condition info
+    expect(modalContent.getByText(/Availability Status/i)).toBeInTheDocument();
+    expect(modalContent.getByText(/Condition Inspection/i)).toBeInTheDocument();
 
-    // Safe interaction handshake: does NOT render "Request to Borrow"
-    expect(modalContent.queryByRole('button', { name: /Request to Borrow/i })).not.toBeInTheDocument();
-
-    // Provides action to add genuine item in Lending
-    const addOwnBtn = modalContent.getByRole('button', { name: /Add Your Own Item in Lending/i });
-    fireEvent.click(addOwnBtn);
-    expect(navigatedToLending).toBe(true);
+    // Evaluator interaction handshake: provides Request to Borrow action
+    expect(modalContent.getByRole('button', { name: /Request to Borrow/i })).toBeInTheDocument();
   });
 
-  it('strictly isolates demonstration items from IndexedDB persistence', async () => {
-    const { unmount: unmountFirst } = render(
-      <DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />,
-    );
-    await screen.findByRole('heading', { name: /No items listed yet/i });
+  it('distinguishes user-created listings from curated example items in the single unified grid', async () => {
+    // Initially has 20 seeded demo items
+    const initialItems = await adapter.getAllItems();
+    expect(initialItems.length).toBe(20);
 
-    // Confirm IndexedDB has zero items stored
-    const storedItems = await adapter.getAllItems();
-    expect(storedItems.length).toBe(0);
-
-    unmountFirst();
-
-    // Now create a real item in IndexedDB
+    // Now create a custom user item in IndexedDB
     await adapter.createItem({
-      id: 'real-community-item-1',
+      id: 'custom-community-item-1',
       title: 'Bosch Professional Laser Level',
       description: 'Self-leveling cross-line laser with clamp mount.',
       category: 'TOOLS',
@@ -225,22 +218,24 @@ describe('Curated Example Catalogue & First-Time Visitor Experience (Module 08)'
       photos: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      isDemo: false,
     });
 
-    // Re-render
-    const { unmount: unmountSecond } = render(
-      <DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />,
+    render(
+      <DemoProfileProvider>
+        <DiscoverPage adapter={adapter} onNavigateToLending={() => {}} />
+      </DemoProfileProvider>,
     );
-    expect(await screen.findByText('Bosch Professional Laser Level')).toBeInTheDocument();
+    expect(await screen.findByText('Showing 21 of 21 items')).toBeInTheDocument();
 
-    // Real item does NOT have Example Item badge
-    const realCard = screen.getByText('Bosch Professional Laser Level').closest('article');
-    expect(within(realCard).queryByText('Example Item')).not.toBeInTheDocument();
-    expect(within(realCard).getByText('Available')).toBeInTheDocument();
+    // Real custom item does NOT have Example Item badge
+    const customCard = screen.getByText('Bosch Professional Laser Level').closest('article');
+    expect(within(customCard).queryByText('Example Item')).not.toBeInTheDocument();
+    expect(within(customCard).getByText('Available')).toBeInTheDocument();
 
-    // Example catalogue items are still accessible below
-    expect(screen.getByText('Cordless Compact Drill/Driver')).toBeInTheDocument();
-
-    unmountSecond();
+    // Demo catalogue item has BOTH Example Item badge and Available badge
+    const demoCard = screen.getByText('Cordless Compact Drill/Driver').closest('article');
+    expect(within(demoCard).getByText('Example Item')).toBeInTheDocument();
+    expect(within(demoCard).getByText('Available')).toBeInTheDocument();
   });
 });

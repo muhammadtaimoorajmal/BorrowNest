@@ -16,7 +16,7 @@ import { REQUEST_STATUS } from '../../borrowing/constants/requestStatus';
 import { LOAN_STATUS } from '../../borrowing/constants/loanStatus';
 import styles from './LendingPage.module.css';
 
-export function LendingPage({ adapter }) {
+export function LendingPage({ adapter, onNavigateToBorrowing }) {
   const {
     activeItems,
     archivedItems,
@@ -28,6 +28,7 @@ export function LendingPage({ adapter }) {
     archiveListing,
     restoreListing,
     deleteListing,
+    deleteDemoListingAndHistory,
   } = useListings(adapter);
 
   const {
@@ -188,6 +189,32 @@ export function LendingPage({ adapter }) {
       setDeletingItem(null);
     } catch (err) {
       setActionError(err.message || 'Failed to delete listing.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleArchiveConfirm = async (id) => {
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await archiveListing(id);
+      setDeletingItem(null);
+    } catch (err) {
+      setActionError(err.message || 'Failed to archive listing.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCascadeDemoDeleteConfirm = async (id) => {
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await deleteDemoListingAndHistory(id);
+      setDeletingItem(null);
+    } catch (err) {
+      setActionError(err.message || 'Failed to cascade delete demonstration listing.');
     } finally {
       setIsSubmitting(false);
     }
@@ -500,9 +527,16 @@ export function LendingPage({ adapter }) {
       {deletingItem && (
         <DeleteConfirmDialog
           item={deletingItem}
+          requests={requests}
+          loans={loans}
+          isDemoMode={isDemoMode}
           onConfirm={handleDeleteConfirm}
+          onConfirmArchive={handleArchiveConfirm}
+          onConfirmCascadeDemoDelete={handleCascadeDemoDeleteConfirm}
+          onNavigateToBorrowing={onNavigateToBorrowing}
           onCancel={() => setDeletingItem(null)}
           isDeleting={isSubmitting}
+          isSubmitting={isSubmitting}
         />
       )}
 

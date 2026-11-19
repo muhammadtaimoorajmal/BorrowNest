@@ -40,6 +40,16 @@
   letter-spacing: 0.02em;
 }
 
+.triggerName {
+  font-weight: var(--bn-font-weight-medium);
+}
+
+.tagSeparator {
+  color: var(--bn-color-primary-400);
+  font-size: var(--bn-font-size-xs);
+  opacity: 0.8;
+}
+
 .caretIcon {
   font-size: 0.625rem;
   opacity: 0.7;

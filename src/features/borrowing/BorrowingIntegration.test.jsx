@@ -147,10 +147,12 @@ describe('Cross-Module Integration: Discover -> Borrow Request -> Lending Approv
     const deleteBtn = await screen.findByRole('button', { name: /Delete Dewalt Cordless Circular Saw/i });
     fireEvent.click(deleteBtn);
 
-    const confirmDeleteBtn = screen.getByRole('button', { name: /Permanently Delete/i });
-    fireEvent.click(confirmDeleteBtn);
+    // Defect 05: Proactively informs owner that active borrowing activity blocks deletion
+    expect(await screen.findByRole('heading', { name: /Active Borrowing Activity in Progress/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Permanently Delete$/i })).not.toBeInTheDocument();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Cannot delete item.*associated borrowing request/i);
+    const cancelDeleteBtn = screen.getByRole('button', { name: /Cancel/i });
+    fireEvent.click(cancelDeleteBtn);
 
     // 17. Safeguards: Owner cannot archive item while approved reservation is active
     const archiveBtn = screen.getByRole('button', { name: /Archive Dewalt Cordless Circular Saw/i });

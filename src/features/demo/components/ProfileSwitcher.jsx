@@ -97,10 +97,11 @@ export function ProfileSwitcher({ variant = 'compact', className = '' }) {
         className={styles.triggerButton}
         aria-haspopup="true"
         aria-expanded={isOpen}
-        aria-label={`Current demo profile: ${activeProfile.displayName}. Click to switch demonstration profile.`}
+        aria-label={`Current demo profile: ${activeProfile.displayName}, ${activeProfile.badge}. Click to switch demonstration profile.`}
       >
         <span aria-hidden="true">{activeProfile.avatar}</span>
-        <span>{activeProfile.displayName}</span>
+        <span className={styles.triggerName}>{activeProfile.displayName}</span>
+        <span aria-hidden="true" className={styles.tagSeparator}>•</span>
         <span className={styles.roleTag}>{activeProfile.badge}</span>
         <span className={`${styles.caretIcon} ${isOpen ? styles.caretOpen : ''}`} aria-hidden="true">
           ▼

@@ -70,7 +70,12 @@ export function App({ adapter = storageAdapter }) {
               onNavigateToLending={() => navigateTo('lending')}
             />
           )}
-          {currentSection === 'lending' && <LendingPage adapter={adapter} />}
+          {currentSection === 'lending' && (
+            <LendingPage
+              adapter={adapter}
+              onNavigateToBorrowing={() => navigateTo('borrowing')}
+            />
+          )}
           {currentSection === 'account' && (
             <AccountPage storageAdapter={adapter} onDataRestored={() => navigateTo('lending')} />
           )}

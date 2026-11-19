@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { REQUEST_STATUS } from '../constants/requestStatus';
 import {
   LOAN_STATUS,
@@ -47,7 +47,9 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
   const { activeProfile, switchProfile, isDemoMode } = useDemoProfile();
 
   const [perspective, setPerspective] = useState(() => {
-    return activeProfile?.role === 'lender' ? 'owner' : 'borrower';
+    return activeProfile?.role === 'lender' || (activeProfile?.id && activeProfile.id !== 'demo-borrower')
+      ? 'owner'
+      : 'borrower';
   });
   const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | REQUEST_STATUS.*
   const [confirmAction, setConfirmAction] = useState(null); // { action: 'approve'|'decline'|'cancel', request: object }
@@ -57,6 +59,29 @@ export function BorrowingPage({ adapter, onNavigateToDiscover, onNavigateToLendi
   const [returnDialog, setReturnDialog] = useState(null); // { mode, loan, item }
   const [comparisonDialog, setComparisonDialog] = useState(null); // { loan, item }
   const [releaseDialog, setReleaseDialog] = useState(null); // { loan, item }
+
+  // Synchronize default perspective dynamically when active demo profile changes (Defect 04)
+  const prevProfileIdRef = useRef(activeProfile?.id);
+
+  useEffect(() => {
+    if (activeProfile?.id && prevProfileIdRef.current !== activeProfile.id) {
+      prevProfileIdRef.current = activeProfile.id;
+      const targetPerspective =
+        activeProfile.role === 'lender' || activeProfile.id !== 'demo-borrower'
+          ? 'owner'
+          : 'borrower';
+      setPerspective(targetPerspective);
+      setStatusFilter('ALL');
+      setConfirmAction(null);
+      setHandoverDialog(null);
+      setReturnDialog(null);
+      setComparisonDialog(null);
+      setReleaseDialog(null);
+      if (typeof refresh === 'function') {
+        refresh();
+      }
+    }
+  }, [activeProfile?.id, activeProfile?.role, refresh]);
 
   const today = getLocalToday();
 

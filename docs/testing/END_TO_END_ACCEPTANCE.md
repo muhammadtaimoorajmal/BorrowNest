@@ -4,7 +4,7 @@
 **Product:** BorrowNest — *Share what you own. Borrow what you need.*  
 **Environment:** Local-First Client Architecture (React 19 + IndexedDB v3)  
 **Verification Date:** November 19, 2026  
-**Baseline Test Count:** 241 automated tests across 30 test suites (Vitest 5 + Testing Library)  
+**Baseline Test Count:** 249 automated tests across 31 test suites (Vitest 5 + Testing Library)  
 **Catalogue Status:** Exactly 20 products across 5 categories (`npm run check:catalogue` passing)  
 **Token Status:** 146 design tokens across 33 CSS files (`npm run check:tokens` passing)  
 

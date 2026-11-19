@@ -231,10 +231,10 @@ describe('Cross-Module Integration: Complete Physical Loan Custody Lifecycle (DR
     const deleteBtn = await screen.findByRole('button', { name: /Delete Hammer Drill 18V Kit/i });
     fireEvent.click(deleteBtn);
 
-    const confirmDeleteBtn = screen.getByRole('button', { name: /Permanently Delete/i });
-    fireEvent.click(confirmDeleteBtn);
+    // Defect 05: Proactively informs owner that historical records prevent permanent deletion
+    expect(await screen.findByRole('heading', { name: /Listing Has Historical Records/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Permanently Delete$/i })).not.toBeInTheDocument();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Cannot delete item.*associated borrowing request/i);
     const stillExists = await adapter.getItemById(item.id);
     expect(stillExists).toBeDefined();
   });

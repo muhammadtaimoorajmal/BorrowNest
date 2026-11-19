@@ -6,6 +6,7 @@ import {
   executeReplace,
 } from '../../../services/backup/importBackup';
 import ProfileSwitcher from '../../demo/components/ProfileSwitcher';
+import { useDemoProfile } from '../../demo/context/DemoProfileContext';
 import { resetDemoMarketplace } from '../../demo/services/resetDemoMarketplace';
 import styles from './AccountPage.module.css';
 
@@ -25,6 +26,7 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
   const [showResetDemoConfirm, setShowResetDemoConfirm] = useState(false);
   const [isResettingDemo, setIsResettingDemo] = useState(false);
   const [resetDemoMessage, setResetDemoMessage] = useState(null);
+  const { switchProfile } = useDemoProfile();
 
   const [storageEstimate, setStorageEstimate] = useState(null);
   const [localItemCount, setLocalItemCount] = useState(0);
@@ -109,7 +111,13 @@ export function AccountPage({ storageAdapter, onDataRestored }) {
     setResetDemoMessage(null);
     try {
       const result = await resetDemoMarketplace(storageAdapter);
+      if (typeof switchProfile === 'function') {
+        switchProfile('demo-borrower');
+      }
       await refreshDiagnostics();
+      if (typeof onDataRestored === 'function') {
+        onDataRestored();
+      }
       setShowResetDemoConfirm(false);
       setResetDemoMessage(
         `Demonstration marketplace reset successfully. Restored ${result.resetItems} items to Available. All simulated demo requests and loans cleared. Your custom listings and personal library remain intact.`,

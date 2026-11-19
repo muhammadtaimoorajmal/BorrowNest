@@ -72,7 +72,7 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLe
   const currentPhoto = item.photos?.[activePhotoIndex];
   const currentPhotoUrl = photoUrls[activePhotoIndex];
 
-  const { activeProfile, isDemoMode } = useDemoProfile();
+  const { activeProfile } = useDemoProfile();
   const assignedOwner = useMemo(() => {
     if (item.ownerProfileId && item.ownerDisplayName) {
       return { id: item.ownerProfileId, displayName: item.ownerDisplayName };
@@ -128,10 +128,9 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLe
             <div className={styles.demoNoticeBanner} role="note">
               <span aria-hidden="true">💡</span>
               <div>
-                <strong>Curated Demonstration Item</strong>
+                <strong>Classroom Demonstration Listing</strong>
                 <p>
-                  This item is part of BorrowNest&rsquo;s example catalogue to illustrate how community equipment is shared.
-                  It is a read-only showcase item and does not belong to a live user.
+                  Classroom demonstration listing. This item is assigned to {assignedOwner?.displayName || 'Demo Owner'}. Availability and borrowing activity are simulated in this browser.
                 </p>
               </div>
             </div>
@@ -209,34 +208,32 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLe
             <div className={styles.specItem}>
               <span className={styles.specLabel}>Classification</span>
               <span className={styles.specValue}>
-                {item.isDemo ? '✨ Curated Example Item' : isAvailable ? '✅ Available for borrowing' : '⏳ Currently unavailable'}
+                {item.isDemo ? '✨ Classroom Demonstration Listing' : 'Community Equipment Listing'}
               </span>
             </div>
 
-            {item.isDemo ? (
-              <div className={styles.specItem}>
-                <span className={styles.specLabel}>Status Notice</span>
-                <span className={styles.specValue}>
-                  Illustrative example only. No real owner, live availability or physical condition inspection is represented.
-                </span>
-              </div>
-            ) : (
-              <div className={styles.specItem}>
-                <span className={styles.specLabel}>Condition Grade</span>
-                <span className={styles.specValue}>
-                  {conditionInfo.label} (Tier {item.conditionGrade}/5)
-                </span>
-              </div>
-            )}
+            <div className={styles.specItem}>
+              <span className={styles.specLabel}>Availability Status</span>
+              <span className={styles.specValue}>
+                {isAvailable ? '✅ Available for borrowing' : '⏳ Currently unavailable'}
+              </span>
+            </div>
+
+            <div className={styles.specItem}>
+              <span className={styles.specLabel}>Condition Grade</span>
+              <span className={styles.specValue}>
+                {conditionInfo.label} (Tier {item.conditionGrade || 4}/5)
+              </span>
+            </div>
 
             {assignedOwner && (
               <div className={styles.specItem}>
-                <span className={styles.specLabel}>Demonstration Owner</span>
+                <span className={styles.specLabel}>Simulated Owner</span>
                 <span className={styles.specValue}>👤 {assignedOwner.displayName}</span>
               </div>
             )}
 
-            {!item.isDemo && item.approximateArea && (
+            {item.approximateArea && (
               <div className={styles.specItem}>
                 <span className={styles.specLabel}>Approximate Area (DR-05)</span>
                 <span className={styles.specValue}>📍 {item.approximateArea}</span>
@@ -244,81 +241,60 @@ export function ItemDetailModal({ item, onClose, onRequestBorrow, onNavigateToLe
             )}
           </div>
 
-          {/* Condition Notes / Description for genuine listings */}
-          {!item.isDemo && (item.conditionDescription || item.conditionNotes) && (
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Condition & Handling Observations</h3>
-              <div className={styles.notesBox}>{item.conditionDescription || item.conditionNotes}</div>
+          {/* Condition Notes / Description */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>Condition Inspection</h3>
+            <div className={styles.notesBox}>
+              {item.isDemo
+                ? 'Sample condition information — not a verified physical inspection.'
+                : item.conditionDescription || item.conditionNotes || conditionInfo.description}
             </div>
-          )}
+          </div>
         </div>
 
         <footer className={styles.footer}>
           <button type="button" onClick={onClose} className={styles.dismissBtn}>
-            {item.isDemo ? 'Back to Catalogue' : 'Close'}
+            Close
           </button>
 
-          {item.isDemo ? (
-            isDemoMode && activeProfile ? (
-              isOwner ? (
-                <button
-                  type="button"
-                  disabled
-                  className={styles.requestBtnDisabled}
-                  title="You own this demonstration item. Switch to Demo Borrower to request it."
-                >
-                  You Own This Item ({assignedOwner?.displayName})
-                </button>
-              ) : isAvailable ? (
-                <button
-                  type="button"
-                  onClick={() => onRequestBorrow && onRequestBorrow(item)}
-                  className={styles.requestBtn}
-                >
-                  Request to Borrow
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled
-                  className={styles.requestBtnDisabled}
-                  title="Item is currently marked unavailable"
-                >
-                  Unavailable for Request
-                </button>
-              )
-            ) : (
-              onNavigateToLending && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onNavigateToLending();
-                  }}
-                  className={styles.addOwnItemBtn}
-                >
-                  Add Your Own Item in Lending
-                </button>
-              )
-            )
-          ) : isAvailable ? (
-            <button
-              type="button"
-              onClick={() => onRequestBorrow && onRequestBorrow(item)}
-              className={styles.requestBtn}
-            >
-              Request to Borrow
-            </button>
-          ) : (
+          {isOwner ? (
             <button
               type="button"
               disabled
               className={styles.requestBtnDisabled}
-              title="Item is currently marked unavailable by owner"
+              title="You own this demonstration item. Switch to Demo Borrower to request it."
+            >
+              You Own This Item ({assignedOwner?.displayName})
+            </button>
+          ) : !isAvailable ? (
+            <button
+              type="button"
+              disabled
+              className={styles.requestBtnDisabled}
+              title="Item is currently marked unavailable"
             >
               Unavailable for Request
             </button>
-          )}
+          ) : onRequestBorrow ? (
+            <button
+              type="button"
+              onClick={() => onRequestBorrow(item)}
+              className={styles.requestBtn}
+            >
+              Request to Borrow
+            </button>
+          ) : onNavigateToLending ? (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onNavigateToLending();
+              }}
+              className={styles.addOwnItemBtn}
+            >
+              Add Your Own Item in Lending
+            </button>
+          ) : null}
         </footer>
       </div>
     </div>

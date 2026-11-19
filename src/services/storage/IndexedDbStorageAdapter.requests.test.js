@@ -6,6 +6,7 @@ import {
   ItemUnavailableError,
   ItemHasRequestHistoryError,
   ItemHasActiveReservationError,
+  ItemHasPendingRequestsError,
 } from './storageErrors';
 import { REQUEST_STATUS } from '../../features/borrowing/constants/requestStatus';
 
@@ -319,7 +320,7 @@ describe('Storage Adapter: Borrowing Requests, Approval & Integrity (DR-02, DR-0
       await expect(adapter.archiveItem(testItem.id)).rejects.toThrow(ItemHasActiveReservationError);
     });
 
-    it('permits archiving an item if it has only PENDING requests', async () => {
+    it('blocks archiving an item if it has PENDING requests (Defect 06)', async () => {
       await adapter.createItem(testItem);
       await adapter.createBorrowRequest({
         itemId: testItem.id,
@@ -328,8 +329,7 @@ describe('Storage Adapter: Borrowing Requests, Approval & Integrity (DR-02, DR-0
         endDate: '2026-12-22',
       });
 
-      const archived = await adapter.archiveItem(testItem.id);
-      expect(archived.status).toBe('ARCHIVED');
+      await expect(adapter.archiveItem(testItem.id)).rejects.toThrow(ItemHasPendingRequestsError);
     });
   });
 });

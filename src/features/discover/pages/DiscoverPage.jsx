@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useDiscovery } from '../hooks/useDiscovery';
 import { DiscoverySearch } from '../components/DiscoverySearch';
 import { CategoryFilters } from '../components/CategoryFilters';
@@ -9,15 +9,12 @@ import { DiscoveryNoResults } from '../components/DiscoveryNoResults';
 import { ItemDetailModal } from '../components/ItemDetailModal';
 import { BorrowRequestDialog } from '../../borrowing/components/BorrowRequestDialog';
 import { DemonstrationGuide } from '../../demo/components/DemonstrationGuide';
-import { EXAMPLE_CATALOGUE } from '../data/exampleCatalogue';
-import { filterListings } from '../services/filterListings';
 import styles from './DiscoverPage.module.css';
 
 /**
- * Public item discovery, exploration, and catalogue browsing page for BorrowNest.
+ * Public item discovery, exploration, and marketplace browsing page for BorrowNest.
  * Fully implements DR-01 (Unified Discovery) with keyword search, category pills,
- * live feedback, and clear architectural separation between the curated read-only
- * example catalogue and the visitor's private IndexedDB local inventory.
+ * and live feedback using IndexedDB as the single runtime source of truth (Defect 01).
  *
  * @param {object} props
  * @param {object} [props.adapter] - Storage adapter instance
@@ -29,7 +26,7 @@ export function DiscoverPage({
   onNavigateToLending,
   onNavigateToBorrowing,
 }) {
-  // Personal local inventory state via existing IndexedDB hook
+  // Single source of truth: Unified marketplace inventory loaded from IndexedDB
   const {
     items: localItems,
     totalActiveCount: localTotalCount,
@@ -47,14 +44,6 @@ export function DiscoverPage({
     refresh: refreshLocal,
   } = useDiscovery(adapter);
 
-  // Filter curated example catalogue items in memory
-  const filteredExampleItems = useMemo(() => {
-    return filterListings(EXAMPLE_CATALOGUE, {
-      searchQuery,
-      category: selectedCategory,
-    });
-  }, [searchQuery, selectedCategory]);
-
   const [selectedItem, setSelectedItem] = useState(null);
   const [requestingItem, setRequestingItem] = useState(null);
 
@@ -71,14 +60,14 @@ export function DiscoverPage({
       <section className={styles.introHero} aria-label="BorrowNest Introduction">
         <h2 className={styles.introHeroTagline}>Share what you own. Borrow what you need.</h2>
         <p className={styles.introHeroText}>
-          BorrowNest is a local-first prototype. Listings, requests and loan records are stored in this browser. It does not yet publish items to a shared online marketplace or synchronize data between users. Explore 20 example items below to see the types of equipment BorrowNest helps people organize, or add your own genuine listings in Lending.
+          BorrowNest is an interactive classroom marketplace prototype. Demo profiles and marketplace activity are stored in this browser and do not synchronize between different visitors. Explore 20 curated marketplace products below with genuine photography and simulated owners, or add your own listings in Lending.
         </p>
       </section>
 
       <div className={styles.header}>
         <h1 className={styles.pageTitle}>Item Discovery & Catalog</h1>
         <p className={styles.pageSubtitle}>
-          Explore 20 example items to see the types of equipment BorrowNest helps people organize. Search by keyword and browse by category.
+          Explore 20 curated marketplace products with genuine photography. Search by keyword and browse by category.
         </p>
       </div>
 
@@ -123,13 +112,7 @@ export function DiscoverPage({
               ? 'Loading local listings...'
               : localTotalCount === 0
               ? 'Your local listings: 0'
-              : `Your local listings: Showing ${localResultCount} of ${localTotalCount} items`}
-          </span>
-          <span className={styles.countSeparator} aria-hidden="true"> • </span>
-          <span className={styles.exampleCount}>
-            {filteredExampleItems.length === EXAMPLE_CATALOGUE.length
-              ? `Example catalogue: ${EXAMPLE_CATALOGUE.length} items`
-              : `Example catalogue: ${filteredExampleItems.length} of ${EXAMPLE_CATALOGUE.length} items`}
+              : `Showing ${localResultCount} of ${localTotalCount} items`}
           </span>
         </div>
 
@@ -147,7 +130,7 @@ export function DiscoverPage({
         )}
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Single Unified Marketplace Grid (Defect 01) */}
       <section
         id="catalogue-panel"
         aria-label="Catalogue items"
@@ -164,71 +147,20 @@ export function DiscoverPage({
               Retry
             </button>
           </div>
+        ) : localTotalCount === 0 ? (
+          <DiscoveryEmptyState onNavigateToLending={onNavigateToLending} />
+        ) : localResultCount === 0 ? (
+          <DiscoveryNoResults onResetFilters={handleResetFilters} />
         ) : (
-          <>
-            {/* If local inventory has 0 items, display honest empty state */}
-            {localTotalCount === 0 && (
-              <DiscoveryEmptyState onNavigateToLending={onNavigateToLending} />
-            )}
-
-            {/* If local inventory has items, show local items */}
-            {localTotalCount > 0 && (
-              <div className={styles.localSection}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>
-                    My Local Listings ({localTotalCount})
-                  </h2>
-                  <p className={styles.sectionSubtitle}>
-                    Genuine items stored directly in your browser&apos;s IndexedDB.
-                  </p>
-                </div>
-                {localResultCount === 0 ? (
-                  <DiscoveryNoResults onResetFilters={handleResetFilters} />
-                ) : (
-                  <div className={styles.grid}>
-                    {localItems.map((item) => (
-                      <DiscoveryCard
-                        key={item.id}
-                        item={item}
-                        onView={setSelectedItem}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Curated Example Catalogue: Always visible showcase with real photography */}
-            <section className={styles.exampleSection} aria-label="Curated Example Equipment">
-              <div className={styles.exampleHeader}>
-                <div className={styles.exampleHeaderBadge}>
-                  <span aria-hidden="true">✨</span> Illustrative Demonstration Catalogue
-                </div>
-                <h2 className={styles.exampleTitle}>
-                  Explore 20 Example Items
-                </h2>
-                <p className={styles.exampleSubtitle}>
-                  Illustrative catalogue — not live community listings. Browse 20 curated example items with genuine photography to see the types of tools, gardening gear, household equipment, outdoor items, and electronics BorrowNest helps people organize. Create your own genuine listings in Lending.
-                </p>
-              </div>
-
-              {filteredExampleItems.length === 0 ? (
-                <div className={styles.noExampleResults}>
-                  <p>No example items match the current filters.</p>
-                </div>
-              ) : (
-                <div className={styles.grid}>
-                  {filteredExampleItems.map((item) => (
-                    <DiscoveryCard
-                      key={item.id}
-                      item={item}
-                      onView={setSelectedItem}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
+          <div className={styles.grid}>
+            {localItems.map((item) => (
+              <DiscoveryCard
+                key={item.id}
+                item={item}
+                onView={setSelectedItem}
+              />
+            ))}
+          </div>
         )}
       </section>
 
@@ -245,7 +177,7 @@ export function DiscoverPage({
         />
       )}
 
-      {/* Borrow Request Submission Dialog (DR-02 / DR-03 - Both genuine & demo items) */}
+      {/* Borrow Request Submission Dialog (DR-02 / DR-03) */}
       {requestingItem && (
         <BorrowRequestDialog
           item={requestingItem}

@@ -101,6 +101,10 @@ export function useListings(adapter = storageAdapter) {
         status: 'ACTIVE',
         photoAttestation: rawItemData.photoAttestation === true,
         photos: rawItemData.photos || [],
+        ownerProfileId: rawItemData.ownerProfileId || null,
+        ownerDisplayName: rawItemData.ownerDisplayName || null,
+        isDemo: rawItemData.isDemo === true,
+        demoSeed: rawItemData.demoSeed === true,
         createdAt: now,
         updatedAt: now,
       };
@@ -128,6 +132,10 @@ export function useListings(adapter = storageAdapter) {
         ...existing,
         ...updates,
         id, // immutable
+        ownerProfileId: existing.ownerProfileId || updates.ownerProfileId || null,
+        ownerDisplayName: existing.ownerDisplayName || updates.ownerDisplayName || null,
+        isDemo: existing.isDemo === true,
+        demoSeed: existing.demoSeed === true,
         createdAt: existing.createdAt, // immutable
         updatedAt: now,
       };
@@ -191,6 +199,20 @@ export function useListings(adapter = storageAdapter) {
     [adapter, refresh],
   );
 
+  const deleteDemoListingAndHistory = useCallback(
+    async (id) => {
+      if (typeof adapter.deleteDemoListingAndHistory === 'function') {
+        const result = await adapter.deleteDemoListingAndHistory(id);
+        await refresh();
+        return result;
+      }
+      const result = await adapter.deleteItem(id);
+      await refresh();
+      return result;
+    },
+    [adapter, refresh],
+  );
+
   return {
     items,
     activeItems,
@@ -205,5 +227,6 @@ export function useListings(adapter = storageAdapter) {
     archiveListing,
     restoreListing,
     deleteListing,
+    deleteDemoListingAndHistory,
   };
 }

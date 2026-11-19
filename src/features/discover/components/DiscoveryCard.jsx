@@ -66,17 +66,14 @@ export function DiscoveryCard({ item, onView }) {
         )}
 
         <div className={styles.badgeRow}>
-          {item.isDemo ? (
-            <span className={styles.demoBadge}>Example Item</span>
-          ) : (
-            <span
-              className={`${styles.availabilityBadge} ${
-                isAvailable ? styles.availableBadge : styles.unavailableBadge
-              }`}
-            >
-              {isAvailable ? 'Available' : 'Unavailable'}
-            </span>
-          )}
+          {item.isDemo && <span className={styles.demoBadge}>Example Item</span>}
+          <span
+            className={`${styles.availabilityBadge} ${
+              isAvailable ? styles.availableBadge : styles.unavailableBadge
+            }`}
+          >
+            {isAvailable ? 'Available' : 'Unavailable'}
+          </span>
           <span className={styles.categoryBadge}>{categoryInfo.label}</span>
         </div>
       </div>
@@ -87,7 +84,12 @@ export function DiscoveryCard({ item, onView }) {
 
         <div className={styles.metaRow}>
           {item.isDemo ? (
-            <span className={styles.conditionChip}>Illustrative Example</span>
+            <span
+              className={styles.conditionChip}
+              title="Sample condition information — not a verified physical inspection"
+            >
+              Sample Condition: {conditionInfo.label}
+            </span>
           ) : (
             <span className={styles.conditionChip} title={conditionInfo.description}>
               Condition: {conditionInfo.label}
@@ -98,7 +100,7 @@ export function DiscoveryCard({ item, onView }) {
               👤 {ownerDisplayName}
             </span>
           )}
-          {!item.isDemo && item.approximateArea && (
+          {item.approximateArea && (
             <span className={styles.areaChip}>
               <span aria-hidden="true">📍</span>
               {item.approximateArea}

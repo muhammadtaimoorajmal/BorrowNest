@@ -10,6 +10,7 @@ import {
   ItemUnavailableError,
   ItemHasRequestHistoryError,
   ItemHasActiveReservationError,
+  ItemHasPendingRequestsError,
   LoanNotFoundError,
   LoanStateTransitionError,
   CollectionDateNotReachedError,
@@ -228,8 +229,10 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
 
   /**
    * Safely archives an item listing (DR-03 + DR-04).
-   * Archiving is blocked while the item has an active reservation in RESERVED or ACTIVE status.
-   * Archiving is permitted when all associated loans are COMPLETED or RELEASED_NOT_COLLECTED (or no loans exist).
+   * Archiving is blocked while the item has:
+   * 1. Any borrowing request in PENDING status (Defect 06).
+   * 2. Any active reservation in RESERVED or ACTIVE status.
+   * Archiving is permitted when all associated requests are resolved and all loans are COMPLETED or RELEASED_NOT_COLLECTED (or no loans exist).
    */
   async archiveItem(id) {
     if (!id) {
@@ -238,8 +241,9 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
     const db = await this._getDb();
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([STORE_ITEMS, STORE_LOANS], 'readwrite');
+      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS, STORE_LOANS], 'readwrite');
       const itemStore = tx.objectStore(STORE_ITEMS);
+      const reqStore = tx.objectStore(STORE_REQUESTS);
       const loanStore = tx.objectStore(STORE_LOANS);
       let updatedItem = null;
 
@@ -250,34 +254,57 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
           return reject(new RecordNotFoundError(id));
         }
 
-        // Check for active or reserved loans
-        const loanIndex = loanStore.index('itemId');
-        const loanQuery = loanIndex.getAll(id);
+        // 1. Check for pending borrowing requests (Defect 06)
+        const reqIndex = reqStore.index('itemId');
+        const reqQuery = reqIndex.getAll(id);
 
-        loanQuery.onsuccess = () => {
-          const loans = loanQuery.result || [];
-          const hasActiveReservation = loans.some(
-            (l) => l.status === LOAN_STATUS.RESERVED || l.status === LOAN_STATUS.ACTIVE,
-          );
-          if (hasActiveReservation) {
+        reqQuery.onsuccess = () => {
+          const reqs = reqQuery.result || [];
+          const pendingReqs = reqs.filter((r) => r.status === REQUEST_STATUS.PENDING);
+          if (pendingReqs.length > 0) {
             tx.abort();
-            return reject(new ItemHasActiveReservationError(id));
+            return reject(
+              new ItemHasPendingRequestsError(
+                id,
+                pendingReqs.length,
+                `Cannot archive item "${id}" because it has ${pendingReqs.length} pending borrowing request(s). Review or decline pending requests before archiving.`,
+              ),
+            );
           }
 
-          updatedItem = {
-            ...itemReq.result,
-            status: 'ARCHIVED',
-            updatedAt: new Date().toISOString(),
+          // 2. Check for active or reserved loans
+          const loanIndex = loanStore.index('itemId');
+          const loanQuery = loanIndex.getAll(id);
+
+          loanQuery.onsuccess = () => {
+            const loans = loanQuery.result || [];
+            const hasActiveReservation = loans.some(
+              (l) => l.status === LOAN_STATUS.RESERVED || l.status === LOAN_STATUS.ACTIVE,
+            );
+            if (hasActiveReservation) {
+              tx.abort();
+              return reject(new ItemHasActiveReservationError(id));
+            }
+
+            updatedItem = {
+              ...itemReq.result,
+              status: 'ARCHIVED',
+              updatedAt: new Date().toISOString(),
+            };
+
+            const putReq = itemStore.put(updatedItem);
+            putReq.onerror = (e) => {
+              reject(this._handleError(e.target.error, `Failed to archive item "${id}"`));
+            };
           };
 
-          const putReq = itemStore.put(updatedItem);
-          putReq.onerror = (e) => {
-            reject(this._handleError(e.target.error, `Failed to archive item "${id}"`));
+          loanQuery.onerror = (e) => {
+            reject(this._handleError(e.target.error, `Failed to inspect item loans for "${id}"`));
           };
         };
 
-        loanQuery.onerror = (e) => {
-          reject(this._handleError(e.target.error, `Failed to inspect item loans for "${id}"`));
+        reqQuery.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to inspect item requests for "${id}"`));
         };
       };
 
@@ -414,6 +441,117 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
     });
   }
 
+  /**
+   * Safely deletes a user-created demonstration listing and its associated local demonstration history (Defect 05).
+   * Executes as an atomic readwrite transaction across [STORE_ITEMS, STORE_REQUESTS, STORE_LOANS].
+   *
+   * Safeguards:
+   * 1. Cannot delete baseline curated demonstration items (demo-001 through demo-020 or demoSeed).
+   * 2. Checks that all associated requests and loans are demonstration records.
+   * 3. Deletes associated requests and loans atomically with the item.
+   * 4. Completely preserves all unrelated items, requests, loans, and photographs.
+   */
+  async deleteDemoListingAndHistory(id) {
+    if (!id) {
+      throw new StorageError('deleteDemoListingAndHistory requires a valid ID');
+    }
+    const db = await this._getDb();
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([STORE_ITEMS, STORE_REQUESTS, STORE_LOANS], 'readwrite');
+      const itemStore = tx.objectStore(STORE_ITEMS);
+      const reqStore = tx.objectStore(STORE_REQUESTS);
+      const loanStore = tx.objectStore(STORE_LOANS);
+
+      const itemReq = itemStore.get(id);
+      itemReq.onsuccess = () => {
+        const item = itemReq.result;
+        if (!item) {
+          tx.abort();
+          return reject(new RecordNotFoundError(id));
+        }
+
+        // Prevent permanent removal of baseline curated demonstration items
+        if (
+          item.demoSeed ||
+          (typeof item.id === 'string' && item.id.startsWith('demo-') && !item.id.startsWith('demo-custom-'))
+        ) {
+          tx.abort();
+          return reject(
+            new StorageError(
+              `Cannot permanently delete curated baseline demonstration item "${id}". You may mark it unavailable or archive it instead.`,
+            ),
+          );
+        }
+
+        // Find all requests for this item
+        const reqIndex = reqStore.index('itemId');
+        const reqQuery = reqIndex.getAll(id);
+
+        reqQuery.onsuccess = () => {
+          const requests = reqQuery.result || [];
+
+          // Find all loans for this item
+          const loanIndex = loanStore.index('itemId');
+          const loanQuery = loanIndex.getAll(id);
+
+          loanQuery.onsuccess = () => {
+            const loans = loanQuery.result || [];
+
+            // Verify that all associated records can safely be classified as demonstration data
+            for (const r of requests) {
+              const isSafeDemo =
+                r.isDemoRequest ||
+                (typeof r.borrowerProfileId === 'string' && r.borrowerProfileId.startsWith('demo-')) ||
+                (typeof r.ownerProfileId === 'string' && r.ownerProfileId.startsWith('demo-'));
+              if (!isSafeDemo) {
+                tx.abort();
+                return reject(
+                  new StorageError(
+                    `Cannot cascade delete item "${id}" because request "${r.id}" is an unconfirmed non-demonstration record.`,
+                  ),
+                );
+              }
+            }
+
+            // Remove associated loans
+            for (const l of loans) {
+              loanStore.delete(l.requestId || l.id);
+            }
+
+            // Remove associated requests
+            for (const r of requests) {
+              reqStore.delete(r.id);
+            }
+
+            // Delete item
+            itemStore.delete(id);
+          };
+
+          loanQuery.onerror = (e) => {
+            reject(this._handleError(e.target.error, `Failed to query loans for demo cascade delete "${id}"`));
+          };
+        };
+
+        reqQuery.onerror = (e) => {
+          reject(this._handleError(e.target.error, `Failed to query requests for demo cascade delete "${id}"`));
+        };
+      };
+
+      itemReq.onerror = (e) => {
+        reject(this._handleError(e.target.error, `Failed to retrieve item for demo cascade delete "${id}"`));
+      };
+
+      tx.oncomplete = () => {
+        resolve({ id, deleted: true });
+      };
+
+      tx.onerror = (e) => {
+        reject(this._handleError(e.target?.error || e, `Transaction failed deleting demo listing "${id}"`));
+      };
+    });
+  }
+
   async countItems(options = {}) {
     const db = await this._getDb();
     const { status } = options;
@@ -537,6 +675,37 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
         if (item.availability !== 'AVAILABLE') {
           tx.abort();
           return reject(new ItemUnavailableError(normalized.itemId, 'item is not available for borrowing'));
+        }
+
+        // Prevent self-borrowing (DR-02 / Defect 08)
+        if (
+          item.ownerProfileId &&
+          normalized.borrowerProfileId &&
+          item.ownerProfileId === normalized.borrowerProfileId
+        ) {
+          tx.abort();
+          return reject(
+            new StorageError(
+              'Self-borrowing is prohibited. You cannot request to borrow an item you own.',
+            ),
+          );
+        }
+
+        // Derive owner metadata from actual stored item record
+        if (!normalized.ownerProfileId && item.ownerProfileId) {
+          normalized.ownerProfileId = item.ownerProfileId;
+        }
+        if (!normalized.ownerDisplayName && item.ownerDisplayName) {
+          normalized.ownerDisplayName = item.ownerDisplayName;
+        }
+
+        // Mark demo request if item or borrower is a simulated demo entity
+        if (
+          item.isDemo ||
+          item.demoSeed ||
+          (normalized.borrowerProfileId && normalized.borrowerProfileId.startsWith('demo-'))
+        ) {
+          normalized.isDemoRequest = true;
         }
 
         if (!normalized.itemTitleSnapshot) {
@@ -1780,3 +1949,4 @@ export class IndexedDbStorageAdapter extends StorageAdapter {
 
 // Default singleton instance for browser application runtime
 export const storageAdapter = new IndexedDbStorageAdapter();
+export { ItemHasPendingRequestsError } from './storageErrors';

@@ -349,3 +349,62 @@
 .demoSwitchLink:hover {
   color: var(--bn-color-primary-900);
 }
+
+.legacyNoticeBanner {
+  background-color: var(--bn-color-accent-50);
+  border: 1px solid var(--bn-color-accent-300);
+  border-radius: var(--bn-radius-lg);
+  padding: var(--bn-space-4);
+  margin-bottom: var(--bn-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-space-3);
+}
+
+.legacyNoticeHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--bn-space-2);
+  color: var(--bn-color-accent-800);
+  font-size: var(--bn-font-size-sm);
+  font-weight: var(--bn-font-weight-bold);
+}
+
+.legacyNoticeText {
+  font-size: var(--bn-font-size-xs);
+  color: var(--bn-color-slate-700);
+  line-height: var(--bn-line-height-normal);
+  margin: 0;
+}
+
+.legacyItemsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bn-space-2);
+}
+
+.legacyItemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+  padding: var(--bn-space-2) var(--bn-space-3);
+  border-radius: var(--bn-radius-md);
+  border: 1px solid var(--bn-color-accent-200);
+  font-size: var(--bn-font-size-xs);
+}
+
+.claimLegacyBtn {
+  padding: var(--bn-spacing-1-5) var(--bn-space-3);
+  background-color: var(--bn-color-accent-600);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--bn-radius-sm);
+  font-weight: var(--bn-font-weight-medium);
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.claimLegacyBtn:hover {
+  background-color: var(--bn-color-accent-700);
+}

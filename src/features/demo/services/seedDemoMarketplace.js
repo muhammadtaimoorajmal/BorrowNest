@@ -44,7 +44,7 @@ export function buildDemoItemRecord(exampleItem) {
     conditionGrade = 3; // Fair
   }
 
-  const now = '2026-11-19T00:00:00.000Z';
+  const now = new Date().toISOString();
 
   return {
     schemaVersion: SCHEMA_VERSION,

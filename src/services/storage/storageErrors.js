@@ -86,6 +86,15 @@ export class ItemHasActiveReservationError extends StorageError {
   }
 }
 
+export class ItemHasPendingRequestsError extends StorageError {
+  constructor(itemId, count = 1, message) {
+    super(message || `Cannot archive item "${itemId}" because it has ${count} pending borrowing request(s). Review or resolve pending requests before archiving.`);
+    this.name = 'ItemHasPendingRequestsError';
+    this.itemId = itemId;
+    this.pendingCount = count;
+  }
+}
+
 // ==========================================
 // Module 06: Loan Lifecycle Domain Errors (DR-04)
 // ==========================================

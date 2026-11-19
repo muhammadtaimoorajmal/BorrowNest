@@ -35,6 +35,10 @@ export class StorageAdapter {
     throw new Error('Method not implemented: deleteItem');
   }
 
+  async deleteDemoListingAndHistory(_id) {
+    throw new Error('Method not implemented: deleteDemoListingAndHistory');
+  }
+
   async countItems(_options = {}) {
     throw new Error('Method not implemented: countItems');
   }

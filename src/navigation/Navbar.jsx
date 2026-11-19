@@ -50,9 +50,13 @@ export function Navbar({ currentSection = 'lending', onNavigate }) {
 
           <div className={styles.headerRightGroup}>
             <ProfileSwitcher variant="compact" />
-            <div className={styles.prototypePill} role="status">
+            <div
+              className={styles.prototypePill}
+              role="status"
+              title="BorrowNest is an interactive classroom marketplace prototype. Demo profiles and marketplace activity are stored in this browser and do not synchronize between different visitors."
+            >
               <span className={styles.pillDot} aria-hidden="true"></span>
-              <span className={styles.pillText}>Local-First Storage</span>
+              <span className={styles.pillText}>Classroom Demo Prototype</span>
             </div>
           </div>
         </div>
